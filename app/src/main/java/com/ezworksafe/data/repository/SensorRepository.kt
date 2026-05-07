@@ -6,11 +6,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
 import android.media.AudioRecordingConfiguration
 import android.net.wifi.WifiManager
 import android.os.Build
+import androidx.core.content.ContextCompat
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import kotlinx.coroutines.channels.awaitClose
@@ -104,6 +106,12 @@ class SensorRepository(private val context: Context) {
             return@callbackFlow
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED
+        ) {
+            trySend(SensorStatus.Denied)
+        }
+
         fun emitState() {
             val configs: List<AudioRecordingConfiguration> = audioManager.activeRecordingConfigurations
             val micActive = configs.any { it.clientAudioSource == android.media.MediaRecorder.AudioSource.MIC }
@@ -128,6 +136,12 @@ class SensorRepository(private val context: Context) {
             trySend(SensorStatus.Unavailable)
             close()
             return@callbackFlow
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+        ) {
+            trySend(SensorStatus.Denied)
         }
 
         fun emitState() {
