@@ -1,20 +1,15 @@
 package com.ezworksafe.data.repository
 
 import android.content.Context
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.mock
 
 class SensorRepositoryTest {
-
-    @get:Rule
-    val instantRule = InstantTaskExecutorRule()
 
     private val mockContext: Context = mock()
 

@@ -548,6 +548,7 @@ Expected: BUILD FAILED (SensorRepository not defined)
 package com.ezworksafe.data.repository
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -600,11 +601,16 @@ class SensorRepository(private val context: Context) {
     }
 
     private fun observeBluetoothStatus(): Flow<SensorStatus> = callbackFlow {
-        val bluetoothAdapter = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            context.getSystemService(BluetoothAdapter::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            BluetoothAdapter.getDefaultAdapter()
+        val bluetoothAdapter = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+                manager?.adapter
+            } else {
+                @Suppress("DEPRECATION")
+                BluetoothAdapter.getDefaultAdapter()
+            }
+        } catch (e: Exception) {
+            null
         }
 
         if (bluetoothAdapter == null) {
