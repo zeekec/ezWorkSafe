@@ -2,8 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permissions (no runtime: wifi, bluetooth) -->
+    <!-- Permissions (normal: wifi) -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- Permissions (bluetooth — BLUETOOTH_CONNECT is dangerous on API 31+) -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
