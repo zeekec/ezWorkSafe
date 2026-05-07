@@ -95,14 +95,17 @@ class SensorRepository(private val context: Context) {
             close()
             return@callbackFlow
         }
-        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED
-        ) {
-            trySend(SensorStatus.Denied)
-        }
-
         fun emitState() {
+            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                trySend(SensorStatus.Denied)
+                return
+            }
             val configs: List<AudioRecordingConfiguration> = audioManager.activeRecordingConfigurations
-            val micActive = configs.any { it.clientAudioSource == android.media.MediaRecorder.AudioSource.MIC }
+            val micActive = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                configs.any { it.clientAudioSource == android.media.MediaRecorder.AudioSource.MIC }
+            } else {
+                configs.isNotEmpty()
+            }
             trySend(if (micActive) SensorStatus.Active else SensorStatus.Inactive)
         }
 
@@ -126,12 +129,11 @@ class SensorRepository(private val context: Context) {
             return@callbackFlow
         }
 
-        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-        ) {
-            trySend(SensorStatus.Denied)
-        }
-
         fun emitState() {
+            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                trySend(SensorStatus.Denied)
+                return
+            }
             try {
                 cameraManager.cameraIdList
                 trySend(SensorStatus.Inactive)
