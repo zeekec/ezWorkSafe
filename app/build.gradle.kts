@@ -12,7 +12,7 @@ android {
         minSdk = 24
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.1"
     }
 
     buildTypes {
@@ -37,6 +37,14 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    applicationVariants.configureEach {
+        outputs.configureEach {
+            if (this is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                this.outputFileName = "ezWorkSafe-${versionName}-${name}.apk"
+            }
+        }
     }
 }
 
