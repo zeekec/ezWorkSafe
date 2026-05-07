@@ -1,0 +1,93 @@
+package com.ezworksafe.ui.view
+
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.test.platform.app.InstrumentationRegistry
+import com.ezworksafe.EzWorkSafeApp
+import com.ezworksafe.data.model.SensorStatus
+import com.ezworksafe.data.model.SensorType
+import com.ezworksafe.data.repository.FakeSensorRepository
+import org.junit.BeforeClass
+import org.junit.Rule
+import org.junit.Test
+
+class StatusDashboardE2eTest {
+
+    companion object {
+        private lateinit var fakeRepo: FakeSensorRepository
+
+        @BeforeClass @JvmStatic
+        fun setUpClass() {
+            fakeRepo = FakeSensorRepository()
+            val app = InstrumentationRegistry.getInstrumentation()
+                .targetContext.applicationContext as EzWorkSafeApp
+            app.sensorRepository = fakeRepo
+        }
+    }
+
+    @get:Rule
+    val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @Test
+    fun wifi_card_shows_initial_status() {
+        composeRule.onNodeWithText("WiFi").assertIsDisplayed()
+    }
+
+    @Test
+    fun wifi_toggles_between_active_and_inactive() {
+        fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Active)
+        composeRule.waitUntil(5000) {
+            try {
+                composeRule.onNodeWithText("Active").assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+
+        fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Inactive)
+        composeRule.waitUntil(5000) {
+            try {
+                composeRule.onNodeWithText("Inactive").assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+    }
+
+    @Test
+    fun bluetooth_active_updates_ui() {
+        fakeRepo.setStatus(SensorType.BLUETOOTH, SensorStatus.Active)
+        composeRule.waitUntil(5000) {
+            try {
+                composeRule.onNodeWithText("Active").assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+    }
+
+    @Test
+    fun all_four_sensor_labels_displayed() {
+        composeRule.onNodeWithText("WiFi").assertIsDisplayed()
+        composeRule.onNodeWithText("Bluetooth").assertIsDisplayed()
+        composeRule.onNodeWithText("Microphone").assertIsDisplayed()
+        composeRule.onNodeWithText("Camera").assertIsDisplayed()
+    }
+
+    @Test
+    fun sensor_shows_denied_status() {
+        fakeRepo.setStatus(SensorType.CAMERA, SensorStatus.Denied)
+        composeRule.waitUntil(5000) {
+            try {
+                composeRule.onNodeWithText("Denied").assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+    }
+}

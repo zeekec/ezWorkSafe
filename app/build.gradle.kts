@@ -63,4 +63,10 @@ dependencies {
     testImplementation("androidx.arch.core:core-testing:2.2.0")
     testImplementation("org.mockito:mockito-core:5.7.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+
+    // Instrumented testing
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.01.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

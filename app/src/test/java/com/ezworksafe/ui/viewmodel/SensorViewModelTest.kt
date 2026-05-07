@@ -1,16 +1,30 @@
 package com.ezworksafe.ui.viewmodel
 
-import android.app.Application
+import com.ezworksafe.EzWorkSafeApp
+import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
+import com.ezworksafe.data.repository.SensorRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 
 class SensorViewModelTest {
 
-    private val mockApp: Application = mock()
+    private val mockRepo = mock<SensorRepository> {
+        on { observeSensor(SensorType.WIFI) } doReturn flowOf(SensorStatus.Unavailable)
+        on { observeSensor(SensorType.BLUETOOTH) } doReturn flowOf(SensorStatus.Unavailable)
+        on { observeSensor(SensorType.MICROPHONE) } doReturn flowOf(SensorStatus.Unavailable)
+        on { observeSensor(SensorType.CAMERA) } doReturn flowOf(SensorStatus.Unavailable)
+    }
+
+    private val mockApp = mock<EzWorkSafeApp> {
+        on { sensorRepository } doReturn mockRepo
+    }
 
     @Test
     fun `viewModel exposes StateFlows for all four sensors`() {
@@ -31,7 +45,7 @@ class SensorViewModelTest {
     @Test
     fun `initial wifi status is Unavailable with mock context`() = runTest {
         val vm = SensorViewModel(mockApp)
-        assertEquals(com.ezworksafe.data.model.SensorStatus.Unavailable, vm.wifiStatus.value)
+        assertEquals(SensorStatus.Unavailable, vm.wifiStatus.value)
     }
 
     @Test

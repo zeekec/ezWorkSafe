@@ -3,16 +3,16 @@ package com.ezworksafe.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ezworksafe.EzWorkSafeApp
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
-import com.ezworksafe.data.repository.SensorRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 class SensorViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = SensorRepository(application)
+    private val repository = (application as EzWorkSafeApp).sensorRepository
 
     val sensorTypes: List<SensorType> = SensorType.entries
 

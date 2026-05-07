@@ -15,7 +15,7 @@ class SensorRepositoryTest {
 
     @Test
     fun `repository exposes four sensor flows`() = runTest {
-        val repo = SensorRepository(mockContext)
+        val repo = SystemSensorRepository(mockContext)
 
         val wifiStatus = repo.observeSensor(SensorType.WIFI).first()
         val btStatus = repo.observeSensor(SensorType.BLUETOOTH).first()

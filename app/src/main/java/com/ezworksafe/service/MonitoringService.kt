@@ -8,7 +8,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.ezworksafe.data.model.SensorStatus
+import com.ezworksafe.EzWorkSafeApp
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.data.repository.SensorRepository
 import kotlinx.coroutines.CoroutineScope
@@ -46,7 +46,7 @@ class MonitoringService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun observeSensors() {
-        val repository = SensorRepository(this)
+        val repository: SensorRepository = (application as EzWorkSafeApp).sensorRepository
         serviceScope.launch {
             combine(
                 repository.observeSensor(SensorType.WIFI),
