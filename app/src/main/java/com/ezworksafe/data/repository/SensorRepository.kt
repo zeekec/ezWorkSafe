@@ -56,13 +56,8 @@ class SensorRepository(private val context: Context) {
 
     private fun observeBluetoothStatus(): Flow<SensorStatus> = callbackFlow {
         val bluetoothAdapter = try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
-                manager?.adapter
-            } else {
-                @Suppress("DEPRECATION")
-                BluetoothAdapter.getDefaultAdapter()
-            }
+            val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+            manager?.adapter
         } catch (e: Exception) {
             null
         }
@@ -100,14 +95,7 @@ class SensorRepository(private val context: Context) {
             close()
             return@callbackFlow
         }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            trySend(SensorStatus.Unavailable)
-            close()
-            return@callbackFlow
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED
         ) {
             trySend(SensorStatus.Denied)
         }
@@ -138,8 +126,7 @@ class SensorRepository(private val context: Context) {
             return@callbackFlow
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
         ) {
             trySend(SensorStatus.Denied)
         }
