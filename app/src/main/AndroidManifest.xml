@@ -13,6 +13,10 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <!-- Foreground service permissions -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
     <!-- Hardware features (not required — app works without camera/mic) -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
@@ -36,12 +40,10 @@
             </intent-filter>
         </activity>
 
-        <!-- Foreground service (uncomment when Phase 8 is implemented)
         <service
             android:name=".service.MonitoringService"
             android:foregroundServiceType="dataSync"
             android:exported="false" />
-        -->
 
     </application>
 </manifest>
