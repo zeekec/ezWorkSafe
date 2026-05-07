@@ -8,25 +8,25 @@ class SensorStatusTest {
     @Test
     fun `active displays green label`() {
         assertEquals("Active", SensorStatus.Active.label)
-        assertEquals(0xFF4CAF50.toInt(), SensorStatus.Active.color)
+        assertEquals(0xFF4CAF50L, SensorStatus.Active.color)
     }
 
     @Test
     fun `inactive displays gray label`() {
         assertEquals("Inactive", SensorStatus.Inactive.label)
-        assertEquals(0xFF9E9E9E.toInt(), SensorStatus.Inactive.color)
+        assertEquals(0xFF9E9E9EL, SensorStatus.Inactive.color)
     }
 
     @Test
     fun `denied displays red label`() {
         assertEquals("Denied", SensorStatus.Denied.label)
-        assertEquals(0xFFF44336.toInt(), SensorStatus.Denied.color)
+        assertEquals(0xFFF44336L, SensorStatus.Denied.color)
     }
 
     @Test
     fun `unavailable displays dark gray label`() {
         assertEquals("Unavailable", SensorStatus.Unavailable.label)
-        assertEquals(0xFF616161.toInt(), SensorStatus.Unavailable.color)
+        assertEquals(0xFF616161L, SensorStatus.Unavailable.color)
     }
 
     @Test

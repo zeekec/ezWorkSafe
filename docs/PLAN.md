@@ -329,25 +329,25 @@ class SensorStatusTest {
     @Test
     fun `active displays green label`() {
         assertEquals("Active", SensorStatus.Active.label)
-        assertEquals(0xFF4CAF50.toInt(), SensorStatus.Active.color)
+        assertEquals(0xFF4CAF50L, SensorStatus.Active.color)
     }
 
     @Test
     fun `inactive displays gray label`() {
         assertEquals("Inactive", SensorStatus.Inactive.label)
-        assertEquals(0xFF9E9E9E.toInt(), SensorStatus.Inactive.color)
+        assertEquals(0xFF9E9E9EL, SensorStatus.Inactive.color)
     }
 
     @Test
     fun `denied displays red label`() {
         assertEquals("Denied", SensorStatus.Denied.label)
-        assertEquals(0xFFF44336.toInt(), SensorStatus.Denied.color)
+        assertEquals(0xFFF44336L, SensorStatus.Denied.color)
     }
 
     @Test
     fun `unavailable displays dark gray label`() {
         assertEquals("Unavailable", SensorStatus.Unavailable.label)
-        assertEquals(0xFF616161.toInt(), SensorStatus.Unavailable.color)
+        assertEquals(0xFF616161L, SensorStatus.Unavailable.color)
     }
 
     @Test
@@ -372,15 +372,14 @@ Expected: BUILD FAILED (SensorStatus and SensorType not defined)
 ```kotlin
 package com.ezworksafe.data.model
 
-@androidx.annotation.ColorRes
 sealed class SensorStatus(
     val label: String,
     val color: Long
 ) {
-    data object Active : SensorStatus("Active", 0xFF4CAF50)
-    data object Inactive : SensorStatus("Inactive", 0xFF9E9E9E)
-    data object Denied : SensorStatus("Denied", 0xFFF44336)
-    data object Unavailable : SensorStatus("Unavailable", 0xFF616161)
+    data object Active : SensorStatus("Active", 0xFF4CAF50L)
+    data object Inactive : SensorStatus("Inactive", 0xFF9E9E9EL)
+    data object Denied : SensorStatus("Denied", 0xFFF44336L)
+    data object Unavailable : SensorStatus("Unavailable", 0xFF616161L)
 }
 
 enum class SensorType(val displayName: String) {

@@ -1,14 +1,13 @@
 package com.ezworksafe.data.model
 
-@androidx.annotation.ColorRes
 sealed class SensorStatus(
     val label: String,
     val color: Long
 ) {
-    data object Active : SensorStatus("Active", 0xFF4CAF50)
-    data object Inactive : SensorStatus("Inactive", 0xFF9E9E9E)
-    data object Denied : SensorStatus("Denied", 0xFFF44336)
-    data object Unavailable : SensorStatus("Unavailable", 0xFF616161)
+    data object Active : SensorStatus("Active", 0xFF4CAF50L)
+    data object Inactive : SensorStatus("Inactive", 0xFF9E9E9EL)
+    data object Denied : SensorStatus("Denied", 0xFFF44336L)
+    data object Unavailable : SensorStatus("Unavailable", 0xFF616161L)
 }
 
 enum class SensorType(val displayName: String) {
