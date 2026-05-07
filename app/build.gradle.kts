@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
@@ -32,17 +31,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+}
 
-    applicationVariants.configureEach {
-        outputs.configureEach {
-            if (this is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
-                this.outputFileName = "ezWorkSafe-${versionName}-${name}.apk"
-            }
-        }
-    }
+base {
+    archivesName = "ezWorkSafe-${android.defaultConfig.versionName}"
 }
 
 dependencies {
