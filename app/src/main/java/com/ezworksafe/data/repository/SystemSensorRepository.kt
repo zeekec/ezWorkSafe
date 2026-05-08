@@ -15,6 +15,7 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         refreshTrigger.value = Unit
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeSensor(type: SensorType): Flow<SensorStatus> {
         return refreshTrigger.flatMapLatest {
             when (type) {

@@ -7,12 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezworksafe.service.MonitoringService
 import com.ezworksafe.util.PermissionHelper
@@ -22,11 +20,16 @@ class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { _ ->
-        // Re-render will happen via ViewModel observing permission state
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        lifecycle.addObserver(LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                refreshSensorFlows()
+            }
+        })
 
         requestRuntimePermissionsIfNeeded()
         startMonitoringService()
@@ -34,22 +37,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             EzWorkSafeTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                val viewModel: com.ezworksafe.ui.viewmodel.SensorViewModel = viewModel()
-                StatusDashboard(viewModel = viewModel)
-
-                val lifecycleOwner = LocalLifecycleOwner.current
-                DisposableEffect(lifecycleOwner) {
-                    val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_RESUME) {
-                            viewModel.refresh()
-                        }
-                    }
-                    lifecycleOwner.lifecycle.addObserver(observer)
-                    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-                }
+                    val viewModel: com.ezworksafe.ui.viewmodel.SensorViewModel = viewModel()
+                    StatusDashboard(viewModel = viewModel)
                 }
             }
         }
+    }
+
+    private fun refreshSensorFlows() {
+        val viewModel = androidx.lifecycle.ViewModelProvider(this)[com.ezworksafe.ui.viewmodel.SensorViewModel::class.java]
+        viewModel.refresh()
     }
 
     private fun requestRuntimePermissionsIfNeeded() {
