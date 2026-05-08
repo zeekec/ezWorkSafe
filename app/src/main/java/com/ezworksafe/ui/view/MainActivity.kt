@@ -44,6 +44,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            refreshSensorFlows()
+        }
+    }
+
     private fun refreshSensorFlows() {
         val viewModel = androidx.lifecycle.ViewModelProvider(this)[com.ezworksafe.ui.viewmodel.SensorViewModel::class.java]
         viewModel.refresh()

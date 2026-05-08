@@ -24,6 +24,12 @@ class SensorStatusTest {
     }
 
     @Test
+    fun `blocked displays orange label`() {
+        assertEquals("Blocked", SensorStatus.Blocked.label)
+        assertEquals(0xFFFF9800L, SensorStatus.Blocked.color)
+    }
+
+    @Test
     fun `unavailable displays dark gray label`() {
         assertEquals("Unavailable", SensorStatus.Unavailable.label)
         assertEquals(0xFF616161L, SensorStatus.Unavailable.color)
