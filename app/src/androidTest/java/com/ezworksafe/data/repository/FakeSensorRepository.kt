@@ -15,6 +15,8 @@ class FakeSensorRepository : SensorRepository {
         return statuses.getValue(type)
     }
 
+    override fun refresh() = Unit
+
     fun setStatus(type: SensorType, status: SensorStatus) {
         statuses.getValue(type).value = status
     }

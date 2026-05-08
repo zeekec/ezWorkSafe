@@ -31,4 +31,6 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
     val cameraStatus: StateFlow<SensorStatus> = repository
         .observeSensor(SensorType.CAMERA)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SensorStatus.Unavailable)
+
+    fun refresh() = repository.refresh()
 }

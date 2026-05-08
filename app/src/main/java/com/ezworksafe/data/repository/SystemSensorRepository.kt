@@ -17,16 +17,26 @@ import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flatMapLatest
 
 class SystemSensorRepository(private val context: Context) : SensorRepository {
 
+    private val refreshTrigger = MutableStateFlow(Unit)
+
+    override fun refresh() {
+        refreshTrigger.value = Unit
+    }
+
     override fun observeSensor(type: SensorType): Flow<SensorStatus> {
-        return when (type) {
-            SensorType.WIFI -> observeWifiStatus()
-            SensorType.BLUETOOTH -> observeBluetoothStatus()
-            SensorType.MICROPHONE -> observeMicStatus()
-            SensorType.CAMERA -> observeCameraStatus()
+        return refreshTrigger.flatMapLatest {
+            when (type) {
+                SensorType.WIFI -> observeWifiStatus()
+                SensorType.BLUETOOTH -> observeBluetoothStatus()
+                SensorType.MICROPHONE -> observeMicStatus()
+                SensorType.CAMERA -> observeCameraStatus()
+            }
         }
     }
 

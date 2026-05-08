@@ -7,7 +7,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezworksafe.service.MonitoringService
@@ -30,8 +34,19 @@ class MainActivity : ComponentActivity() {
         setContent {
             EzWorkSafeTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    val viewModel: com.ezworksafe.ui.viewmodel.SensorViewModel = viewModel()
-                    StatusDashboard(viewModel = viewModel)
+                val viewModel: com.ezworksafe.ui.viewmodel.SensorViewModel = viewModel()
+                StatusDashboard(viewModel = viewModel)
+
+                val lifecycleOwner = LocalLifecycleOwner.current
+                DisposableEffect(lifecycleOwner) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_RESUME) {
+                            viewModel.refresh()
+                        }
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+                }
                 }
             }
         }

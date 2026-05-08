@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface SensorRepository {
     fun observeSensor(type: SensorType): Flow<SensorStatus>
+    fun refresh()
 }
