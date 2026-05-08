@@ -24,10 +24,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 
 class SystemSensorRepository(private val context: Context) : SensorRepository {
 
-    private val refreshTrigger = MutableStateFlow(Unit)
+    private val refreshTrigger = MutableStateFlow(0)
 
     override fun refresh() {
-        refreshTrigger.value = Unit
+        refreshTrigger.value++
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
