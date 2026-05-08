@@ -2,7 +2,7 @@
 
 ## Remaining gaps from PLAN.md edge cases
 
-- [ ] **Observe runtime permission changes** — Camera/mic flows check permissions at flow creation, but if the user revokes from Settings while the app is running, status stays stale until the flow restarts. Need to observe permission changes at runtime (e.g., `OnSharedPreferenceChangeListener` or re-check on app resume).
+- [x] **Observe runtime permission changes** — `refreshTrigger` + `flatMapLatest` restarts sensor flows on `ON_RESUME`, re-checking permissions.
 
 ## Beyond the plan
 
