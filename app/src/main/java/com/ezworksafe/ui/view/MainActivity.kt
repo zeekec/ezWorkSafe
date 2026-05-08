@@ -28,9 +28,11 @@ class MainActivity : ComponentActivity() {
         startMonitoringService()
 
         setContent {
-            Surface(modifier = Modifier.fillMaxSize()) {
-                val viewModel: com.ezworksafe.ui.viewmodel.SensorViewModel = viewModel()
-                StatusDashboard(viewModel = viewModel)
+            EzWorkSafeTheme {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    val viewModel: com.ezworksafe.ui.viewmodel.SensorViewModel = viewModel()
+                    StatusDashboard(viewModel = viewModel)
+                }
             }
         }
     }
