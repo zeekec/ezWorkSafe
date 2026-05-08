@@ -1,16 +1,22 @@
 package com.ezworksafe.ui.view
 
+import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnySibling
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.GrantPermissionRule
 import com.ezworksafe.EzWorkSafeApp
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.data.repository.FakeSensorRepository
+import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
 
 class StatusDashboardE2eTest {
 
@@ -26,8 +32,22 @@ class StatusDashboardE2eTest {
         }
     }
 
+    private val permissionRule = GrantPermissionRule.grant(
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO
+    )
+
+    private val composeRule = createAndroidComposeRule<MainActivity>()
+
     @get:Rule
-    val composeRule = createAndroidComposeRule<MainActivity>()
+    val ruleChain: RuleChain = RuleChain
+        .outerRule(permissionRule)
+        .around(composeRule)
+
+    @Before
+    fun setUp() {
+        SensorType.entries.forEach { fakeRepo.setStatus(it, SensorStatus.Inactive) }
+    }
 
     @Test
     fun wifi_card_shows_initial_status() {
@@ -37,7 +57,7 @@ class StatusDashboardE2eTest {
     @Test
     fun wifi_toggles_between_active_and_inactive() {
         fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Active)
-        composeRule.waitUntil(5000) {
+        composeRule.waitUntil(5_000) {
             try {
                 composeRule.onNodeWithText("Active").assertIsDisplayed()
                 true
@@ -47,9 +67,9 @@ class StatusDashboardE2eTest {
         }
 
         fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Inactive)
-        composeRule.waitUntil(5000) {
+        composeRule.waitUntil(5_000) {
             try {
-                composeRule.onNodeWithText("Inactive").assertIsDisplayed()
+                composeRule.onNode(hasText("Inactive") and hasAnySibling(hasText("WiFi"))).assertIsDisplayed()
                 true
             } catch (_: AssertionError) {
                 false
