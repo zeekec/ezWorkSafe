@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Shield body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,18 L28,30 L28,52 C28,70 39,83 54,90 C69,83 80,70 80,52 L80,30 Z" />
+
+    <!-- Eye ellipse (green fill) -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M42,57 C42,52.58 66,52.58 66,57 C66,61.42 42,61.42 42,57 Z" />
+
+    <!-- Iris (white circle) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,57 C50,54.79 58,54.79 58,57 C58,59.21 50,59.21 50,57 Z" />
+
+    <!-- Upper eyelid -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="2.5"
+        android:pathData="M42,57 C46,49 62,49 66,57" />
+
+    <!-- Lower eyelid -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#4CAF50"
+        android:strokeWidth="2.5"
+        android:pathData="M42,57 C46,65 62,65 66,57" />
+</vector>
