@@ -37,13 +37,14 @@ class SensorWidget : GlanceAppWidget() {
     }
 }
 
+@SuppressLint("RestrictedApi")
 @Composable
 private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .padding(8.dp)
-            .background(0xFF1a1a2e.toInt())
+            .background(ColorProvider(0xFF1a1a2e.toInt()))
             .clickable(actionStartActivity<MainActivity>()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -78,7 +79,7 @@ private fun SensorCell(name: String, status: SensorStatus, modifier: GlanceModif
             modifier = GlanceModifier
                 .padding(bottom = 4.dp)
                 .size(10.dp)
-                .background(status.color.toInt())
+                .background(ColorProvider(status.color.toInt()))
         ) {
         }
         Text(
