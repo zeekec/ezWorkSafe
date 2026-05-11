@@ -55,7 +55,7 @@ class StatusDashboardE2eTest {
     }
 
     @Test
-    fun wifi_toggles_between_active_and_inactive() {
+    fun wifi_toggles_between_active_and_blocked() {
         fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Active)
         composeRule.waitUntil(5_000) {
             try {
@@ -66,10 +66,10 @@ class StatusDashboardE2eTest {
             }
         }
 
-        fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Inactive)
+        fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Blocked)
         composeRule.waitUntil(5_000) {
             try {
-                composeRule.onNode(hasText("Inactive") and hasAnySibling(hasText("WiFi"))).assertIsDisplayed()
+                composeRule.onNode(hasText("Blocked") and hasAnySibling(hasText("WiFi"))).assertIsDisplayed()
                 true
             } catch (_: AssertionError) {
                 false

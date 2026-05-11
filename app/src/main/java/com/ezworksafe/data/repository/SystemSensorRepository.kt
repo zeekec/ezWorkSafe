@@ -54,7 +54,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         }
 
         fun emitState() {
-            trySend(if (wifiManager.isWifiEnabled) SensorStatus.Active else SensorStatus.Inactive)
+            trySend(if (wifiManager.isWifiEnabled) SensorStatus.Active else SensorStatus.Blocked)
         }
 
         emitState()
@@ -86,7 +86,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         fun emitState() {
             trySend(
                 if (bluetoothAdapter.isEnabled) SensorStatus.Active
-                else SensorStatus.Inactive
+                else SensorStatus.Blocked
             )
         }
 
@@ -135,13 +135,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
                 trySend(SensorStatus.Blocked)
                 return
             }
-            val configs: List<AudioRecordingConfiguration> = audioManager.activeRecordingConfigurations
-            val micActive = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                configs.any { it.clientAudioSource == android.media.MediaRecorder.AudioSource.MIC }
-            } else {
-                configs.isNotEmpty()
-            }
-            trySend(if (micActive) SensorStatus.Active else SensorStatus.Inactive)
+            trySend(SensorStatus.Active)
         }
 
         emitState()
@@ -182,7 +176,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
                     return
                 }
                 cameraManager.getCameraCharacteristics(ids[0])
-                trySend(SensorStatus.Inactive)
+                trySend(SensorStatus.Active)
             } catch (_: SecurityException) {
                 trySend(SensorStatus.Blocked)
             } catch (_: CameraAccessException) {
