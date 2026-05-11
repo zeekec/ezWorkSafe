@@ -11,6 +11,9 @@ import androidx.core.app.NotificationCompat
 import com.ezworksafe.EzWorkSafeApp
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.data.repository.SensorRepository
+import androidx.glance.appwidget.updateAll
+import com.ezworksafe.widget.SensorWidget
+import com.ezworksafe.widget.WidgetState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -54,6 +57,13 @@ class MonitoringService : Service() {
                 repository.observeSensor(SensorType.MICROPHONE),
                 repository.observeSensor(SensorType.CAMERA)
             ) { wifi, bt, mic, cam ->
+                WidgetState.statuses = mapOf(
+                    SensorType.WIFI to wifi,
+                    SensorType.BLUETOOTH to bt,
+                    SensorType.MICROPHONE to mic,
+                    SensorType.CAMERA to cam
+                )
+                SensorWidget().updateAll(this@MonitoringService)
                 "WiFi: ${wifi.label} | BT: ${bt.label} | Mic: ${mic.label} | Cam: ${cam.label}"
             }.collect { text ->
                 val notification = createNotification(text)
