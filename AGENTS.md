@@ -56,6 +56,11 @@ app/src/main/java/com/ezworksafe/
 - Camera/mic monitoring APIs vary across **API levels**
 - Some `BroadcastReceiver` actions restricted since Android 8+
 
+## Plan Execution
+Default: **subagent-driven-development** — fresh subagent per task with two-stage
+review (spec compliance → code quality) after each. See implementation plans in
+`docs/superpowers/plans/`.
+
 ## Implementation Plan
 See [docs/PLAN.md](docs/PLAN.md) for the full implementation breakdown.
 

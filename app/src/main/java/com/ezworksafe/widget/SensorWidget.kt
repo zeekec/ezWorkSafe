@@ -1,8 +1,8 @@
 package com.ezworksafe.widget
 
-import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -37,14 +37,13 @@ class SensorWidget : GlanceAppWidget() {
     }
 }
 
-@SuppressLint("RestrictedApi")
 @Composable
 private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .padding(8.dp)
-            .background(ColorProvider(0xFF1a1a2e.toInt()))
+            .background(ColorProvider(ComposeColor(0xFF1a1a2e.toInt())))
             .clickable(actionStartActivity<MainActivity>()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -68,7 +67,6 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
     }
 }
 
-@SuppressLint("RestrictedApi")
 @Composable
 private fun SensorCell(name: String, status: SensorStatus, modifier: GlanceModifier) {
     Column(
@@ -79,20 +77,20 @@ private fun SensorCell(name: String, status: SensorStatus, modifier: GlanceModif
             modifier = GlanceModifier
                 .padding(bottom = 4.dp)
                 .size(10.dp)
-                .background(ColorProvider(status.color.toInt()))
+                .background(ColorProvider(ComposeColor(status.color.toInt())))
         ) {
         }
         Text(
             text = name,
             style = TextStyle(
-                color = ColorProvider(0xFFAAAAAA.toInt()),
+                color = ColorProvider(ComposeColor(0xFFAAAAAA.toInt())),
                 fontSize = 9.sp
             )
         )
         Text(
             text = status.label,
             style = TextStyle(
-                color = ColorProvider(status.color.toInt()),
+                color = ColorProvider(ComposeColor(status.color.toInt())),
                 fontSize = 10.sp
             )
         )
