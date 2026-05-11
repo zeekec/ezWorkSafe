@@ -1,5 +1,6 @@
 package com.ezworksafe.widget
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
@@ -42,7 +43,7 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
         modifier = GlanceModifier
             .fillMaxSize()
             .padding(8.dp)
-            .background(ColorProvider(0xFF1a1a2e.toInt()))
+            .background(0xFF1a1a2e.toInt())
             .clickable(actionStartActivity<MainActivity>()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -66,6 +67,7 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
     }
 }
 
+@SuppressLint("RestrictedApi")
 @Composable
 private fun SensorCell(name: String, status: SensorStatus, modifier: GlanceModifier) {
     Column(
@@ -76,7 +78,7 @@ private fun SensorCell(name: String, status: SensorStatus, modifier: GlanceModif
             modifier = GlanceModifier
                 .padding(bottom = 4.dp)
                 .size(10.dp)
-                .background(ColorProvider(status.color.toInt()))
+                .background(status.color.toInt())
         ) {
         }
         Text(
