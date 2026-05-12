@@ -10,7 +10,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
-import android.text.format.DateFormat
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -23,6 +22,7 @@ import com.ezworksafe.ui.view.MainActivity
 import com.ezworksafe.util.formatLastUpdated
 import com.ezworksafe.widget.SensorWidgetReceiver
 import com.ezworksafe.widget.WidgetState
+import java.text.DateFormat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -99,33 +99,17 @@ class MonitoringService : Service() {
         Log.d("MonitoringService", "pushWidgetUpdate: ids=${ids.contentToString()}, wifi=$wifi, bt=$bt, mic=$mic, cam=$cam")
         if (ids.isEmpty()) return
 
-        val labelColor = 0xFFAAAAAA.toInt()
-        val statuses = mapOf(SensorType.WIFI to wifi, SensorType.BLUETOOTH to bt,
-            SensorType.MICROPHONE to mic, SensorType.CAMERA to cam)
-
+        val views = buildWidgetRemoteViews(
+            packageName, wifi, bt, mic, cam,
+            WidgetState.lastRefreshTime, android.text.format.DateFormat.getTimeFormat(this)
+        )
         for (widgetId in ids) {
-            val views = RemoteViews(packageName, R.layout.widget_sensor_status)
-            views.setInt(R.id.widget_root, "setBackgroundColor", 0xFF1a1a2e.toInt())
-            views.setInt(R.id.left_section, "setBackgroundColor", 0xFF1a1a2e.toInt())
-            views.setInt(R.id.right_section, "setBackgroundColor", 0xFF1e1e35.toInt())
-            for ((type, status) in statuses) {
-                val cell = cellMap[type] ?: continue
-                views.setInt(cell.dot, "setBackgroundColor", status.color)
-                views.setTextColor(cell.status, status.color)
-                views.setTextViewText(cell.status, status.label)
-            }
-            views.setTextColor(R.id.label_wifi, labelColor)
-            views.setTextColor(R.id.label_bt, labelColor)
-            views.setTextColor(R.id.label_mic, labelColor)
-            views.setTextColor(R.id.label_cam, labelColor)
-            views.setTextViewText(R.id.last_updated, formatLastUpdated(WidgetState.lastRefreshTime, DateFormat.getTimeFormat(this)))
-            views.setTextColor(R.id.last_updated, labelColor)
             appWidgetManager.updateAppWidget(widgetId, views)
             Log.d("MonitoringService", "pushWidgetUpdate: updated widgetId=$widgetId")
         }
     }
 
-    private fun createNotification(text: String): Notification {
+    internal fun createNotification(text: String): Notification {
         val refreshIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -156,4 +140,40 @@ class MonitoringService : Service() {
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(channel)
     }
+}
+
+internal fun buildWidgetRemoteViews(
+    packageName: String,
+    wifi: SensorStatus, bt: SensorStatus,
+    mic: SensorStatus, cam: SensorStatus,
+    lastRefreshTime: Long,
+    timeFormat: DateFormat
+): RemoteViews {
+    val labelColor = 0xFFAAAAAA.toInt()
+    val statuses = mapOf(SensorType.WIFI to wifi, SensorType.BLUETOOTH to bt,
+        SensorType.MICROPHONE to mic, SensorType.CAMERA to cam)
+    val cellMap = mapOf(
+        SensorType.WIFI to Pair(R.id.dot_wifi, R.id.status_wifi),
+        SensorType.BLUETOOTH to Pair(R.id.dot_bt, R.id.status_bt),
+        SensorType.MICROPHONE to Pair(R.id.dot_mic, R.id.status_mic),
+        SensorType.CAMERA to Pair(R.id.dot_cam, R.id.status_cam),
+    )
+
+    val views = RemoteViews(packageName, R.layout.widget_sensor_status)
+    views.setInt(R.id.widget_root, "setBackgroundColor", 0xFF1a1a2e.toInt())
+    views.setInt(R.id.left_section, "setBackgroundColor", 0xFF1a1a2e.toInt())
+    views.setInt(R.id.right_section, "setBackgroundColor", 0xFF1e1e35.toInt())
+    for ((type, status) in statuses) {
+        val (dotId, statusId) = cellMap[type] ?: continue
+        views.setInt(dotId, "setBackgroundColor", status.color)
+        views.setTextColor(statusId, status.color)
+        views.setTextViewText(statusId, status.label)
+    }
+    views.setTextColor(R.id.label_wifi, labelColor)
+    views.setTextColor(R.id.label_bt, labelColor)
+    views.setTextColor(R.id.label_mic, labelColor)
+    views.setTextColor(R.id.label_cam, labelColor)
+    views.setTextViewText(R.id.last_updated, formatLastUpdated(lastRefreshTime, timeFormat))
+    views.setTextColor(R.id.last_updated, labelColor)
+    return views
 }

@@ -91,6 +91,8 @@ dependencies {
     testImplementation("androidx.arch.core:core-testing:2.2.0")
     testImplementation("org.mockito:mockito-core:5.7.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+    testImplementation("org.robolectric:robolectric:4.16.1")
+    testImplementation("androidx.test:core:1.6.1")
 
     // Instrumented testing
     androidTestImplementation(platform("androidx.compose:compose-bom:2026.03.00"))
