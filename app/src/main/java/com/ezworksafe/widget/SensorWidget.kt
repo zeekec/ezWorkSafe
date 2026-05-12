@@ -1,6 +1,7 @@
 package com.ezworksafe.widget
 
 import android.content.Context
+import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.unit.dp
@@ -34,13 +35,13 @@ class SensorWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val statuses = WidgetState.statuses
         provideContent {
-            WidgetContent(statuses = statuses)
+            WidgetContent(statuses = statuses, context = context)
         }
     }
 }
 
 @Composable
-private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
+private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Context) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -117,8 +118,8 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
                         }
                     }
                 }
-                Text(
-                    text = formatLastUpdated(WidgetState.lastRefreshTime),
+                    Text(
+                        text = formatLastUpdated(WidgetState.lastRefreshTime, context),
                     style = TextStyle(
                         color = ColorProvider(ComposeColor(0xFFAAAAAA.toInt())),
                         fontSize = 8.sp
@@ -130,15 +131,9 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
     }
 }
 
-private fun formatLastUpdated(time: Long): String {
+private fun formatLastUpdated(time: Long, context: Context): String {
     if (time == 0L) return ""
-    val elapsed = System.currentTimeMillis() - time
-    return when {
-        elapsed < 60_000 -> "Updated just now"
-        elapsed < 3_600_000 -> "Updated ${elapsed / 60_000}m ago"
-        elapsed < 86_400_000 -> "Updated ${elapsed / 3_600_000}h ago"
-        else -> "Updated >1d ago"
-    }
+    return "Updated ${DateFormat.getTimeFormat(context).format(java.util.Date(time))}"
 }
 
 @Composable

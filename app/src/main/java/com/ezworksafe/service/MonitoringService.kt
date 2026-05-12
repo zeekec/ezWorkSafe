@@ -10,7 +10,9 @@ import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.text.format.DateFormat
 import android.util.Log
+import java.util.Date
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.ezworksafe.EzWorkSafeApp
@@ -157,12 +159,6 @@ class MonitoringService : Service() {
 
     private fun formatLastUpdated(time: Long): String {
         if (time == 0L) return ""
-        val elapsed = System.currentTimeMillis() - time
-        return when {
-            elapsed < 60_000 -> "Updated just now"
-            elapsed < 3_600_000 -> "Updated ${elapsed / 60_000}m ago"
-            elapsed < 86_400_000 -> "Updated ${elapsed / 3_600_000}h ago"
-            else -> "Updated >1d ago"
-        }
+        return "Updated ${DateFormat.getTimeFormat(this).format(Date(time))}"
     }
 }
