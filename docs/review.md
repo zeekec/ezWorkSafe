@@ -59,12 +59,13 @@ None.
 
 **9. Unused color resources in `colors.xml`**
 - File: `app/src/main/res/values/colors.xml`
-- `status_active`, `status_inactive`, `status_denied`, `status_unavailable`, `card_background`, `background` — all defined but never referenced (widget uses inline hex values, Compose uses `SensorStatus.color`).
+- `status_active`, `status_inactive`, `status_denied`, `status_unavailable`, `card_background` — all defined but never referenced.
+- **Status: ✓ FIXED** — removed all unused entries, keeping only `background`.
 
 **10. `SensorStatus.color` stored as `Long`, used as `Int`**
 - File: `app/src/main/java/com/ezworksafe/data/model/SensorStatus.kt:5`
 - `color` is `Long` (hex literals like `0xFF4CAF50L`), but every call site does `.toInt()`.
-- **Fix:** Store as `Int` directly: `0xFF4CAF50.toInt()`. Kotlin can represent ARGB as `Int` (which is 32-bit).
+- **Status: ✓ FIXED** — `color` changed to `Int`, hex values extracted to private top-level `val` constants (e.g. `private val ACTIVE_COLOR = 0xFF4CAF50.toInt()`). All 6 `.toInt()` call sites updated.
 
 **11. `docs/PLAN.md` file structure missing widget package**
 - File: `docs/PLAN.md`

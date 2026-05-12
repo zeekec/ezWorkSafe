@@ -91,7 +91,7 @@ private fun StatusCard(sensorType: SensorType, status: SensorStatus) {
                 modifier = Modifier
                     .size(16.dp)
                     .clip(CircleShape)
-                    .background(Color(status.color.toInt())),
+                    .background(Color(status.color)),
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -106,7 +106,7 @@ private fun StatusCard(sensorType: SensorType, status: SensorStatus) {
             Text(
                 text = status.label,
                 fontSize = 14.sp,
-                color = Color(status.color.toInt()),
+                color = Color(status.color),
                 fontWeight = FontWeight.SemiBold
             )
         }

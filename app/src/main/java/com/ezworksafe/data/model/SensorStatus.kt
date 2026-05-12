@@ -1,14 +1,20 @@
 package com.ezworksafe.data.model
 
+private val ACTIVE_COLOR = 0xFF4CAF50.toInt()
+private val INACTIVE_COLOR = 0xFF9E9E9E.toInt()
+private val DENIED_COLOR = 0xFFF44336.toInt()
+private val BLOCKED_COLOR = 0xFFFF9800.toInt()
+private val UNAVAILABLE_COLOR = 0xFF616161.toInt()
+
 sealed class SensorStatus(
     val label: String,
-    val color: Long
+    val color: Int
 ) {
-    data object Active : SensorStatus("Active", 0xFF4CAF50L)
-    data object Inactive : SensorStatus("Inactive", 0xFF9E9E9EL)
-    data object Denied : SensorStatus("Denied", 0xFFF44336L)
-    data object Blocked : SensorStatus("Blocked", 0xFFFF9800L)
-    data object Unavailable : SensorStatus("Unavailable", 0xFF616161L)
+    data object Active : SensorStatus("Active", ACTIVE_COLOR)
+    data object Inactive : SensorStatus("Inactive", INACTIVE_COLOR)
+    data object Denied : SensorStatus("Denied", DENIED_COLOR)
+    data object Blocked : SensorStatus("Blocked", BLOCKED_COLOR)
+    data object Unavailable : SensorStatus("Unavailable", UNAVAILABLE_COLOR)
 }
 
 enum class SensorType(val displayName: String) {

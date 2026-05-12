@@ -110,8 +110,8 @@ class MonitoringService : Service() {
             views.setInt(R.id.right_section, "setBackgroundColor", 0xFF1e1e35.toInt())
             for ((type, status) in statuses) {
                 val cell = cellMap[type] ?: continue
-                views.setInt(cell.dot, "setBackgroundColor", status.color.toInt())
-                views.setTextColor(cell.status, status.color.toInt())
+                views.setInt(cell.dot, "setBackgroundColor", status.color)
+                views.setTextColor(cell.status, status.color)
                 views.setTextViewText(cell.status, status.label)
             }
             views.setTextColor(R.id.label_wifi, labelColor)

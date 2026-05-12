@@ -150,7 +150,7 @@ private fun SensorCell(name: String, status: SensorStatus, modifier: GlanceModif
             modifier = GlanceModifier
                 .padding(bottom = 4.dp)
                 .size(10.dp)
-                .background(ColorProvider(ComposeColor(status.color.toInt())))
+                .background(ColorProvider(ComposeColor(status.color)))
         ) {
         }
         Text(
@@ -163,7 +163,7 @@ private fun SensorCell(name: String, status: SensorStatus, modifier: GlanceModif
         Text(
             text = status.label,
             style = TextStyle(
-                color = ColorProvider(ComposeColor(status.color.toInt())),
+                color = ColorProvider(ComposeColor(status.color)),
                 fontSize = 10.sp
             )
         )
