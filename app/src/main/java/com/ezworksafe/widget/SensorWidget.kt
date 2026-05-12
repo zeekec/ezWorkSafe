@@ -30,6 +30,7 @@ import androidx.glance.unit.ColorProvider
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.ui.view.MainActivity
+import com.ezworksafe.util.formatLastUpdated
 
 class SensorWidget : GlanceAppWidget() {
 
@@ -120,7 +121,7 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                     }
                 }
                     Text(
-                        text = formatLastUpdated(WidgetState.lastRefreshTime, context),
+                        text = formatLastUpdated(WidgetState.lastRefreshTime, DateFormat.getTimeFormat(context)),
                         style = TextStyle(
                             color = ColorProvider(ComposeColor(0xFFAAAAAA.toInt())),
                             fontSize = 8.sp,
@@ -135,10 +136,6 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
     }
 }
 
-private fun formatLastUpdated(time: Long, context: Context): String {
-    if (time == 0L) return ""
-    return "Updated ${DateFormat.getTimeFormat(context).format(java.util.Date(time))}"
-}
 
 @Composable
 private fun SensorCell(name: String, status: SensorStatus, modifier: GlanceModifier) {

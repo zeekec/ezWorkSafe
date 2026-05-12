@@ -12,7 +12,6 @@ import android.os.Build
 import android.os.IBinder
 import android.text.format.DateFormat
 import android.util.Log
-import java.util.Date
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.ezworksafe.EzWorkSafeApp
@@ -21,6 +20,7 @@ import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.data.repository.SensorRepository
 import com.ezworksafe.ui.view.MainActivity
+import com.ezworksafe.util.formatLastUpdated
 import com.ezworksafe.widget.SensorWidgetReceiver
 import com.ezworksafe.widget.WidgetState
 import kotlinx.coroutines.CoroutineScope
@@ -118,7 +118,7 @@ class MonitoringService : Service() {
             views.setTextColor(R.id.label_bt, labelColor)
             views.setTextColor(R.id.label_mic, labelColor)
             views.setTextColor(R.id.label_cam, labelColor)
-            views.setTextViewText(R.id.last_updated, formatLastUpdated(WidgetState.lastRefreshTime))
+            views.setTextViewText(R.id.last_updated, formatLastUpdated(WidgetState.lastRefreshTime, DateFormat.getTimeFormat(this)))
             views.setTextColor(R.id.last_updated, labelColor)
             appWidgetManager.updateAppWidget(widgetId, views)
             Log.d("MonitoringService", "pushWidgetUpdate: updated widgetId=$widgetId")
@@ -155,10 +155,5 @@ class MonitoringService : Service() {
         }
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(channel)
-    }
-
-    private fun formatLastUpdated(time: Long): String {
-        if (time == 0L) return ""
-        return "Updated ${DateFormat.getTimeFormat(this).format(Date(time))}"
     }
 }

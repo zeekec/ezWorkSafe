@@ -44,7 +44,7 @@ None.
 
 **6. `MonitoringService` has no unit tests**
 - File: `app/src/test/java/com/ezworksafe/widget/MonitoringServiceWidgetTest.kt`
-- **Status: ✓ PARTIALLY FIXED** — test renamed to `WidgetStateLabelTest`, `MonitoringServiceNotificationE2eTest` added (verifies FGS notification via `dumpsys`). Still missing: unit tests for `formatLastUpdated()` and `combine` collector integration. These require Android framework dependencies (or Robolectric) — scoped as future work.
+- **Status: ✓ PARTIALLY FIXED** — test renamed to `WidgetStateLabelTest`, `MonitoringServiceNotificationE2eTest` added (verifies FGS notification via `dumpsys`). `formatLastUpdated` extracted to shared utility in `util/FormatUtils.kt` with dedicated unit tests (`FormatUtilsTest`). Still missing: unit tests for `combine` collector integration (requires Robolectric) — scoped as future work.
 
 **7. `docs/API.md` contains stale line-number references**
 - File: `docs/API.md`
@@ -88,8 +88,8 @@ None.
 
 | Area | What's missing | Status |
 |------|----------------|--------|
-| `MonitoringService` | `pushWidgetUpdate`, `formatLastUpdated`, notification creation, `combine` collector | **PARTIAL** — E2E test verifies FGS notification via `dumpsys`. Unit tests for `formatLastUpdated` and `combine` integration still missing (require Robolectric or refactoring). |
-| `formatLastUpdated` | Unit test for either implementation (service + Glance) | **OPEN** — Requires Android Context mocking (dependent on `DateFormat.getTimeFormat()`). |
+| `MonitoringService` | `pushWidgetUpdate`, `formatLastUpdated`, notification creation, `combine` collector | **PARTIAL** — E2E test verifies FGS notification via `dumpsys`. `formatLastUpdated` extracted to shared utility with unit tests. `combine` collector integration still missing (requires Robolectric). |
+| `formatLastUpdated` | Unit test for either implementation (service + Glance) | **✓ FIXED** — Extracted to shared `FormatUtils.formatLastUpdated(time, dateFormat)` in `util/FormatUtils.kt`, pure-Kotlin function with no Android dependency. Tested in `FormatUtilsTest` (zero-time + non-zero-time cases via `SimpleDateFormat`). No mocking needed. |
 | `repository.refresh()` | SensorViewModel `refresh()` delegation | **✓ FIXED** — `SensorViewModelTest` now calls `verify(mockRepo).refresh()`. |
 | `WidgetState.lastRefreshTime` | `lastRefreshTime` updated by `repository.refresh()` | **✓ FIXED** — `SensorRepositoryTest.refresh updates WidgetState lastRefreshTime` added. |
 | `FakeSensorRepository` | Not used by unit tests | **✓ FIXED** — Copied to `src/test`, used in `SensorRepositoryTest.fake repository emits configured statuses`. |
