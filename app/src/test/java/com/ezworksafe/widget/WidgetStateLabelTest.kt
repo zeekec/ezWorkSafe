@@ -6,10 +6,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
-class MonitoringServiceWidgetTest {
+class WidgetStateLabelTest {
 
     @Before
     fun setUp() {
+        WidgetState.lastRefreshTime = 0L
         WidgetState.statuses = SensorType.entries.associateWith {
             SensorStatus.Inactive
         }

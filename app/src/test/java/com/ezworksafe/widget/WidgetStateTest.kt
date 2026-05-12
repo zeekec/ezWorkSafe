@@ -3,6 +3,7 @@ package com.ezworksafe.widget
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -10,6 +11,7 @@ class WidgetStateTest {
 
     @Before
     fun setUp() {
+        WidgetState.lastRefreshTime = 0L
         WidgetState.statuses = SensorType.entries.associateWith {
             SensorStatus.Inactive
         }
@@ -34,5 +36,17 @@ class WidgetStateTest {
         )
         WidgetState.statuses = expected
         assertEquals(expected, WidgetState.statuses)
+    }
+
+    @Test
+    fun `lastRefreshTime starts at zero`() {
+        assertEquals(0L, WidgetState.lastRefreshTime)
+    }
+
+    @Test
+    fun `lastRefreshTime can be updated`() {
+        val time = System.currentTimeMillis()
+        WidgetState.lastRefreshTime = time
+        assertTrue(WidgetState.lastRefreshTime > 0)
     }
 }

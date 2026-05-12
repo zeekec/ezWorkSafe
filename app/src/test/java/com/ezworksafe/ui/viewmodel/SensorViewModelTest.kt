@@ -12,6 +12,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 
 class SensorViewModelTest {
 
@@ -55,5 +56,12 @@ class SensorViewModelTest {
             listOf(SensorType.WIFI, SensorType.BLUETOOTH, SensorType.MICROPHONE, SensorType.CAMERA),
             vm.sensorTypes
         )
+    }
+
+    @Test
+    fun `refresh delegates to repository`() {
+        val vm = SensorViewModel(mockApp)
+        vm.refresh()
+        verify(mockRepo).refresh()
     }
 }
