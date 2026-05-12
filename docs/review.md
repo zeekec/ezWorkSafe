@@ -85,26 +85,24 @@ None.
 
 ## Test Coverage Gaps
 
-| Area | What's missing |
-|------|----------------|
-| `MonitoringService` | No test at all. `pushWidgetUpdate`, `formatLastUpdated`, notification creation, and the `combine` collector are untested. |
-| `formatLastUpdated` | No unit test for either implementation (service + Glance). Should verify output format and the `time == 0L` empty-string case. |
-| `repository.refresh()` | `SensorViewModelTest` never calls `refresh()`. No test verifies that `refresh()` increments `refreshTrigger` and causes flows to re-emit. |
-| `WidgetState.lastRefreshTime` | No test verifies that `lastRefreshTime` is updated by `repository.refresh()`. |
-| `FakeSensorRepository` | Exists in `androidTest` but is not used by any unit test. The unit tests rely on mocks instead. |
-| Widget AppOps limitation | No test documents/demonstrates that `isAppOpBlocked` returns correct values in foreground and `MODE_IGNORED` in background on API 36+ (end-to-end behavior). |
-
----
+| Area | What's missing | Status |
+|------|----------------|--------|
+| `MonitoringService` | `pushWidgetUpdate`, `formatLastUpdated`, notification creation, `combine` collector | **PARTIAL** — E2E test verifies FGS notification via `dumpsys`. Unit tests for `formatLastUpdated` and `combine` integration still missing (require Robolectric or refactoring). |
+| `formatLastUpdated` | Unit test for either implementation (service + Glance) | **OPEN** — Requires Android Context mocking (dependent on `DateFormat.getTimeFormat()`). |
+| `repository.refresh()` | SensorViewModel `refresh()` delegation | **✓ FIXED** — `SensorViewModelTest` now calls `verify(mockRepo).refresh()`. |
+| `WidgetState.lastRefreshTime` | `lastRefreshTime` updated by `repository.refresh()` | **✓ FIXED** — `SensorRepositoryTest.refresh updates WidgetState lastRefreshTime` added. |
+| `FakeSensorRepository` | Not used by unit tests | **✓ FIXED** — Copied to `src/test`, used in `SensorRepositoryTest.fake repository emits configured statuses`. |
+| Widget AppOps limitation | No test for `isAppOpBlocked` foreground/background behavior | **OPEN** — Requires device with API 36+ and specific AppOps configuration. Documented in AGENTS.md and PLAN.md instead. |
 
 ## Documentation Gaps
 
-| What's missing | Where it should go |
-|----------------|-------------------|
-| Android 16 AppOps background restriction + widget section rationale | `docs/API.md` or a new `docs/ANDROID_16_ISSUES.md` |
-| Widget architecture (dual-path: Glance initial render + RemoteViews push) | `docs/PLAN.md` or `AGENTS.md` |
-| `WidgetState` singleton contract (written from service, read by Glance) | `AGENTS.md` in the widget subsection |
-| Why Mic/Cam only update on foreground refresh | `AGENTS.md` "Android Gotchas" section |
-| How the notification "Refresh" action works | `docs/PLAN.md` or `AGENTS.md` |
+| What's missing | Where it should go | Status |
+|----------------|-------------------|--------|
+| Android 16 AppOps background restriction + widget section rationale | `docs/API.md` or new doc | **✓ FIXED** — Documented in PLAN.md "Post-Plan Additions" and AGENTS.md "Android Gotchas". |
+| Widget architecture (dual-path: Glance initial render + RemoteViews push) | `docs/PLAN.md` or `AGENTS.md` | **✓ FIXED** — Documented in PLAN.md file tree + Post-Plan Additions, AGENTS.md "Android Gotchas". |
+| `WidgetState` singleton contract (written from service, read by Glance) | `AGENTS.md` in the widget subsection | **✓ FIXED** — Documented in AGENTS.md "Android Gotchas". |
+| Why Mic/Cam only update on foreground refresh | `AGENTS.md` "Android Gotchas" section | **✓ FIXED** — Covered under Android 16 AppOps limitation entry. |
+| How the notification "Refresh" action works | `docs/PLAN.md` or `AGENTS.md` | **✓ FIXED** — Documented in AGENTS.md "Notification 'Refresh' action" and PLAN.md Post-Plan Additions. |
 
 ---
 
