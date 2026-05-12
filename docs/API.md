@@ -13,7 +13,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | **Acquired via** | `context.getSystemService(Context.WIFI_SERVICE)` |
 | **Methods used** | `isWifiEnabled` |
 | **Intent action** | `WifiManager.WIFI_STATE_CHANGED_ACTION` |
-| **Used in** | `SystemSensorRepository.kt:45-66` |
+| **Used in** | `SystemSensorRepository.kt:50-72` |
 | **Purpose** | Query WiFi enabled/disabled state and subscribe to state change broadcasts |
 | **Docs** | https://developer.android.com/reference/android/net/wifi/WifiManager |
 
@@ -24,7 +24,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | **Acquired via** | `context.getSystemService(Context.BLUETOOTH_SERVICE)` → `BluetoothManager.adapter` |
 | **Methods used** | `BluetoothManager.adapter`, `BluetoothAdapter.isEnabled` |
 | **Intent action** | `BluetoothAdapter.ACTION_STATE_CHANGED` |
-| **Used in** | `SystemSensorRepository.kt:68-100` |
+| **Used in** | `SystemSensorRepository.kt:74-106` |
 | **Purpose** | Query Bluetooth enabled/disabled state and subscribe to state change broadcasts |
 | **Docs** | https://developer.android.com/reference/android/bluetooth/BluetoothAdapter |
 
@@ -35,7 +35,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | **Acquired via** | `context.getSystemService(Context.AUDIO_SERVICE)` |
 | **Methods used** | `registerAudioRecordingCallback()`, `unregisterAudioRecordingCallback()` |
 | **Callback class** | `AudioManager.AudioRecordingCallback` — `onRecordingConfigChanged()` |
-| **Used in** | `SystemSensorRepository.kt:102-130` |
+| **Used in** | `SystemSensorRepository.kt:123-155` |
 | **Purpose** | Monitor microphone recording state via audio recording configuration callbacks (API 24+) |
 | **Docs** | https://developer.android.com/reference/android/media/AudioManager |
 
@@ -47,7 +47,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | **Properties used** | `cameraIdList` |
 | **Methods used** | `registerAvailabilityCallback()`, `unregisterAvailabilityCallback()` |
 | **Callback class** | `CameraManager.AvailabilityCallback` — `onCameraAvailable()`, `onCameraUnavailable()` |
-| **Used in** | `SystemSensorRepository.kt:132-169` |
+| **Used in** | `SystemSensorRepository.kt:157-207` |
 | **Purpose** | Monitor camera usage state (available vs. in-use) via camera2 availability callbacks |
 | **Docs** | https://developer.android.com/reference/android/hardware/camera2/CameraManager |
 
@@ -61,7 +61,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | `android.app.Application` | `EzWorkSafeApp.kt` | Custom Application subclass; initializes `sensorRepository` in `onCreate()` | https://developer.android.com/reference/android/app/Application |
 | `android.content.Context` | Throughout | Access system services, register receivers, check permissions | https://developer.android.com/reference/android/content/Context |
 | `android.os.Bundle` | `MainActivity.kt:26` | Activity `onCreate(Bundle?)` parameter for saved instance state | https://developer.android.com/reference/android/os/Bundle |
-| `android.content.Intent` | `MainActivity.kt:66`, `MonitoringService.kt:37` | Service launch intents, broadcast `onReceive()` parameter | https://developer.android.com/reference/android/content/Intent |
+| `android.content.Intent` | `MainActivity.kt:58`, `MonitoringService.kt:49` | Service launch intents, broadcast `onReceive()` parameter | https://developer.android.com/reference/android/content/Intent |
 
 ### 2.2 BroadcastReceiver
 | | |
@@ -71,7 +71,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | **Paired with** | `android.content.IntentFilter` |
 | **Registered via** | `context.registerReceiver()` / `context.unregisterReceiver()` |
 | **Intents received** | `WifiManager.WIFI_STATE_CHANGED_ACTION`, `BluetoothAdapter.ACTION_STATE_CHANGED` |
-| **Used in** | `SystemSensorRepository.kt:58-65`, `SystemSensorRepository.kt:91-99` |
+| **Used in** | `SystemSensorRepository.kt:64-69`, `SystemSensorRepository.kt:97-103` |
 | **Purpose** | Receive system-level broadcasts when WiFi or Bluetooth state changes |
 | **Docs** | https://developer.android.com/reference/android/content/BroadcastReceiver |
 
@@ -88,11 +88,11 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 ### 2.4 Notification APIs
 | API | Class | Purpose | Docs |
 |-----|-------|---------|------|
-| `android.app.Notification` | `MonitoringService.kt:65-73` | Foreground notification object | https://developer.android.com/reference/android/app/Notification |
-| `android.app.NotificationChannel` | `MonitoringService.kt:78-84` | Notification channel (required API 26+) | https://developer.android.com/reference/android/app/NotificationChannel |
-| `android.app.NotificationManager` | `MonitoringService.kt:85-86` | System service for channel creation | https://developer.android.com/reference/android/app/NotificationManager |
-| `androidx.core.app.NotificationCompat` | `MonitoringService.kt:66-73` | Builder for notifications with backward compatibility | https://developer.android.com/reference/androidx/core/app/NotificationCompat |
-| `NotificationCompat.BigTextStyle` | `MonitoringService.kt:69` | Expandable notification style with full summary text | https://developer.android.com/reference/androidx/core/app/NotificationCompat.BigTextStyle |
+| `android.app.Notification` | `MonitoringService.kt:128-145` | Foreground notification object | https://developer.android.com/reference/android/app/Notification |
+| `android.app.NotificationChannel` | `MonitoringService.kt:147-157` | Notification channel (required API 26+) | https://developer.android.com/reference/android/app/NotificationChannel |
+| `android.app.NotificationManager` | `MonitoringService.kt:156-157` | System service for channel creation | https://developer.android.com/reference/android/app/NotificationManager |
+| `androidx.core.app.NotificationCompat` | `MonitoringService.kt:136-144` | Builder for notifications with backward compatibility | https://developer.android.com/reference/androidx/core/app/NotificationCompat |
+| `NotificationCompat.BigTextStyle` | `MonitoringService.kt:137` | Expandable notification style with full summary text | https://developer.android.com/reference/androidx/core/app/NotificationCompat.BigTextStyle |
 
 ### 2.5 PackageManager / Permissions
 | API | Used in | Purpose | Docs |
@@ -112,7 +112,6 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | API | Used in | Purpose | Docs |
 |-----|---------|---------|------|
 | `androidx.lifecycle.Lifecycle` / `LifecycleEventObserver` | `MainActivity.kt:28-32` | Observe activity resume events to refresh sensor flows | https://developer.android.com/reference/androidx/lifecycle/Lifecycle |
-| `onWindowFocusChanged()` | `MainActivity.kt:47-52` | Refresh sensor flows when window regains focus | https://developer.android.com/reference/android/app/Activity#onWindowFocusChanged(boolean) |
 
 ---
 
@@ -152,8 +151,8 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 ### 3.5 Core KTX (`androidx.core:core-ktx:1.12.0`)
 | API | Used in | Purpose |
 |-----|---------|---------|
-| `ContextCompat.startForegroundService()` | `MainActivity.kt:67` | Start foreground service with backward compatibility |
-| `ContextCompat.checkSelfPermission()` | `PermissionHelper.kt:17`, `SystemSensorRepository.kt:111,141` | Runtime permission check |
+| `ContextCompat.startForegroundService()` | `MainActivity.kt:60` | Start foreground service with backward compatibility |
+| `ContextCompat.checkSelfPermission()` | `PermissionHelper.kt:17`, `SystemSensorRepository.kt:132,166` | Runtime permission check |
 | **Docs** | https://developer.android.com/kotlin/ktx | |
 
 ### 3.6 Compose UI Test (`androidx.compose.ui:ui-test-junit4`)
@@ -185,17 +184,17 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 
 | API | Used in | Purpose |
 |-----|---------|---------|
-| `kotlinx.coroutines.flow.callbackFlow` | `SystemSensorRepository.kt:44,68,102,132` | Create a `Flow` from callback-based APIs (BroadcastReceiver, AudioManager callback, CameraManager callback) |
-| `kotlinx.coroutines.channels.awaitClose` | `SystemSensorRepository.kt:65,99,127,166` | Suspend until flow collection is cancelled, then run cleanup (unregister receiver/callback) |
-| `kotlinx.coroutines.flow.flatMapLatest` | `SystemSensorRepository.kt:34` | Restart the sensor observation flow when `refreshTrigger` emits a new value |
+| `kotlinx.coroutines.flow.callbackFlow` | `SystemSensorRepository.kt:50,74,123,157` | Create a `Flow` from callback-based APIs (BroadcastReceiver, AudioManager callback, CameraManager callback) |
+| `kotlinx.coroutines.channels.awaitClose` | `SystemSensorRepository.kt:71,105,152,204` | Suspend until flow collection is cancelled, then run cleanup (unregister receiver/callback) |
+| `kotlinx.coroutines.flow.flatMapLatest` | `SystemSensorRepository.kt:40` | Restart the sensor observation flow when `refreshTrigger` emits a new value |
 | `kotlinx.coroutines.flow.stateIn` | `SensorViewModel.kt:21-33` | Convert cold `Flow<SensorStatus>` into hot `StateFlow` scoped to `viewModelScope` |
 | `kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5_000)` | `SensorViewModel.kt:21-33` | Keep upstream flow alive for 5s after last subscriber (survives rotation) |
-| `kotlinx.coroutines.flow.MutableStateFlow` | `SystemSensorRepository.kt:26` | Observable state holder for the refresh trigger counter |
-| `kotlinx.coroutines.flow.combine` | `MonitoringService.kt:51` | Merge four sensor flows into a single notification text string |
-| `kotlinx.coroutines.CoroutineScope` | `MonitoringService.kt:28` | Custom scope for foreground service coroutines |
-| `kotlinx.coroutines.SupervisorJob` | `MonitoringService.kt:28` | Job that allows child coroutines to fail independently |
-| `kotlinx.coroutines.Dispatchers.Main` | `MonitoringService.kt:28` | Main-thread dispatcher for UI-bound operations |
-| `kotlinx.coroutines.ExperimentalCoroutinesApi` | `SystemSensorRepository.kt:17` | Opt-in for `flatMapLatest` (experimental in 1.7.x) |
+| `kotlinx.coroutines.flow.MutableStateFlow` | `SystemSensorRepository.kt:31` | Observable state holder for the refresh trigger counter |
+| `kotlinx.coroutines.flow.combine` | `MonitoringService.kt:63` | Merge four sensor flows into a single notification text string |
+| `kotlinx.coroutines.CoroutineScope` | `MonitoringService.kt:40` | Custom scope for foreground service coroutines |
+| `kotlinx.coroutines.SupervisorJob` | `MonitoringService.kt:40` | Job that allows child coroutines to fail independently |
+| `kotlinx.coroutines.Dispatchers.Main` | `MonitoringService.kt:40` | Main-thread dispatcher for UI-bound operations |
+| `kotlinx.coroutines.ExperimentalCoroutinesApi` | `SystemSensorRepository.kt:22` | Opt-in for `flatMapLatest` (experimental in 1.7.x) |
 
 **Docs:**
 - Coroutines guide: https://kotlinlang.org/docs/coroutines-overview.html
@@ -227,8 +226,8 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | `android.permission.FOREGROUND_SERVICE_DATA_SYNC` | Normal | 34+ | Declare `dataSync` foreground service type |
 
 ### Runtime Permissions (CAMERA + RECORD_AUDIO)
-- Requested in `MainActivity.kt:59-62` via `ActivityResultContracts.RequestMultiplePermissions`
-- Checked per-sensor in `SystemSensorRepository.kt:111,141` — emits `SensorStatus.Denied` if not granted
+- Requested in `MainActivity.kt:52-55` via `ActivityResultContracts.RequestMultiplePermissions`
+- Checked per-sensor in `SystemSensorRepository.kt:132,166` — emits `SensorStatus.Denied` if not granted
 - Utility wrapper: `PermissionHelper.kt`
 
 **Docs:** https://developer.android.com/training/permissions/requesting
@@ -259,8 +258,8 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | Config | Value |
 |--------|-------|
 | `compileSdk` | 34 |
-| `minSdk` | 24 |
-| `targetSdk` | 34 |
+| `minSdk` | 26 |
+| `targetSdk` | 33 |
 | `namespace` / `applicationId` | `com.ezworksafe` |
 | Java compatibility | `VERSION_17` |
 
@@ -338,8 +337,8 @@ interface SensorRepository {
 
 | Action Constant | Used In | Purpose |
 |----------------|---------|---------|
-| `WifiManager.WIFI_STATE_CHANGED_ACTION` | `SystemSensorRepository.kt:63` | WiFi radio on/off broadcasts |
-| `BluetoothAdapter.ACTION_STATE_CHANGED` | `SystemSensorRepository.kt:96` | Bluetooth radio on/off broadcasts |
+| `WifiManager.WIFI_STATE_CHANGED_ACTION` | `SystemSensorRepository.kt:69` | WiFi radio on/off broadcasts |
+| `BluetoothAdapter.ACTION_STATE_CHANGED` | `SystemSensorRepository.kt:102` | Bluetooth radio on/off broadcasts |
 | `android.intent.action.MAIN` | `AndroidManifest.xml:38` | Main activity entry point |
 | `android.intent.category.LAUNCHER` | `AndroidManifest.xml:39` | Launcher category for home screen icon |
 

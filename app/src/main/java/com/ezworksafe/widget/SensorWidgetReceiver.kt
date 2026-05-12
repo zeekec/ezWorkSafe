@@ -15,7 +15,7 @@ class SensorWidgetReceiver : GlanceAppWidgetReceiver() {
         try {
             val intent = Intent(context, MonitoringService::class.java)
             context.startForegroundService(intent)
-        } catch (e: Exception) {
+        } catch (e: IllegalStateException) {
             Log.w("SensorWidgetReceiver", "startForegroundService blocked by FGS restrictions", e)
         }
         super.onUpdate(context, appWidgetManager, appWidgetIds)

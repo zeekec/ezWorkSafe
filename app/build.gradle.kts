@@ -17,12 +17,12 @@ val keystoreProperties = if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.ezworksafe"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.ezworksafe"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 33
         versionCode = 1
         versionName = "0.1"
     }
