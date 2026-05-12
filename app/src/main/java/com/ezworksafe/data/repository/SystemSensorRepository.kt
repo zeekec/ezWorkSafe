@@ -105,6 +105,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         awaitClose { context.unregisterReceiver(receiver) }
     }
 
+    @Suppress("DEPRECATION")
     private fun isAppOpBlocked(opStr: String): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false
         return try {

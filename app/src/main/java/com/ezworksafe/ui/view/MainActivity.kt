@@ -13,10 +13,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezworksafe.service.MonitoringService
+import com.ezworksafe.ui.viewmodel.SensorViewModel
 import com.ezworksafe.util.PermissionHelper
 
 class MainActivity : ComponentActivity() {
 
+    private lateinit var viewModel: SensorViewModel
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { _ ->
@@ -37,7 +39,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             EzWorkSafeTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    val viewModel: com.ezworksafe.ui.viewmodel.SensorViewModel = viewModel()
+                    viewModel = viewModel()
                     StatusDashboard(viewModel = viewModel)
                 }
             }
@@ -45,7 +47,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun refreshSensorFlows() {
-        val viewModel = androidx.lifecycle.ViewModelProvider(this)[com.ezworksafe.ui.viewmodel.SensorViewModel::class.java]
         viewModel.refresh()
     }
 

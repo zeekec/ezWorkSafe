@@ -75,12 +75,12 @@ The `WidgetState` singleton is a pragmatic choice for cross-component state shar
 **17. Redundant `ViewModelProvider` lookup on every resume**
 - File: `app/src/main/java/com/ezworksafe/ui/view/MainActivity.kt:47-49`
 - `refreshSensorFlows()` creates a new `ViewModelProvider(this)` lookup. The ViewModel is already obtained in `setContent` via `viewModel()` (line 40). Two lookups for the same ViewModel.
-- **Fix:** Store the ViewModel as a field and reuse, or pass it to `refreshSensorFlows()`.
+- **Status: ✓ FIXED** — ViewModel stored as `lateinit var` field, assigned in `setContent`, reused in `refreshSensorFlows()`.
 
 **18. `PermissionHelper.isPermissionGranted()` is unused dead code**
 - File: `app/src/main/java/com/ezworksafe/util/PermissionHelper.kt:21-23`
 - `isPermissionGranted()` is never called. `SystemSensorRepository` uses `ContextCompat.checkSelfPermission` directly.
-- **Fix:** Remove the unused function.
+- **Status: ✓ FIXED** — removed the unused function.
 
 **11. `docs/PLAN.md` file structure missing widget package** _(superseded — PLAN.md already updated)_
 - File: `docs/PLAN.md`
@@ -109,6 +109,7 @@ The `WidgetState` singleton is a pragmatic choice for cross-component state shar
 - File: `app/src/main/java/com/ezworksafe/data/repository/SystemSensorRepository.kt:115`
 - `appOps.noteOpNoThrow()` is deprecated (API < Q fallback path). Build emits: `'fun noteOpNoThrow(p0: String, p1: Int, p2: String): Int' is deprecated.`
 - Generates a build warning. Add `@Suppress("DEPRECATION")` to the method or call site.
+- **Status: ✓ FIXED** — added `@Suppress("DEPRECATION")` to `isAppOpBlocked()`. Build is now warning-free.
 
 ---
 
