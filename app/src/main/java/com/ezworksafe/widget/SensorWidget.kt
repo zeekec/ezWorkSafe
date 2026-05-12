@@ -24,6 +24,7 @@ import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.ezworksafe.data.model.SensorStatus
@@ -92,10 +93,10 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                 modifier = GlanceModifier
                     .defaultWeight()
                     .background(ColorProvider(ComposeColor(0xFF1e1e35.toInt()))),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
+                    modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     val rightEntries = statuses.entries.toList().drop(2)
@@ -120,12 +121,15 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                 }
                     Text(
                         text = formatLastUpdated(WidgetState.lastRefreshTime, context),
-                    style = TextStyle(
-                        color = ColorProvider(ComposeColor(0xFFAAAAAA.toInt())),
-                        fontSize = 8.sp
-                    ),
-                    modifier = GlanceModifier.fillMaxWidth(),
-                )
+                        style = TextStyle(
+                            color = ColorProvider(ComposeColor(0xFFAAAAAA.toInt())),
+                            fontSize = 8.sp,
+                            textAlign = TextAlign.Center,
+                        ),
+                        modifier = GlanceModifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                    )
             }
         }
     }
