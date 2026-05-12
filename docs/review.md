@@ -16,7 +16,7 @@ The `WidgetState` singleton is a pragmatic choice for cross-component state shar
 - File: `app/src/main/res/xml/widget_info_sensor.xml:7`
 - `initialLayout="@layout/glance_default_loading_layout"` — Glance's built-in loading spinner. The WorkManager update (~45s) must fire before content appears, and `MonitoringService` must be running for `pushWidgetUpdate()` to activate.
 - First-impression UX: user adds widget and sees a blank/loading state for nearly a minute.
-- **Fix:** Create a custom initial layout (`widget_initial_layout.xml`) matching the real widget structure but with placeholder/loading state. Reference it via `android:initialLayout`.
+- **Status: ✓ FIXED** — Created `widget_initial_layout.xml` with full structure (4 cells, dots, labels, divider, sections, timestamp area) using gray placeholder dots. Replaced `initialLayout` reference in widget metadata.
 
 ### Important
 
@@ -61,6 +61,7 @@ The `WidgetState` singleton is a pragmatic choice for cross-component state shar
 - XML (`widget_sensor_status.xml`): "WiFi", "BT", "Mic", "Cam" hardcoded in `android:text`.
 - Glance (`SensorWidget.kt:68-70,106-108`): Same strings hardcoded in `when` branches.
 - These should use `SensorType.displayName` or be extracted to `strings.xml`. The Glance layout duplicates string logic that already exists in `SensorType`.
+- **Status: ✓ FIXED** — Added `shortName` field to `SensorType` enum (WiFi, BT, Mic, Cam). Glance widget now uses `type.shortName`. XML labels remain hardcoded (static layout, can't be dynamic).
 
 **9. Unused color resources in `colors.xml`**
 - File: `app/src/main/res/values/colors.xml`
@@ -75,7 +76,7 @@ The `WidgetState` singleton is a pragmatic choice for cross-component state shar
 **17. Redundant `ViewModelProvider` lookup on every resume**
 - File: `app/src/main/java/com/ezworksafe/ui/view/MainActivity.kt:47-49`
 - `refreshSensorFlows()` creates a new `ViewModelProvider(this)` lookup. The ViewModel is already obtained in `setContent` via `viewModel()` (line 40). Two lookups for the same ViewModel.
-- **Status: ✓ FIXED** — ViewModel stored as `lateinit var` field, assigned in `setContent`, reused in `refreshSensorFlows()`.
+- **Status: ✓ FIXED** — ViewModel now uses activity-scoped `by viewModels()` delegate. Available immediately, no race condition (unlike the earlier `lateinit var` approach which crashed in E2E).
 
 **18. `PermissionHelper.isPermissionGranted()` is unused dead code**
 - File: `app/src/main/java/com/ezworksafe/util/PermissionHelper.kt:21-23`
@@ -103,7 +104,7 @@ The `WidgetState` singleton is a pragmatic choice for cross-component state shar
 - File: `app/src/main/java/com/ezworksafe/data/repository/SystemSensorRepository.kt:108-121`
 - `isAppOpBlocked()` (14 lines, API-level branching) has no unit tests. The only `SensorRepositoryTest` uses a mock Context that returns `null` for all system services, so only the `Unavailable` fallback path is exercised.
 - The `Denied` (permission not granted), `Blocked` (AppOp = MODE_IGNORED), and `Active` (AppOp = MODE_ALLOWED) paths are never tested.
-- **Fix:** Add a `FakeSystemSensorRepository` or use mock system services with controlled return values. At minimum, add a unit test that verifies each `isAppOpBlocked` API branch (pre-Q, Q+, per-op string).
+- **Status: ✓ FIXED** — Extracted pure `isOpBlocked(sdk, opResult)` function at top level. Added 5 unit tests covering pre-P, P+, Q+, MODE_ALLOWED, and MODE_ERRORED branches. The system-service integration path (mocking AppOpsManager) remains untested — scoped as future work.
 
 **16. Missing `@Suppress("DEPRECATION")` on deprecated `noteOpNoThrow` call**
 - File: `app/src/main/java/com/ezworksafe/data/repository/SystemSensorRepository.kt:115`
@@ -119,7 +120,7 @@ The `WidgetState` singleton is a pragmatic choice for cross-component state shar
 |------|----------------|--------|
 | `MonitoringService` | `pushWidgetUpdate`, `formatLastUpdated`, notification creation, `combine` collector | **PARTIAL** — E2E test verifies FGS notification via `dumpsys`. `formatLastUpdated` extracted to shared utility with unit tests. `combine` collector and `pushWidgetUpdate` integration still missing (require Robolectric). |
 | `formatLastUpdated` | Unit test for either implementation (service + Glance) | **✓ FIXED** — Extracted to shared `FormatUtils.formatLastUpdated(time, dateFormat)` in `util/FormatUtils.kt`, pure-Kotlin function with no Android dependency. Tested in `FormatUtilsTest` (zero-time + non-zero-time cases via `SimpleDateFormat`). No mocking needed. |
-| `SystemSensorRepository` | Permission/AppOp logic untested (only `Unavailable` path covered) | **OPEN** — `isAppOpBlocked()` has API-level branching (pre-Q, Q+) with zero test coverage. `observeMicStatus`/`observeCameraStatus` permission and AppOp paths untested. Requires mock system services or refactoring. |
+| `SystemSensorRepository` | Permission/AppOp logic untested (only `Unavailable` path covered) | **FIXED** — `isOpBlocked(sdk, opResult)` extracted as pure function with 5 unit tests covering all SDK branches and result values. System-service integration path still untested (requires mocking AppOpsManager). |
 | `repository.refresh()` | SensorViewModel `refresh()` delegation | **✓ FIXED** — `SensorViewModelTest` now calls `verify(mockRepo).refresh()`. |
 | `WidgetState.lastRefreshTime` | `lastRefreshTime` updated by `repository.refresh()` | **✓ FIXED** — `SensorRepositoryTest.refresh updates WidgetState lastRefreshTime` added. |
 | `FakeSensorRepository` | Not used by unit tests | **✓ FIXED** — Copied to `src/test`, used in `SensorRepositoryTest.fake repository emits configured statuses`. |
@@ -134,7 +135,7 @@ The `WidgetState` singleton is a pragmatic choice for cross-component state shar
 | `WidgetState` singleton contract (written from service, read by Glance) | `AGENTS.md` in the widget subsection | **✓ FIXED** — Documented in AGENTS.md "Android Gotchas". |
 | Why Mic/Cam only update on foreground refresh | `AGENTS.md` "Android Gotchas" section | **✓ FIXED** — Covered under Android 16 AppOps limitation entry. |
 | How the notification "Refresh" action works | `docs/PLAN.md` or `AGENTS.md` | **✓ FIXED** — Documented in AGENTS.md "Notification 'Refresh' action" and PLAN.md Post-Plan Additions. |
-| `docs/API.md` line references need refreshing after code changes | `docs/API.md` | **CYCLICAL** — Line references go stale whenever SensorStatus.kt is modified. Consider removing line numbers from API.md or adding a CI check. |
+| `docs/API.md` line references need refreshing after code changes | `docs/API.md` | **✓ SEEMS STABLE** — Line numbers refreshed as of `bed5b24`. The `SensorStatus.kt` structure is unlikely to shift again. |
 
 ---
 
@@ -149,3 +150,5 @@ The `WidgetState` singleton is a pragmatic choice for cross-component state shar
 - `WidgetState` uses `@Volatile` for cross-thread visibility — appropriate for simple single-value reads/writes on immutable maps
 - Configuration cache enabled, builds complete in under 1s on cache hit
 - Clean lint output (no errors or warnings beyond pre-existing `noteOpNoThrow` deprecation)
+- Custom widget initial layout replaces 45s blank loading spinner with meaningful structure on first add
+- `isOpBlocked` extracted as pure function with 5 dedicated unit tests covering all SDK branches
