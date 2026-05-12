@@ -5,20 +5,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezworksafe.service.MonitoringService
 import com.ezworksafe.ui.viewmodel.SensorViewModel
 import com.ezworksafe.util.PermissionHelper
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var viewModel: SensorViewModel
+    private val viewModel: SensorViewModel by viewModels()
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { _ ->
@@ -39,7 +39,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             EzWorkSafeTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    viewModel = viewModel()
                     StatusDashboard(viewModel = viewModel)
                 }
             }

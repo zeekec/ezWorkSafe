@@ -4,6 +4,6 @@
     android:minHeight="40dp"
     android:updatePeriodMillis="0"
     android:resizeMode="horizontal"
-    android:initialLayout="@layout/glance_default_loading_layout"
+    android:initialLayout="@layout/widget_initial_layout"
     android:widgetCategory="home_screen">
 </appwidget-provider>
