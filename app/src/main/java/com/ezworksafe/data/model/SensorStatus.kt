@@ -17,9 +17,9 @@ sealed class SensorStatus(
     data object Unavailable : SensorStatus("Unavailable", UNAVAILABLE_COLOR)
 }
 
-enum class SensorType(val displayName: String) {
-    WIFI("WiFi"),
-    BLUETOOTH("Bluetooth"),
-    MICROPHONE("Microphone"),
-    CAMERA("Camera")
+enum class SensorType(val displayName: String, val shortName: String) {
+    WIFI("WiFi", "WiFi"),
+    BLUETOOTH("Bluetooth", "BT"),
+    MICROPHONE("Microphone", "Mic"),
+    CAMERA("Camera", "Cam")
 }

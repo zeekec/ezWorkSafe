@@ -36,12 +36,16 @@ class SensorStatusTest {
     }
 
     @Test
-    fun `sensor type enum has four values`() {
+    fun `sensor type enum has four values with display and short names`() {
         val values = SensorType.values()
         assertEquals(4, values.size)
         assertEquals("WiFi", SensorType.WIFI.displayName)
         assertEquals("Bluetooth", SensorType.BLUETOOTH.displayName)
         assertEquals("Microphone", SensorType.MICROPHONE.displayName)
         assertEquals("Camera", SensorType.CAMERA.displayName)
+        assertEquals("WiFi", SensorType.WIFI.shortName)
+        assertEquals("BT", SensorType.BLUETOOTH.shortName)
+        assertEquals("Mic", SensorType.MICROPHONE.shortName)
+        assertEquals("Cam", SensorType.CAMERA.shortName)
     }
 }

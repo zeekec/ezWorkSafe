@@ -65,11 +65,7 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                 val leftEntries = statuses.entries.toList().take(2)
                 leftEntries.forEachIndexed { index, (type, status) ->
                     SensorCell(
-                        name = when (type) {
-                            SensorType.WIFI -> "WiFi"
-                            SensorType.BLUETOOTH -> "BT"
-                            else -> ""
-                        },
+                        name = type.shortName,
                         status = status,
                         modifier = GlanceModifier.defaultWeight()
                     )
@@ -103,11 +99,7 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                     val rightEntries = statuses.entries.toList().drop(2)
                     rightEntries.forEachIndexed { index, (type, status) ->
                         SensorCell(
-                            name = when (type) {
-                                SensorType.MICROPHONE -> "Mic"
-                                SensorType.CAMERA -> "Cam"
-                                else -> ""
-                            },
+                            name = type.shortName,
                             status = status,
                             modifier = GlanceModifier.defaultWeight()
                         )
