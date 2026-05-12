@@ -117,7 +117,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 
 ## 3. AndroidX / Jetpack Libraries
 
-### 3.1 Activity Compose (`androidx.activity:activity-compose:1.8.2`)
+### 3.1 Activity Compose (`androidx.activity:activity-compose:1.13.0`)
 | API | Used in | Purpose |
 |-----|---------|---------|
 | `androidx.activity.ComponentActivity` | `MainActivity.kt:18` | Base activity with Compose support |
@@ -126,7 +126,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | `ActivityResultContracts.RequestMultiplePermissions()` | `MainActivity.kt:21` | Contract for requesting multiple runtime permissions |
 | **Docs** | https://developer.android.com/jetpack/androidx/releases/activity | |
 
-### 3.2 Compose UI (`androidx.compose.ui:ui` via BOM `2024.01.00`)
+### 3.2 Compose UI (`androidx.compose.ui:ui` via BOM `2026.03.00`)
 | APIs used | `Modifier`, `fillMaxSize`, `background`, `padding`, `size`, `width`, `weight`, `clip`, `draw.clip`, `graphics.Color`, `foundation.background`, `foundation.shape.CircleShape`, `foundation.shape.RoundedCornerShape`, `foundation.layout.*` |
 |-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Used in** | `StatusDashboard.kt` |
@@ -140,7 +140,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | **Purpose** | Material Design 3 components: cards, surfaces, typography, dynamic color (Android 12+) |
 | **Docs** | https://developer.android.com/jetpack/compose/material3 |
 
-### 3.4 Lifecycle (`androidx.lifecycle:lifecycle-*-2.7.0`)
+### 3.4 Lifecycle (`androidx.lifecycle:lifecycle-*-2.10.0`)
 | Artifacts | `lifecycle-runtime-ktx:2.7.0`, `lifecycle-viewmodel-compose:2.7.0`, `lifecycle-runtime-compose:2.7.0` |
 |-----------|-------------------------------------------------------------------------------------------------------|
 | **APIs used** | `AndroidViewModel`, `viewModelScope`, `viewModel()` (compose function), `ViewModelProvider` |
@@ -148,7 +148,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | **Purpose** | ViewModel with lifecycle-scoped coroutines, Compose integration for ViewModel resolution |
 | **Docs** | https://developer.android.com/jetpack/androidx/releases/lifecycle |
 
-### 3.5 Core KTX (`androidx.core:core-ktx:1.12.0`)
+### 3.5 Core KTX (`androidx.core:core-ktx:1.18.0`)
 | API | Used in | Purpose |
 |-----|---------|---------|
 | `ContextCompat.startForegroundService()` | `MainActivity.kt:60` | Start foreground service with backward compatibility |
@@ -180,7 +180,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 
 ## 4. Kotlin Coroutines & Flow
 
-### 4.1 Kotlinx Coroutines (`org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3`)
+### 4.1 Kotlinx Coroutines (`org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0`)
 
 | API | Used in | Purpose |
 |-----|---------|---------|
@@ -202,7 +202,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 - callbackFlow: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/callback-flow.html
 - stateIn: https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/state-in.html
 
-### 4.2 Kotlinx Coroutines Test (`org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3`)
+### 4.2 Kotlinx Coroutines Test (`org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0`)
 | API | Used in | Purpose |
 |-----|---------|---------|
 | `runTest` | `SensorViewModelTest.kt`, `SensorRepositoryTest.kt` | Scope for testing suspending functions with virtual time |
@@ -257,7 +257,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 
 | Config | Value |
 |--------|-------|
-| `compileSdk` | 34 |
+| `compileSdk` | 36 |
 | `minSdk` | 26 |
 | `targetSdk` | 33 |
 | `namespace` / `applicationId` | `com.ezworksafe` |

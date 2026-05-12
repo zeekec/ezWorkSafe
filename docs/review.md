@@ -99,6 +99,7 @@ The `WidgetState` singleton is a pragmatic choice for cross-component state shar
 - `compose-bom:2024.01.00` (latest: 2026.05.00)
 - `activity-compose:1.8.2` (latest: 1.13.0)
 - `coroutines-android:1.7.3` (latest: 1.11.0)
+- **Status: ✓ FIXED** — bumped all to latest stable: core-ktx 1.18.0, lifecycle 2.10.0, compose-bom 2026.03.00, activity-compose 1.13.0, coroutines 1.11.0. Also bumped compileSdk to 36 (required by core-ktx 1.18.0).
 
 **15. `SystemSensorRepository` permission/AppOp logic untested at unit level**
 - File: `app/src/main/java/com/ezworksafe/data/repository/SystemSensorRepository.kt:108-121`

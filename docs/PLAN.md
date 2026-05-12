@@ -32,7 +32,7 @@ The following were implemented beyond the original plan:
 
 | Config | Value |
 |--------|-------|
-| `compileSdk` | 34 (needed for Glance 1.1.1) |
+| `compileSdk` | 36 |
 | `minSdk` | 26 |
 | `targetSdk` | 33 |
 

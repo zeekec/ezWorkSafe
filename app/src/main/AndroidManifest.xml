@@ -28,7 +28,7 @@
         android:supportsRtl="true"
         android:icon="@mipmap/ic_launcher"
         android:theme="@style/Theme.EzWorkSafe"
-        tools:targetApi="34">
+        tools:targetApi="36">
         <activity
             android:name=".ui.view.MainActivity"
             android:exported="true"
