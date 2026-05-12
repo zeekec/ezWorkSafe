@@ -308,7 +308,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | `Denied` | Runtime permission not granted | Red `0xFFF44336` |
 | `Unavailable` | Hardware missing, service null, or API level too low | Dark gray `0xFF616161` |
 
-**File:** `data/model/SensorStatus.kt:3-11`
+**File:** `data/model/SensorStatus.kt:9-18`
 
 ### 9.2 SensorType (enum)
 | Value | Display Name |
@@ -318,7 +318,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | `MICROPHONE` | "Microphone" |
 | `CAMERA` | "Camera" |
 
-**File:** `data/model/SensorStatus.kt:13-17`
+**File:** `data/model/SensorStatus.kt:20-25`
 
 ### 9.3 SensorRepository (interface)
 ```kotlin
