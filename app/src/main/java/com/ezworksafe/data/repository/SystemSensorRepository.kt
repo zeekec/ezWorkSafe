@@ -18,6 +18,7 @@ import android.os.Process
 import androidx.core.content.ContextCompat
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
+import com.ezworksafe.widget.WidgetState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +31,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
     private val refreshTrigger = MutableStateFlow(0)
 
     override fun refresh() {
+        WidgetState.lastRefreshTime = System.currentTimeMillis()
         refreshTrigger.value++
     }
 
@@ -103,12 +105,13 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         awaitClose { context.unregisterReceiver(receiver) }
     }
 
+    @Suppress("DEPRECATION")
     private fun isAppOpBlocked(opStr: String): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false
         return try {
             val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
             val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                appOps.unsafeCheckOpNoThrow(opStr, Process.myUid(), context.packageName)
+                appOps.checkOpNoThrow(opStr, Process.myUid(), context.packageName)
             } else {
                 appOps.noteOpNoThrow(opStr, Process.myUid(), context.packageName)
             }

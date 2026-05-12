@@ -7,4 +7,5 @@ object WidgetState {
     var statuses: Map<SensorType, SensorStatus> = SensorType.entries.associateWith {
         SensorStatus.Inactive
     }
+    var lastRefreshTime: Long = 0L
 }

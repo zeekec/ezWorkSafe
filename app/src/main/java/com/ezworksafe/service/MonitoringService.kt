@@ -3,16 +3,23 @@ package com.ezworksafe.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.ezworksafe.EzWorkSafeApp
+import com.ezworksafe.R
+import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.data.repository.SensorRepository
-import androidx.glance.appwidget.updateAll
-import com.ezworksafe.widget.SensorWidget
+import com.ezworksafe.ui.view.MainActivity
+import com.ezworksafe.widget.SensorWidgetReceiver
 import com.ezworksafe.widget.WidgetState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,7 +70,7 @@ class MonitoringService : Service() {
                     SensorType.MICROPHONE to mic,
                     SensorType.CAMERA to cam
                 )
-                SensorWidget().updateAll(this@MonitoringService)
+                pushWidgetUpdate(wifi, bt, mic, cam)
                 "WiFi: ${wifi.label} | BT: ${bt.label} | Mic: ${mic.label} | Cam: ${cam.label}"
             }.collect { text ->
                 val notification = createNotification(text)
@@ -72,7 +79,58 @@ class MonitoringService : Service() {
         }
     }
 
+    private data class CellIds(val dot: Int, val status: Int)
+    private val cellMap = mapOf(
+        SensorType.WIFI to CellIds(R.id.dot_wifi, R.id.status_wifi),
+        SensorType.BLUETOOTH to CellIds(R.id.dot_bt, R.id.status_bt),
+        SensorType.MICROPHONE to CellIds(R.id.dot_mic, R.id.status_mic),
+        SensorType.CAMERA to CellIds(R.id.dot_cam, R.id.status_cam),
+    )
+
+    private fun pushWidgetUpdate(
+        wifi: SensorStatus, bt: SensorStatus,
+        mic: SensorStatus, cam: SensorStatus
+    ) {
+        val appWidgetManager = AppWidgetManager.getInstance(this)
+        val componentName = ComponentName(this, SensorWidgetReceiver::class.java)
+        val ids = appWidgetManager.getAppWidgetIds(componentName)
+        Log.d("MonitoringService", "pushWidgetUpdate: ids=${ids.contentToString()}, wifi=$wifi, bt=$bt, mic=$mic, cam=$cam")
+        if (ids.isEmpty()) return
+
+        val labelColor = 0xFFAAAAAA.toInt()
+        val statuses = mapOf(SensorType.WIFI to wifi, SensorType.BLUETOOTH to bt,
+            SensorType.MICROPHONE to mic, SensorType.CAMERA to cam)
+
+        for (widgetId in ids) {
+            val views = RemoteViews(packageName, R.layout.widget_sensor_status)
+            views.setInt(R.id.widget_root, "setBackgroundColor", 0xFF1a1a2e.toInt())
+            views.setInt(R.id.left_section, "setBackgroundColor", 0xFF1a1a2e.toInt())
+            views.setInt(R.id.right_section, "setBackgroundColor", 0xFF1e1e35.toInt())
+            for ((type, status) in statuses) {
+                val cell = cellMap[type] ?: continue
+                views.setInt(cell.dot, "setBackgroundColor", status.color.toInt())
+                views.setTextColor(cell.status, status.color.toInt())
+                views.setTextViewText(cell.status, status.label)
+            }
+            views.setTextColor(R.id.label_wifi, labelColor)
+            views.setTextColor(R.id.label_bt, labelColor)
+            views.setTextColor(R.id.label_mic, labelColor)
+            views.setTextColor(R.id.label_cam, labelColor)
+            views.setTextViewText(R.id.last_updated, formatLastUpdated(WidgetState.lastRefreshTime))
+            views.setTextColor(R.id.last_updated, labelColor)
+            appWidgetManager.updateAppWidget(widgetId, views)
+            Log.d("MonitoringService", "pushWidgetUpdate: updated widgetId=$widgetId")
+        }
+    }
+
     private fun createNotification(text: String): Notification {
+        val refreshIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val refreshPendingIntent = PendingIntent.getActivity(
+            this, 0, refreshIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("ezWorkSafe")
             .setContentText(text)
@@ -80,6 +138,7 @@ class MonitoringService : Service() {
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
+            .addAction(0, "Refresh", refreshPendingIntent)
             .build()
     }
 
@@ -94,5 +153,16 @@ class MonitoringService : Service() {
         }
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(channel)
+    }
+
+    private fun formatLastUpdated(time: Long): String {
+        if (time == 0L) return ""
+        val elapsed = System.currentTimeMillis() - time
+        return when {
+            elapsed < 60_000 -> "Updated just now"
+            elapsed < 3_600_000 -> "Updated ${elapsed / 60_000}m ago"
+            elapsed < 86_400_000 -> "Updated ${elapsed / 3_600_000}h ago"
+            else -> "Updated >1d ago"
+        }
     }
 }
