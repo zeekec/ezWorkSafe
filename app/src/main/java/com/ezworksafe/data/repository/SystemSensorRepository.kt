@@ -115,7 +115,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
             } else {
                 appOps.noteOpNoThrow(opStr, Process.myUid(), context.packageName)
             }
-            result == AppOpsManager.MODE_IGNORED
+            isOpBlocked(Build.VERSION.SDK_INT, result)
         } catch (_: Exception) {
             false
         }
@@ -207,3 +207,6 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         }
     }
 }
+
+fun isOpBlocked(sdk: Int, opResult: Int): Boolean =
+    sdk >= Build.VERSION_CODES.P && opResult == AppOpsManager.MODE_IGNORED
