@@ -6,9 +6,65 @@
 
 **Architecture:** Single-Activity MVVM app with a `SensorRepository` wrapping Android system services via `callbackFlow` for reactive updates, a `SensorViewModel` exposing `StateFlow<SensorStatus>` per sensor, and a Jetpack Compose dashboard UI. Runtime permission requests for MIC and CAMERA. Optional foreground service for background monitoring.
 
-**Tech Stack:** Kotlin, Coroutines + Flow, AndroidX Lifecycle (ViewModel + LiveData/StateFlow), Jetpack Compose, JUnit + Mockito (testing), Gradle Kotlin DSL.
+**Tech Stack:** Kotlin, Coroutines + Flow, AndroidX Lifecycle (ViewModel + StateFlow), Jetpack Compose, Jetpack Glance (widget), JUnit + Mockito (testing), Gradle Kotlin DSL.
 
-**UI Framework Decision:** Jetpack Compose (chosen over XML for reactive state rendering — each status indicator recomposes automatically from StateFlow emissions, eliminating manual View update logic).
+---
+
+## Post-Plan Additions
+
+The following were implemented beyond the original plan:
+
+| Feature | Details |
+|---------|---------|
+| **Home screen widget** | 1×4 Jetpack Glance widget (`widget/`) with dual update path: Glance for initial render, RemoteViews push from service for real-time updates. |
+| **Widget split sections** | Left (WiFi/BT, real-time broadcasts) and right (Mic/Cam+timestamp, foreground-refreshed) to work around Android 16 AppOps background restriction. |
+| **Foreground service enhancement** | `MonitoringService` now hosts a `combine` collector that aggregates all 4 sensor flows, pushes to `WidgetState`, and updates the notification text in real time. |
+| **SensorRepository refactor** | Changed from class to `interface` + `SystemSensorRepository` implementation, with `refreshTrigger` + `flatMapLatest` for permission re-checks on resume. |
+| **`SensorStatus.Blocked` state** | Added for WiFI/BT hardware-off status (distinct from Inactive). Color: orange `0xFFFF9800`. |
+| **App icon** | Custom adaptive icon (shield + eye) with PNG fallbacks. |
+| **Dark mode** | Material You dynamic colors on API 31+, green-seeded fallback. |
+| **Notification "Refresh" action** | Notification includes a button that opens MainActivity → triggers `refreshSensorFlows()`. |
+| **E2E tests** | Compose UI tests for dashboard (all sensor states), widget provider metadata, notification verification via `dumpsys`, and theme. |
+| **`FakeSensorRepository`** | Deterministic test double with `setStatus()` for E2E and unit tests. |
+| **Configuration cache** | `org.gradle.configuration-cache=true` — builds complete in <1s on cache hit. |
+
+### Current SDK Versions (from `app/build.gradle.kts`)
+
+| Config | Value |
+|--------|-------|
+| `compileSdk` | 34 (needed for Glance 1.1.1) |
+| `minSdk` | 26 |
+| `targetSdk` | 33 |
+
+### Key File Additions Not in Original Structure
+
+```
+app/src/main/java/com/ezworksafe/
+└── widget/
+    ├── SensorWidget.kt           # GlanceAppWidget composable layout
+    ├── SensorWidgetReceiver.kt   # GlanceAppWidgetReceiver + service starter
+    └── WidgetState.kt            # Singleton for cross-component state sharing
+```
+
+```
+app/src/androidTest/
+└── java/com/ezworksafe/
+    ├── service/
+    │   └── MonitoringServiceNotificationE2eTest.kt
+    ├── ui/view/
+    │   ├── StatusDashboardE2eTest.kt
+    │   ├── PermissionRefreshE2eTest.kt   # @Ignored (API 36 shell restriction)
+    │   └── EzWorkSafeThemeTest.kt
+    ├── data/repository/
+    │   └── FakeSensorRepository.kt
+    └── widget/
+        └── SensorWidgetE2eTest.kt
+```
+
+### Known Limitation
+`AppOpsManager.checkOpNoThrow()` returns `MODE_IGNORED` for background processes on Android 16 regardless of actual toggle state (server-side enforcement). No client-side workaround exists. `SensorPrivacyManager` is `@SystemApi`. This is why Mic/Cam show stale state in the widget's right section until the user opens the app.
+
+---
 
 ---
 
@@ -27,24 +83,33 @@ ezWorkSafe/
 │           │   │   ├── model/
 │           │   │   │   └── SensorStatus.kt
 │           │   │   └── repository/
-│           │   │       └── SensorRepository.kt
+│           │   │       ├── SensorRepository.kt        # Interface
+│           │   │       └── SystemSensorRepository.kt  # Implementation
 │           │   ├── ui/
 │           │   │   ├── viewmodel/
 │           │   │   │   └── SensorViewModel.kt
 │           │   │   └── view/
 │           │   │       ├── MainActivity.kt
-│           │   │       └── StatusDashboard.kt
+│           │   │       ├── StatusDashboard.kt
+│           │   │       └── EzWorkSafeTheme.kt
 │           │   ├── service/
 │           │   │   └── MonitoringService.kt
+│           │   ├── widget/
+│           │   │   ├── SensorWidget.kt
+│           │   │   ├── SensorWidgetReceiver.kt
+│           │   │   └── WidgetState.kt
 │           │   └── util/
 │           │       └── PermissionHelper.kt
-│           └── res/
-│               ├── values/
-│               │   ├── strings.xml
-│               │   ├── colors.xml
-│               │   └── themes.xml
-│               └── mipmap-hdpi/
-│                   └── ic_launcher.xml (auto-generated)
+│           ├── res/
+│           │   ├── values/
+│           │   │   ├── strings.xml
+│           │   │   ├── colors.xml
+│           │   │   └── themes.xml
+│           │   ├── layout/
+│           │   │   └── widget_sensor_status.xml
+│           │   └── xml/
+│           │       └── widget_info_sensor.xml
+│           └── drawable/ (auto-generated icons)
 ├── build.gradle.kts
 ├── settings.gradle.kts
 ├── gradle.properties
@@ -52,8 +117,13 @@ ezWorkSafe/
 │   └── wrapper/
 │       └── gradle-wrapper.properties
 ├── AGENTS.md
-└── docs/
-    └── PLAN.md
+├── docs/
+│   ├── PLAN.md
+│   ├── API.md
+│   ├── review.md
+│   ├── todo.md
+│   └── superpowers/
+└── .github/workflows/android.yml
 ```
 
 **File Responsibilities:**
@@ -61,21 +131,29 @@ ezWorkSafe/
 | File | Responsibility |
 |------|---------------|
 | `settings.gradle.kts` | Root project name, module includes |
-| `build.gradle.kts` (root) | Plugin declarations (AGP, Kotlin) |
-| `app/build.gradle.kts` | Module config: SDK versions, dependencies, Compose config |
-| `gradle.properties` | Kotlin/JVM flags, Compose compiler |
-| `AndroidManifest.xml` | Permissions, Activity/Service declarations, Application class |
-| `EzWorkSafeApp.kt` | Application subclass (initialization entry point) |
-| `SensorStatus.kt` | Sealed class: `Active`, `Inactive`, `Denied`, `Unavailable` states |
-| `SensorRepository.kt` | Wraps 4 system services → `callbackFlow<SensorStatus>` per sensor |
+| `build.gradle.kts` (root) | Plugin declarations (AGP, Kotlin, Compose compiler) |
+| `app/build.gradle.kts` | Module config: SDK versions (34/33/26), dependencies, Compose config, Glance |
+| `gradle.properties` | Kotlin/JVM flags, configuration cache, Compose compiler |
+| `AndroidManifest.xml` | Permissions, Activity/Service declarations, Application class, widget receiver, feature flags |
+| `EzWorkSafeApp.kt` | Application subclass with lateinit `sensorRepository` |
+| `SensorStatus.kt` | Sealed class: `Active`, `Inactive`, `Denied`, `Blocked`, `Unavailable` states |
+| `SensorType.kt` | Enum: `WIFI`, `BLUETOOTH`, `MICROPHONE`, `CAMERA` |
+| `SensorRepository.kt` | Interface: `observeSensor()`, `refresh()` |
+| `SystemSensorRepository.kt` | Wraps 4 system services → `callbackFlow<SensorStatus>` per sensor, with `refreshTrigger` + `flatMapLatest` |
 | `PermissionHelper.kt` | Runtime permission check + request launcher for CAMERA + RECORD_AUDIO |
-| `SensorViewModel.kt` | Exposes `StateFlow<SensorStatus>` x4, lifecycle-scoped collection |
-| `MainActivity.kt` | Single Activity host, permission orchestration, ViewModel wiring |
+| `SensorViewModel.kt` | Exposes `StateFlow<SensorStatus>` x4, lifecycle-scoped collection, `refresh()` delegation |
+| `MainActivity.kt` | Single Activity host, permission orchestration, ViewModel wiring, service startup, lifecycle observer for refresh |
 | `StatusDashboard.kt` | Compose UI: 4 status indicator cards with color-coded state |
+| `EzWorkSafeTheme.kt` | Compose theme with Material You dynamic colors (API 31+) and green-seeded fallback |
+| `MonitoringService.kt` | Foreground service with `combine` collector → `WidgetState` push → notification update |
+| `SensorWidget.kt` | GlanceAppWidget composable, 1×4 layout with split sections |
+| `SensorWidgetReceiver.kt` | GlanceAppWidgetReceiver, starts service on widget update |
+| `WidgetState.kt` | Singleton: `statuses` map + `lastRefreshTime`, shared between service and Glance |
+| `widget_sensor_status.xml` | RemoteViews layout for widget (left section + divider + right section) |
+| `widget_info_sensor.xml` | Widget metadata (250×40dp min size, horizontal resize) |
 | `strings.xml` | UI strings |
-| `colors.xml` | Status color tokens (green/gray/red) |
-| `themes.xml` | Material theme |
-| `MonitoringService.kt` | Foreground service for background monitoring (optional) |
+| `colors.xml` | Status color tokens (currently unused — colors sourced from `SensorStatus`) |
+| `themes.xml` | Base Material theme |
 
 ---
 
