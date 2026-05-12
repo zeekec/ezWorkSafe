@@ -110,4 +110,82 @@ class StatusDashboardE2eTest {
             }
         }
     }
+
+    @Test
+    fun bluetooth_blocked_updates_ui() {
+        fakeRepo.setStatus(SensorType.BLUETOOTH, SensorStatus.Blocked)
+        composeRule.waitUntil(5000) {
+            try {
+                composeRule.onNode(hasText("Blocked") and hasAnySibling(hasText("Bluetooth"))).assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+    }
+
+    @Test
+    fun microphone_shows_active() {
+        fakeRepo.setStatus(SensorType.MICROPHONE, SensorStatus.Active)
+        composeRule.waitUntil(5000) {
+            try {
+                composeRule.onNode(hasText("Active") and hasAnySibling(hasText("Microphone"))).assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+    }
+
+    @Test
+    fun microphone_shows_blocked() {
+        fakeRepo.setStatus(SensorType.MICROPHONE, SensorStatus.Blocked)
+        composeRule.waitUntil(5000) {
+            try {
+                composeRule.onNode(hasText("Blocked") and hasAnySibling(hasText("Microphone"))).assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+    }
+
+    @Test
+    fun microphone_shows_denied() {
+        fakeRepo.setStatus(SensorType.MICROPHONE, SensorStatus.Denied)
+        composeRule.waitUntil(5000) {
+            try {
+                composeRule.onNode(hasText("Denied") and hasAnySibling(hasText("Microphone"))).assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+    }
+
+    @Test
+    fun camera_shows_active() {
+        fakeRepo.setStatus(SensorType.CAMERA, SensorStatus.Active)
+        composeRule.waitUntil(5000) {
+            try {
+                composeRule.onNode(hasText("Active") and hasAnySibling(hasText("Camera"))).assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+    }
+
+    @Test
+    fun camera_shows_unavailable() {
+        fakeRepo.setStatus(SensorType.CAMERA, SensorStatus.Unavailable)
+        composeRule.waitUntil(5000) {
+            try {
+                composeRule.onNode(hasText("Unavailable") and hasAnySibling(hasText("Camera"))).assertIsDisplayed()
+                true
+            } catch (_: AssertionError) {
+                false
+            }
+        }
+    }
 }

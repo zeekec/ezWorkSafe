@@ -1,0 +1,44 @@
+package com.ezworksafe.service
+
+import android.Manifest
+import android.os.ParcelFileDescriptor
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.GrantPermissionRule
+import com.ezworksafe.ui.view.MainActivity
+import java.io.BufferedReader
+import java.io.FileInputStream
+import java.io.InputStreamReader
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+
+class MonitoringServiceNotificationE2eTest {
+
+    private val permissionRule = GrantPermissionRule.grant(
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO
+    )
+
+    private val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @get:Rule
+    val ruleChain: RuleChain = RuleChain
+        .outerRule(permissionRule)
+        .around(composeRule)
+
+    @Test
+    fun service_is_foreground_with_notification() {
+        composeRule.waitForIdle()
+
+        composeRule.waitUntil(10_000) {
+            val pfd = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
+                "dumpsys activity services com.ezworksafe/.service.MonitoringService"
+            )
+            val text = BufferedReader(InputStreamReader(FileInputStream(pfd.fileDescriptor))).readText()
+            pfd.close()
+            text.contains("isForeground=true") && text.contains("foregroundId=1")
+        }
+    }
+}
