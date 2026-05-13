@@ -80,11 +80,13 @@ Three locations catch `Exception` broadly rather than specific exception types:
 
 ### L-2: android:allowBackup enabled
 
+**Status: ✓ FIXED**
+
 **File:** `AndroidManifest.xml:26`
 
 `android:allowBackup="true"` allows the device's backup mechanism to extract the app's data. The app stores no persistent data (no database, SharedPreferences, or files), so the practical risk is near-zero. However, it's a best-practice violation.
 
-**Recommendation:** Set `android:allowBackup="false"` if no backup is needed, or add `android:dataExtractionRules` to explicitly control what can be backed up.
+**Fix:** Set `android:allowBackup="false"` and `android:fullBackupContent="false"`.
 
 ### L-3: Keystore password stored in plaintext (in CI and local template)
 
