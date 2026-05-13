@@ -13,7 +13,7 @@
 | Critical   | 0     |
 | High       | 0     |
 | Medium     | 0     |
-| Low        | 1     |
+| Low        | 0     |
 | Informational | 3  |
 
 The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by design). All medium-severity issues have been addressed.
