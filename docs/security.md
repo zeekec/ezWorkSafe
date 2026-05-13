@@ -13,7 +13,7 @@
 | Critical   | 0     |
 | High       | 0     |
 | Medium     | 0     |
-| Low        | 5     |
+| Low        | 4     |
 | Informational | 3  |
 
 The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by design). All medium-severity issues have been addressed.
@@ -60,19 +60,23 @@ The app has a **small attack surface** — no network calls, no storage, no Cont
 
 ### L-1: Broad catch blocks mask unexpected errors
 
-**File:** `SystemSensorRepository.kt:78,119,187`
+**Status: ✓ FIXED**
+
+**Files changed:**
+- `app/src/main/java/com/ezworksafe/data/repository/SystemSensorRepository.kt`
+  - `isAppOpBlocked()`: narrowed `catch (_: Exception)` to `catch (_: SecurityException)`
+  - `observeCameraStatus()`: final fallback `catch (e: Exception)` now logs the unexpected exception via `Log.w`
 
 Three locations catch `Exception` broadly rather than specific exception types:
-- Line 78: `catch (e: Exception)` in `observeBluetoothStatus()`
-- Line 119: `catch (_: Exception)` in `isAppOpBlocked()`
-- Line 187: `catch (_: Exception)` in `observeCameraStatus()`
+- Line 78: `catch (e: Exception)` in `observeBluetoothStatus()` — narrowed to `SecurityException` (M-1)
+- Line 119: `catch (_: Exception)` in `isAppOpBlocked()` — narrowed to `SecurityException`
+- Line 187: `catch (_: Exception)` in `observeCameraStatus()` — kept as final fallback, now logs
 
 **Impact:** Unexpected `RuntimeException` subtypes (e.g., `NullPointerException`, `IllegalStateException`) are silently swallowed, making debugging difficult.
 
-**Recommendation:** Narrow to the expected exception types:
-- Line 78: `SecurityException` (missing BLUETOOTH_CONNECT) and potentially `NullPointerException`
-- Line 119: `SecurityException` (missing permission for AppOps) and `NullPointerException`
-- Line 187: Already preceded by specific `SecurityException` and `CameraAccessException` catches — the broad catch is the final fallback and is acceptable as a crash-prevention measure, but should log the unexpected exception.
+**Fix:**
+- Narrowed `isAppOpBlocked()` catch to `SecurityException`
+- Added `Log.w` to the camera catch-all fallback for debugging visibility
 
 ### L-2: android:allowBackup enabled
 
@@ -165,7 +169,7 @@ The server-side enforcement of AppOps for background processes on Android 16 is 
 |----------|-------|
 | **Fixed** | M-1: Request BLUETOOTH_CONNECT at runtime on API 31+ |
 | **Fixed** | M-2: Enable minification + strip debug logs in release builds |
-| **Low** | L-1: Narrow exception types in catch blocks |
+| **Fixed** | L-1: Narrow exception types in catch blocks |
 | **Low** | L-2: Set `android:allowBackup="false"` |
 | **Low** | L-3: Add pre-commit hook for `keystore.properties` |
 | **Low** | L-5: Fail fast on missing keystore config |
