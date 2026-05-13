@@ -12,11 +12,11 @@
 |------------|-------|
 | Critical   | 0     |
 | High       | 0     |
-| Medium     | 2     |
+| Medium     | 1     |
 | Low        | 5     |
 | Informational | 3  |
 
-The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by design). Two medium-severity issues should be addressed.
+The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by design). One medium-severity issue (M-2) remains.
 
 ---
 
@@ -24,16 +24,21 @@ The app has a **small attack surface** — no network calls, no storage, no Cont
 
 ### M-1: BLUETOOTH_CONNECT runtime permission never requested
 
-**File:** `app/src/main/AndroidManifest.xml:10`
-**File:** `app/src/main/java/com/ezworksafe/data/repository/SystemSensorRepository.kt:74-106`
+**Status: ✓ FIXED**
+
+**Files changed:**
+- `app/src/main/java/com/ezworksafe/util/PermissionHelper.kt` — `REQUIRED_RUNTIME_PERMISSIONS` is now version-gated: includes `BLUETOOTH_CONNECT` on API 31+
+- `app/src/main/java/com/ezworksafe/data/repository/SystemSensorRepository.kt` — added permission check at top of `observeBluetoothStatus()`; narrowed `catch (e: Exception)` to `catch (e: SecurityException)`
+- `app/src/test/java/com/ezworksafe/util/PermissionHelperTest.kt` — tests for both API level paths
 
 `BLUETOOTH_CONNECT` is a dangerous permission on API 31+ but the app never requests it at runtime. `SystemSensorRepository.observeBluetoothStatus()` calls `BluetoothAdapter.isEnabled()` which throws `SecurityException` without this permission. The broad `catch (e: Exception)` at line 78 catches this and returns `null`, degrading to `Unavailable`.
 
 **Impact:** On API 31+ devices, Bluetooth status always reports `Unavailable` instead of `Active`/`Blocked`. The user never sees a permission prompt and has no way to grant this permission from within the app.
 
-**Recommendation:**
-1. Add `BLUETOOTH_CONNECT` to `PermissionHelper.REQUIRED_RUNTIME_PERMISSIONS` (with version-gating — only request on API 31+)
-2. Narrow `catch (e: Exception)` in `observeBluetoothStatus()` to `catch (e: SecurityException)` for explicit handling
+**Fix:**
+1. Added `BLUETOOTH_CONNECT` to `PermissionHelper.REQUIRED_RUNTIME_PERMISSIONS` (version-gated to API 31+)
+2. Narrowed `catch (e: Exception)` in `observeBluetoothStatus()` to `catch (e: SecurityException)` for explicit handling
+3. Added `BLUETOOTH_CONNECT` permission check (API 31+) that emits `SensorStatus.Denied` if not granted
 
 ### M-2: Release build has minification disabled, debug logs persist in production
 
@@ -152,7 +157,7 @@ The server-side enforcement of AppOps for background processes on Android 16 is 
 | Deep links             | No | No intent filters matching URLs |
 | FileProvider           | No | None declared |
 | Third-party SDKs       | Low | Jetpack/AndroidX only — official Google libraries |
-| Runtime permissions    | Partial | CAMERA + RECORD_AUDIO requested. BLUETOOTH_CONNECT missing (see M-1). |
+| Runtime permissions    | Complete | CAMERA + RECORD_AUDIO + BLUETOOTH_CONNECT (API 31+) all requested at runtime. |
 
 ---
 
@@ -160,7 +165,7 @@ The server-side enforcement of AppOps for background processes on Android 16 is 
 
 | Priority | Issue |
 |----------|-------|
-| **High** | M-1: Request BLUETOOTH_CONNECT at runtime on API 31+ |
+| **Fixed** | M-1: Request BLUETOOTH_CONNECT at runtime on API 31+ |
 | **Medium** | M-2: Enable minification + strip debug logs in release builds |
 | **Low** | L-1: Narrow exception types in catch blocks |
 | **Low** | L-2: Set `android:allowBackup="false"` |

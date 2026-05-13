@@ -72,10 +72,18 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
     }
 
     private fun observeBluetoothStatus(): Flow<SensorStatus> = callbackFlow {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
+        ) {
+            trySend(SensorStatus.Denied)
+            close()
+            return@callbackFlow
+        }
+
         val bluetoothAdapter = try {
             val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
             manager?.adapter
-        } catch (e: Exception) {
+        } catch (e: SecurityException) {
             null
         }
 
