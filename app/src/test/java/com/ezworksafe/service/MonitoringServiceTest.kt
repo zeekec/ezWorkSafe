@@ -4,11 +4,14 @@
 package com.ezworksafe.service
 
 import android.app.Notification
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.ezworksafe.EzWorkSafeApp
 import com.ezworksafe.data.model.SensorStatus
+import com.ezworksafe.ui.view.MainActivity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -55,6 +58,43 @@ class MonitoringServiceTest {
             )
             assertNotNull(views)
         }
+    }
+
+    @Test
+    fun `buildWidgetRemoteViews with PendingIntent constructs successfully`() {
+        val intent = Intent(ctx, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            ctx, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val views = buildWidgetRemoteViews(
+            packageName = pkg,
+            wifi = SensorStatus.Active,
+            bt = SensorStatus.Inactive,
+            mic = SensorStatus.Denied,
+            cam = SensorStatus.Unavailable,
+            lastRefreshTime = 0L,
+            timeFormat = DateFormat.getTimeInstance(),
+            openAppIntent = pendingIntent
+        )
+        assertNotNull(views)
+    }
+
+    @Test
+    fun `buildWidgetRemoteViews with null PendingIntent still works`() {
+        val views = buildWidgetRemoteViews(
+            packageName = pkg,
+            wifi = SensorStatus.Active,
+            bt = SensorStatus.Inactive,
+            mic = SensorStatus.Denied,
+            cam = SensorStatus.Unavailable,
+            lastRefreshTime = 0L,
+            timeFormat = DateFormat.getTimeInstance(),
+            openAppIntent = null
+        )
+        assertNotNull(views)
     }
 
     @Test

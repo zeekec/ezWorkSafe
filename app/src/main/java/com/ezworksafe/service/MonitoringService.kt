@@ -102,9 +102,17 @@ class MonitoringService : Service() {
         Log.d("MonitoringService", "pushWidgetUpdate: ids=${ids.contentToString()}, wifi=$wifi, bt=$bt, mic=$mic, cam=$cam")
         if (ids.isEmpty()) return
 
+        val openIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val openAppIntent = PendingIntent.getActivity(
+            this, 0, openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         val views = buildWidgetRemoteViews(
             packageName, wifi, bt, mic, cam,
-            WidgetState.lastRefreshTime, android.text.format.DateFormat.getTimeFormat(this)
+            WidgetState.lastRefreshTime, android.text.format.DateFormat.getTimeFormat(this),
+            openAppIntent = openAppIntent
         )
         for (widgetId in ids) {
             appWidgetManager.updateAppWidget(widgetId, views)
@@ -150,7 +158,8 @@ internal fun buildWidgetRemoteViews(
     wifi: SensorStatus, bt: SensorStatus,
     mic: SensorStatus, cam: SensorStatus,
     lastRefreshTime: Long,
-    timeFormat: DateFormat
+    timeFormat: DateFormat,
+    openAppIntent: PendingIntent? = null
 ): RemoteViews {
     val labelColor = 0xFFAAAAAA.toInt()
     val statuses = mapOf(SensorType.WIFI to wifi, SensorType.BLUETOOTH to bt,
@@ -178,5 +187,8 @@ internal fun buildWidgetRemoteViews(
     views.setTextColor(R.id.label_cam, labelColor)
     views.setTextViewText(R.id.last_updated, formatLastUpdated(lastRefreshTime, timeFormat))
     views.setTextColor(R.id.last_updated, labelColor)
+    if (openAppIntent != null) {
+        views.setOnClickPendingIntent(R.id.widget_root, openAppIntent)
+    }
     return views
 }
