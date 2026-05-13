@@ -1,6 +1,7 @@
 package com.ezworksafe.ui.view
 
 import android.Manifest
+import android.os.Build
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.Lifecycle
@@ -14,10 +15,18 @@ import org.junit.rules.RuleChain
 @Ignore("executeShellCommand crashes on API 36; revisit with proper Android 16 shell API")
 class PermissionRefreshE2eTest {
 
-    private val permissionRule = GrantPermissionRule.grant(
-        Manifest.permission.CAMERA,
-        Manifest.permission.RECORD_AUDIO
-    )
+    private val permissionRule = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        GrantPermissionRule.grant(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.BLUETOOTH_CONNECT
+        )
+    } else {
+        GrantPermissionRule.grant(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        )
+    }
 
     private val composeRule = createAndroidComposeRule<MainActivity>()
 
