@@ -1,0 +1,8 @@
+#!/bin/sh
+# Pre-commit hook: prevent keystore.properties from being committed
+if git diff --cached --name-only | grep -q "keystore.properties"; then
+    echo "ERROR: keystore.properties is staged for commit"
+    echo "This file contains signing credentials and must not be committed."
+    echo "Remove it from the staging area: git reset HEAD keystore.properties"
+    exit 1
+fi

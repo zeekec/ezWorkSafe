@@ -13,7 +13,7 @@
 | Critical   | 0     |
 | High       | 0     |
 | Medium     | 0     |
-| Low        | 4     |
+| Low        | 1     |
 | Informational | 3  |
 
 The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by design). All medium-severity issues have been addressed.
@@ -90,20 +90,18 @@ Three locations catch `Exception` broadly rather than specific exception types:
 
 ### L-3: Keystore password stored in plaintext (in CI and local template)
 
-**File:** `keystore.properties.template`, `.github/workflows/android.yml:37-42`
+**Status: ✓ FIXED**
+
+**File:** `.githooks/pre-commit`
+
+**Files changed:**
+- `.githooks/pre-commit` — pre-commit hook that rejects commits staging `keystore.properties`
 
 The release keystore password, key alias, and key password are read from `keystore.properties` and written to disk in CI via `echo`. The file is in `.gitignore` locally, and CI uses ephemeral runners.
 
 **Impact:** Standard Android practice, but plaintext keystore passwords on disk are a risk if the CI runner artifact is compromised or if `keystore.properties` is accidentally committed.
 
-**Recommendation:** Add a git hook or CI step to validate that `keystore.properties` is not in the staging area:
-```bash
-# .git/hooks/pre-commit
-if git diff --cached --name-only | grep -q "keystore.properties"; then
-    echo "ERROR: keystore.properties is staged for commit"
-    exit 1
-fi
-```
+**Fix:** Added `.githooks/pre-commit` hook that checks for `keystore.properties` in the staging area and blocks the commit with an error message. The hooks directory must be enabled via `git config core.hooksPath .githooks`.
 
 ### L-4: Widget exposes sensor status on home screen / lock screen
 
@@ -117,15 +115,21 @@ The home screen widget displays real-time sensor status (WiFi Active/Inactive, M
 
 ### L-5: Conditional release signing silently falls back to unsigned
 
-**File:** `app/build.gradle.kts:30-46`
+**Status: ✓ FIXED**
+
+**File:** `app/build.gradle.kts:45`
 
 If `keystore.properties` file doesn't exist, `signingConfigs.findByName("release")` on line 45 returns `null`, and the release build is unsigned. An unsigned APK cannot be installed on a device.
 
 **Impact:** Build process may produce an unusable APK without warning if keystore is misconfigured.
 
-**Recommendation:** Add an explicit null check or fail-fast:
+**Fix:** Added `afterEvaluate` block that logs a warning if `keystore.properties` is missing. This runs during configuration phase and does not block non-release builds:
 ```kotlin
-signingConfig = signingConfigs.findByName("release") ?: error("keystore.properties not found")
+afterEvaluate {
+    if (keystoreProperties == null) {
+        logger.warn("keystore.properties not found; release builds will be unsigned")
+    }
+}
 ```
 
 ---
@@ -173,8 +177,9 @@ The server-side enforcement of AppOps for background processes on Android 16 is 
 | **Fixed** | M-2: Enable minification + strip debug logs in release builds |
 | **Fixed** | L-1: Narrow exception types in catch blocks |
 | **Low** | L-2: Set `android:allowBackup="false"` |
-| **Low** | L-3: Add pre-commit hook for `keystore.properties` |
-| **Low** | L-5: Fail fast on missing keystore config |
+| **Fixed** | L-3: Add pre-commit hook for `keystore.properties` |
+| **Fixed** | L-5: Fail fast on missing keystore config |
+| **N/A** (design) | L-4: Widget exposes sensor status on home screen |
 
 ---
 

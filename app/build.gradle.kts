@@ -102,3 +102,9 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
+
+afterEvaluate {
+    if (keystoreProperties == null) {
+        logger.warn("keystore.properties not found; release builds will be unsigned")
+    }
+}
