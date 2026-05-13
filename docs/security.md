@@ -12,11 +12,11 @@
 |------------|-------|
 | Critical   | 0     |
 | High       | 0     |
-| Medium     | 1     |
+| Medium     | 0     |
 | Low        | 5     |
 | Informational | 3  |
 
-The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by design). One medium-severity issue (M-2) remains.
+The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by design). All medium-severity issues have been addressed.
 
 ---
 
@@ -42,21 +42,19 @@ The app has a **small attack surface** — no network calls, no storage, no Cont
 
 ### M-2: Release build has minification disabled, debug logs persist in production
 
-**File:** `app/build.gradle.kts:43` (`isMinifyEnabled = false`)
+**Status: ✓ FIXED**
+
+**Files changed:**
+- `app/build.gradle.kts` — `isMinifyEnabled` set to `true` for release builds
+- `app/proguard-rules.pro` — added ProGuard rules to strip `Log.d` calls
 
 `MonitoringService.pushWidgetUpdate()` logs sensor statuses via `Log.d()`. With `isMinifyEnabled = false` and no ProGuard rules, `Log.d` calls are preserved in the release APK. While the data is not sensitive (Active/Inactive/Blocked/Denied/Unavailable), the log tag includes class names and the messages include widget IDs.
 
 **Impact:** Low-severity information disclosure. Widget IDs and sensor state are visible to any app with `READ_LOGS` permission (disallowed on API 24+ for non-system apps, but `adb logcat` on a debug-connected device exposes them).
 
-**Recommendation:** Enable minification (`isMinifyEnabled = true`) and add a ProGuard rule to strip `Log.d` calls in release builds:
-```
--assumenosideeffects class android.util.Log {
-    public static boolean isLoggable(java.lang.String, int);
-    public static int d(...);
-}
-```
-
-Alternatively, gate logging behind `BuildConfig.DEBUG`.
+**Fix:**
+1. Enabled minification (`isMinifyEnabled = true`) for release builds
+2. Added ProGuard rule to strip `Log.d` calls in release builds
 
 ---
 
@@ -166,7 +164,7 @@ The server-side enforcement of AppOps for background processes on Android 16 is 
 | Priority | Issue |
 |----------|-------|
 | **Fixed** | M-1: Request BLUETOOTH_CONNECT at runtime on API 31+ |
-| **Medium** | M-2: Enable minification + strip debug logs in release builds |
+| **Fixed** | M-2: Enable minification + strip debug logs in release builds |
 | **Low** | L-1: Narrow exception types in catch blocks |
 | **Low** | L-2: Set `android:allowBackup="false"` |
 | **Low** | L-3: Add pre-commit hook for `keystore.properties` |
