@@ -25,12 +25,19 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 | `./gradlew installDebug` | Install to device |
 | `./gradlew connectedDebugAndroidTest` | Run E2E tests (device/emulator) |
 
-## Current SDK Versions
+**CI notes:**
+- Workflow requires `permissions: contents: read` for GITHUB_TOKEN
+- Both "Decode keystore" and "Create keystore.properties" steps guarded by `if: env.KEYSTORE_B64 != ''`
+- Release builds fail on PRs from forks unless keystore secrets are available
+
+## Current SDK Versions & Tools
 | Config | Value |
 |--------|-------|
-| `compileSdk` | 34 (Glance 1.1.1 minimum) |
+| `compileSdk` | 36 |
 | `minSdk` | 26 |
 | `targetSdk` | 33 |
+| AGP | 9.2.1 |
+| Gradle wrapper | 9.5.1 |
 
 ## Required Permissions
 - `ACCESS_WIFI_STATE` — WiFi status
@@ -69,6 +76,11 @@ app/src/main/java/com/ezworksafe/
 - **Widget sections**: Left section (WiFi/BT) updates in real-time via system broadcasts. Right section (Mic/Cam+timestamp) only reflects state from the last foreground refresh. The divider visually separates the two.
 - **Notification "Refresh" action**: The foreground notification includes a "Refresh" button that opens `MainActivity`. The activity's `ON_RESUME` handler calls `refreshSensorFlows()` → `repository.refresh()`, which increments `refreshTrigger` causing all sensor flows to re-emit via `flatMapLatest`. This brings Mic/Cam state up to date.
 - **`WidgetState` singleton**: Shared mutable state between `MonitoringService` (writer, `Dispatchers.Main`) and `SensorWidget` (reader, Glance thread). Fields are `@Volatile` for visibility. `lastRefreshTime` is set by `repository.refresh()` but NOT by `pushWidgetUpdate()` — the timestamp may lag behind the widget display.
+- **Widget click handler — triple path**: Tapping a Glance widget to open the app requires covering all three rendering paths:
+  1. Initial XML layout — `setOnClickPendingIntent` in `SensorWidgetReceiver.onUpdate()`
+  2. RemoteViews push — `openAppIntent` param in `buildWidgetRemoteViews()`
+  3. Glance Compose — `.clickable(actionStartActivity<MainActivity>())` in `SensorWidget.kt`
+  Each path has an independent click action; the Glance `clickable` only covers the last.
 
 ## Plan Execution
 Default: **subagent-driven-development** — fresh subagent per task with two-stage
