@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Erik Zeek
+
 package com.ezworksafe.util
 
 import java.text.DateFormat

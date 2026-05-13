@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Erik Zeek
+
 package com.ezworksafe.data.model
 
 private val ACTIVE_COLOR = 0xFF4CAF50.toInt()
