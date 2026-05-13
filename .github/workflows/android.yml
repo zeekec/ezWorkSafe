@@ -29,6 +29,7 @@ jobs:
         run: echo "$KEYSTORE_B64" | base64 -d > release.keystore
 
       - name: Create keystore.properties
+        if: env.KEYSTORE_B64 != ''
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
