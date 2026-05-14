@@ -30,7 +30,7 @@ and Camera access status at a glance.
 | Async | Kotlin Coroutines + StateFlow |
 | Build | Gradle 9.5.1 + AGP 9.2.1 |
 | Min SDK | 26 |
-| Target SDK | 33 |
+| Target SDK | 35 |
 
 ## Screenshots
 
@@ -72,7 +72,7 @@ config, then:
 Requires a connected device or running emulator.
 
 ```bash
-emulator -avd Pixel_9_API_34 &
+android emulator start Pixel_8_Pro &
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
