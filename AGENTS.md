@@ -25,6 +25,16 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 | `./gradlew installDebug` | Install to device |
 | `./gradlew connectedDebugAndroidTest` | Run E2E tests (device/emulator) |
 
+## Emulator Commands
+| Command | Purpose |
+|---------|---------|
+| `android emulator list` | List available AVDs |
+| `android emulator start Pixel_8_Pro` | Start emulator (AVD: Pixel_8_Pro) |
+| `android emulator start --cold Pixel_8_Pro` | Cold boot (no snapshot) |
+| `android emulator stop Pixel_8_Pro` | Stop emulator |
+
+> `main` branch has repository rulesets requiring all changes through PRs (no direct pushes).
+
 **CI notes:**
 - Workflow requires `permissions: contents: read` for GITHUB_TOKEN
 - Both "Decode keystore" and "Create keystore.properties" steps guarded by `if: env.KEYSTORE_B64 != ''`
@@ -89,6 +99,22 @@ review (spec compliance → code quality) after each. See implementation plans i
 
 ## Implementation Plan
 See [docs/PLAN.md](docs/PLAN.md) for the full implementation breakdown.
+
+## Dependabot Alerts
+- Alerts page (GitHub auth required): `https://github.com/zeekec/ezWorkSafe/security/dependabot`
+- Fetch alerts via API:
+  ```
+  gh api -H "Accept: application/vnd.github+json" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    /repos/zeekec/ezWorkSafe/dependabot/alerts --paginate
+  ```
+- Dismiss as build-only (transitive toolchain deps not shipped in APK):
+  ```
+  gh api -X PATCH /repos/zeekec/ezWorkSafe/dependabot/alerts/<id> \
+    --field state=dismissed \
+    --field dismissed_reason=tolerable_risk \
+    --field dismissed_comment="Build-time transitive dependency, not shipped in the APK"
+  ```
 
 ## Testing
 - Unit: ViewModel + Repository (JUnit + Mockito + `runTest`)
