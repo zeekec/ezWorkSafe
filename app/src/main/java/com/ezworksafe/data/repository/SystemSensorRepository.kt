@@ -58,7 +58,9 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         }
 
         fun emitState() {
-            trySend(if (wifiManager.isWifiEnabled) SensorStatus.Active else SensorStatus.Blocked)
+            val enabled = wifiManager.wifiState == WifiManager.WIFI_STATE_ENABLED ||
+                wifiManager.wifiState == WifiManager.WIFI_STATE_ENABLING
+            trySend(if (enabled) SensorStatus.Active else SensorStatus.Blocked)
         }
 
         emitState()
