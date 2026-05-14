@@ -84,14 +84,6 @@ class MonitoringService : Service() {
         }
     }
 
-    private data class CellIds(val dot: Int, val status: Int)
-    private val cellMap = mapOf(
-        SensorType.WIFI to CellIds(R.id.dot_wifi, R.id.status_wifi),
-        SensorType.BLUETOOTH to CellIds(R.id.dot_bt, R.id.status_bt),
-        SensorType.MICROPHONE to CellIds(R.id.dot_mic, R.id.status_mic),
-        SensorType.CAMERA to CellIds(R.id.dot_cam, R.id.status_cam),
-    )
-
     private fun pushWidgetUpdate(
         wifi: SensorStatus, bt: SensorStatus,
         mic: SensorStatus, cam: SensorStatus
