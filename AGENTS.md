@@ -35,7 +35,7 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 |--------|-------|
 | `compileSdk` | 36 |
 | `minSdk` | 26 |
-| `targetSdk` | 33 |
+| `targetSdk` | 35 |
 | AGP | 9.2.1 |
 | Gradle wrapper | 9.5.1 |
 
