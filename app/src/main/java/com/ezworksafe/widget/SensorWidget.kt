@@ -56,7 +56,7 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
-            modifier = GlanceModifier.fillMaxWidth(),
+            modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -115,19 +115,17 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                         }
                     }
                 }
-                    Text(
-                        text = formatLastUpdated(WidgetState.lastRefreshTime, DateFormat.getTimeFormat(context)),
-                        style = TextStyle(
-                            color = ColorProvider(ComposeColor(0xFFAAAAAA.toInt())),
-                            fontSize = 8.sp,
-                            textAlign = TextAlign.Center,
-                        ),
-                        modifier = GlanceModifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                    )
             }
         }
+        Text(
+            text = formatLastUpdated(WidgetState.lastRefreshTime, DateFormat.getTimeFormat(context)),
+            style = TextStyle(
+                color = ColorProvider(ComposeColor(0xFFAAAAAA.toInt())),
+                fontSize = 8.sp,
+                textAlign = TextAlign.Center,
+            ),
+            modifier = GlanceModifier.fillMaxWidth(),
+        )
     }
 }
 
