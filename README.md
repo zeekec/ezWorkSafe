@@ -34,7 +34,9 @@ and Camera access status at a glance.
 
 ## Screenshots
 
-<!-- TODO: add screenshots -->
+| App dashboard | Home screen widget |
+|:---:|:---:|
+| ![App dashboard](docs/screenshot_app.png) | ![Widget](docs/screenshot_widget.png) |
 
 ## Build
 
