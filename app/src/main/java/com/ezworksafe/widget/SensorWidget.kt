@@ -93,10 +93,10 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                 modifier = GlanceModifier
                     .defaultWeight()
                     .background(ColorProvider(ComposeColor(0xFF1e1e35.toInt()))),
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
+                    modifier = GlanceModifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     val rightEntries = statuses.entries.toList().drop(2)
