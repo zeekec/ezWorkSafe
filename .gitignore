@@ -4,6 +4,9 @@ local.properties
 build/
 .superpowers/
 
+# opencode agent configuration
+.opencode/
+
 # Release signing
 keystore.properties
 *.keystore
