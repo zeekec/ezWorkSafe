@@ -1,23 +1,3 @@
----
-name: perfetto-sql
-description: Translates natural language data intents into syntactically valid Perfetto
-  SQL queries and executes them against a local trace file. Use this skill to extract
-  slice, thread, or memory data from Android Perfetto traces using trace_processor.
-license: Complete terms in LICENSE.txt
-metadata:
-  author: Google LLC
-  last-updated: '2026-05-14'
-  keywords:
-  - Android
-  - Perfetto SQL
-  - Query Guidelines
-  - Performance Profiling
-  - Trace Analysis
-  - SQL Best Practices
-  - SPAN_JOIN
-  - Idempotency
----
-
 ## Guidelines and Hints
 
 - **Idempotency:** Ensure queries are idempotent to prevent "already exists" errors during multiple executions.
@@ -80,7 +60,7 @@ metadata:
 
 ## Resources
 
-- **Documentation:** The Perfetto Standard Library documentation is in [`perfetto-stdlib.md`](references/perfetto-stdlib.md). Use this file as a reference to discover available modules, find schemas (columns and types) for specific tables or views, or determine the `INCLUDE PERFETTO MODULE` statements required before drafting SQL query.
+- **Documentation:** The Perfetto Standard Library documentation is in [`perfetto-stdlib.md`](perfetto-stdlib.md). Use this file as a reference to discover available modules, find schemas (columns and types) for specific tables or views, or determine the `INCLUDE PERFETTO MODULE` statements required before drafting SQL query.
 - **Execution Tool:** Queries are executed using the official `trace_processor` wrapper script downloaded directly from Perfetto. Output is returned in pure CSV format.
 
 ## Execution Protocol
@@ -101,7 +81,7 @@ Perform a direct file check at the top level of your workspace (e.g., `ls trace_
 
 1. Identify the core question, required data points, and filtering conditions.
 2. **Precedence Rule:** If the user's request contains a SQL query, use it **without modification** and skip to Step 2 for validation.
-3. **Mandatory Schema and Module Search:** For every table or view you plan to use, you MUST find its schema in [`perfetto-stdlib.md`](references/perfetto-stdlib.md). **Don't read the entire documentation file** --- it consumes the context window. Follow this precise workflow:
+3. **Mandatory Schema and Module Search:** For every table or view you plan to use, you MUST find its schema in [`perfetto-stdlib.md`](perfetto-stdlib.md). **Don't read the entire documentation file** --- it consumes the context window. Follow this precise workflow:
    - **Discovery and Search:** Use available search tools (`grep`, `read_file` or file search) with line limits to discover relevant views, tables or modules based on your problem domain and high-level intents (for example, 'CPU time', 'running time', 'overlap', 'jank').
      - **Why:** Searching solely for exact table names misses comprehensive, pre-computed views built for these analyses.
      - **Note:** You must verify if a Standard Library module already provides the needed abstraction before drafting manual arithmetic or custom functions.
