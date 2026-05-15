@@ -166,6 +166,27 @@ Or temporarily change `buildWidgetRemoteViews()` to use `widget_initial_layout.x
 
 ---
 
+## Session State (as of 2026-05-15)
+
+**Branch:** `fix/widget-alignment` (clean)
+**Latest commit:** `ba72ff6`
+
+### What's been done this session
+
+- Fix 1 (`ad6017f`): Added `gravity="center_vertical"` to right section — didn't fix
+- Fix 2 (`52d8250`): Moved timestamp to root level in FrameLayout — didn't fix
+- Fix 3 (`ba72ff6`, current): Converted `widget_sensor_status.xml` from `FrameLayout` + `match_parent` back to `LinearLayout` + `weight=1` (matching `widget_initial_layout.xml`), timestamp below as non-weighted sibling
+- Added `.opencode/` to `.gitignore`
+- Documented `android layout` CLI tool for inspection
+
+### What the next session needs to do
+
+1. **Verify Fix 3** — the app was built and installed to device `39111FDJG00F1K` but never observed. Place the widget and check if centering survives the MonitoringService push.
+2. **Use `android layout -p`** to dump the hierarchy in both stage 1 and stage 3, then use `android layout -d -p` to diff them. This gives exact view coordinates instead of guessing.
+3. If still broken, follow the narrowing-down steps under "Current Path Forward" above.
+
+---
+
 ## Open Questions
 
 - Does the issue reproduce at different widget heights (different launchers, different grid sizes)?
