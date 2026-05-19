@@ -35,6 +35,12 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 
 > `main` branch has repository rulesets requiring all changes through PRs (no direct pushes).
 
+**PR workflow:**
+- Use `Fixes #N` (not `Fixes Issue #N`) in the PR body to auto-close issues on merge
+- GitHub does NOT recognize `Fixes Issue #N` — the word "Issue" breaks keyword detection
+- The commit message does not matter for auto-close, only the PR body
+- Use `gh pr merge --auto --squash` to enable auto-merge once CI/CodeQL pass
+
 **CI notes:**
 - Workflow requires `permissions: contents: read` for GITHUB_TOKEN
 - Both "Decode keystore" and "Create keystore.properties" steps guarded by `if: env.KEYSTORE_B64 != ''`
