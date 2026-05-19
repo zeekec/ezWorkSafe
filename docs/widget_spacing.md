@@ -1,7 +1,7 @@
 # Widget Vertical Centering Issue
 
-**Last updated:** 2026-05-15
-**Affected branches:** `fix/widget-alignment`
+**Last updated:** 2026-05-18
+**Branch:** `fix/widget-alignment`
 **Related files:**
 - `app/src/main/res/layout/widget_sensor_status.xml` — RemoteViews live-data layout
 - `app/src/main/res/layout/widget_initial_layout.xml` — RemoteViews placeholder layout
@@ -11,15 +11,9 @@
 
 ---
 
-## Symptom
+## Symptom (original)
 
-When the widget is placed on the home screen, three distinct stages appear:
-
-1. **Centered, grey** — sensor labels (WiFi, BT, Mic, Cam) are vertically centered in the widget with grey placeholder dots and "..." status text
-2. **Colored** — the grey placeholders are replaced with colored status dots and real text from sensor readings
-3. **Shifted to top** — all four sensor labels jump to the top of the widget and stay there
-
-The transition from stage 1 → stage 2+3 happens when `MonitoringService.pushWidgetUpdate()` pushes a `RemoteViews` update with live sensor data.
+Before the fix, the widget content was shifted upward when live sensor data was pushed via RemoteViews. The timestamp overlay overlapped the "Active" status text.
 
 ---
 
@@ -31,165 +25,149 @@ When a widget is added to the home screen:
 SensorWidgetReceiver.onUpdate()
   ├── startForegroundService(MonitoringService)        // starts sensor observation
   ├── super.onUpdate()                                  // triggers Glance render
-  │     └── SensorWidget.provideGlance()                // Glance Compose layout
-  └── appWidgetManager.updateAppWidget(initial_layout)  // overrides with XML placeholder
+  │     └── SensorWidget.provideGlance()                // Glance Compose layout ("WiFi2")
+  └── appWidgetManager.updateAppWidget(initial_layout)  // overrides with XML placeholder ("WiFi1")
 
 ...MonitoringService starts observing sensors...
 
 MonitoringService.pushWidgetUpdate()
-  └── appWidgetManager.updateAppWidget(sensor_status)   // pushes live data layout
+  └── appWidgetManager.updateAppWidget(sensor_status)   // pushes live data layout ("WiFi3")
 ```
 
 ### Stage-by-stage mapping
 
-| Stage | Layout source | What renders |
-|-------|--------------|--------------|
-| 1 | `widget_initial_layout.xml` | Grey dots, "..." text, no timestamp. Uses `LinearLayout` root + `weight=1` on sensors row. **Centering works here.** |
-| 2+3 | `widget_sensor_status.xml` | Colored dots, real status text, timestamp. Uses the layout that's failing to center. |
+| Stage | Layout source | Label | What renders |
+|-------|--------------|-------|-------------|
+| 1 | Glance (`SensorWidget.kt`) | WiFi2 | Glance Compose layout, no timestamp. Colored dots + real status from `WidgetState`. |
+| 2 | `widget_initial_layout.xml` | WiFi1 | Grey dots, "..." text, no timestamp. Pushed in `onUpdate()` and quickly overwritten. |
+| 3 | `widget_sensor_status.xml` | WiFi3 | Colored dots, real status text, timestamp overlays at bottom of right section. |
 
-The Glance layout (`SensorWidget.kt`) is rarely visible because the initial XML layout is pushed immediately after in the same `onUpdate()` call.
-
----
-
-## What's Been Tried
-
-### Fix 1: Add `gravity="center_vertical"` to right section (commit `ad6017f`)
-
-Changed the inner Mic/Cam container in `widget_sensor_status.xml` from `height=0dp, weight=1` (filling all space) to `height=wrap_content` with parent `gravity="center_vertical"`. This matched what `widget_initial_layout.xml` already did.
-
-**Result:** Did not fix the shift. The right section's Mic/Cam row was still being pushed upward.
-
-### Fix 2: Move timestamp out of `right_section` (commit `c615649`, `24cc82d`, then restructure `52d8250`)
-
-The `last_updated` timestamp was nested inside `right_section`, making it two children (Mic/Cam row + timestamp) that competed for vertical space. Moved the timestamp to root level.
-
-For `widget_sensor_status.xml`, the root was changed from a vertical `LinearLayout` to a `FrameLayout` with `sensors_row` at `match_parent` height and the timestamp overlapping at `layout_gravity="bottom|center_horizontal"`.
-
-**Result:** Still did not fix the shift. Despite `gravity="center_vertical"` on the sensor sections, the content was not centering.
-
-### Fix 3: Return to LinearLayout root with weight-based sizing (current)
-
-`widget_sensor_status.xml` was returned to a vertical `LinearLayout` root with `sensors_row` at `height=0dp, weight=1` (matching the structure of the working `widget_initial_layout.xml`). The timestamp is placed below as a non-weighted sibling.
-
-**Status:** Built and installed to real device (`39111FDJG00F1K`) at commit `131370e`. Not yet verified — user ended session before observing result.
+Stage 3 is the primary visible state (pushed within seconds of opening the app).
 
 ---
 
-## Root Cause Hypothesis
+## Root Cause
 
-The working layout (`widget_initial_layout.xml`) uses:
-- **Root:** `LinearLayout` with `orientation="vertical"`
-- **sensors_row:** `height="0dp"`, `layout_weight="1"` — fills all remaining vertical space
-- **No timestamp at root level**
+The old layout used a vertical `LinearLayout` with `sensors_row` at `weight=1` and a separate timestamp row below. The timestamp row stole vertical space from `sensors_row`, shifting all sensor labels above true vertical center by roughly half the timestamp height.
 
-The non-working layout used:
-- **Root:** `FrameLayout`
-- **sensors_row:** `height="match_parent"` — fills FrameLayout height
+---
 
-Both approaches should theoretically give `sensors_row` the same height. However, in practice, the `FrameLayout` + `match_parent` combination does not produce the same centering behavior in the nested `gravity="center_vertical"` LinearLayouts.
+## Solution: FrameLayout overlay in right section
 
-The `LinearLayout` + `weight=1` pattern is proven to work (stage 1). The fix aligns all layout paths to use this same structural approach.
+### `widget_sensor_status.xml` (Stage 3 — RemoteViews push)
+
+Restructured from a vertical `LinearLayout` (sensors_row + timestamp bar) to a **horizontal `LinearLayout`** where the timestamp overlays at the bottom of the right section via `layout_gravity`:
+
+```
+LinearLayout (root, gravity="center_vertical", padding=8dp)
+├── LinearLayout (left_section, weight=1, wrap_content)
+│   ├── paddingTop=14dp, paddingBottom=14dp  ← symmetrical gap for centering
+│   ├── cell_wifi (weight=1)
+│   ├── inner divider (1dp)
+│   └── cell_bt (weight=1)
+├── TextView (section_divider, 2dp, match_parent)
+└── FrameLayout (right_section, weight=1, wrap_content, paddingTop=14dp)
+    ├── LinearLayout (inner_row, fillMaxWidth, wrap_content, marginBottom=14dp)
+    │   ├── cell_mic (weight=1)
+    │   ├── inner divider (1dp)
+    │   └── cell_cam (weight=1)
+    └── TextView (last_updated, layout_gravity="bottom|center_horizontal", 8sp)
+```
+
+Key details:
+- `left_section` and `right_section` both have `paddingTop=14dp` to balance the `paddingBottom`/`marginBottom`, making both sections the same total height (so they center at the same level in the root)
+- `right_section` is `FrameLayout` with `layout_gravity="bottom|center_horizontal"` on the timestamp, placing it below the sensor content
+- `marginBottom=14dp` on `inner_row` creates space between the sensor content and the timestamp (not `paddingBottom` on the FrameLayout — that doesn't separate children)
+- `left_section` has `paddingBottom=14dp` to match the right section's total height for level centering
+
+### `SensorWidget.kt` (Stage 1 — Glance Compose)
+
+Restructured to use `Box` + `contentAlignment = Alignment.Center` in the right section. The timestamp was removed (not visible in the Glance stage anyway).
+
+Key details:
+- Outer `Row` has `verticalAlignment = Alignment.Vertical.CenterVertically`
+- Left section: `Row` with `CenterVertically`
+- Right section: `Box` with `contentAlignment = Alignment.Center` containing only the inner sensor row
+- No timestamp — the Glance stage is always overwritten by the initial XML layout within minutes of widget placement
+
+### `widget_initial_layout.xml` (Stage 2 — initial XML placeholder)
+
+Unchanged. No timestamp, both sections use `match_parent` height with `gravity="center_vertical"`. Centering is naturally correct because there's no timestamp stealing space.
+
+---
+
+## Verification
+
+Confirmed via `android layout -p` layout dump on Pixel_8_Pro emulator:
+
+| Element | Stage 3 (WiFi3) y-position | Stage 1 (WiFiN) y-position |
+|---------|---------------------------|---------------------------|
+| Labels (WiFi, BT, Mic, Cam) | y=708 | y=702 |
+| Status (Active) | y=747 | y=702 (no status visible) |
+| Timestamp (Updated ...) | y=790 | N/A (removed) |
+
+- Stage 3: All labels and status lines are at identical y-positions across left and right sections — vertically centered.
+- Stage 1: Left and right sections were misaligned until timestamp was removed from the Glance layout (now both at y=702).
+- Stage 2: Not measured directly, but structurally identical to Stage 3's working centering behavior.
+
+---
+
+## Key Learnings
+
+1. **`paddingBottom` on a `FrameLayout` does NOT create space between children** — it extends the content area; children within the content area still occupy the same region. Use `marginBottom` on inner children instead.
+2. **Glance `Box` does not support per-child `align()`** — use `contentAlignment` for all children or nest layouts.
+3. **Widget host allocates more space than content needs** — the launcher gives the widget a full grid cell, which is taller than the ~100dp of actual sensor content. Centering within this tall allocation naturally leaves empty space above and below.
+4. **Sections must match in total height** for `gravity="center_vertical"` to center their content at the same level. Unequal heights cause a vertical offset even when both are centered independently.
+5. **`android layout -p`** is the most reliable way to debug widget layout — it gives exact pixel positions for all visible elements.
 
 ---
 
 ## How to Inspect Widget Layout
 
-### Layout Inspector (Android Studio)
-
-1. Run the app on the emulator
-2. In Android Studio: **View → Tool Windows → Layout Inspector**
-3. Select the `ezWorkSafe` process
-4. Click the widget on the emulator screen to capture the layout hierarchy
-5. Inspect `sensors_row` → `left_section` / `right_section` → verify measured heights vs wrap_content heights
-6. Check that `gravity="center_vertical"` is applied on the correct parent views
-
 ### `android layout` CLI tool
 
-The `android layout` command dumps the full view hierarchy as JSON. This gives exact measured positions, dimensions, and layout parameters for every view in the widget — no need to guess.
-
 ```bash
-# Basic dump (prints to stdout)
+# Basic dump
 android layout -p
 
-# Save to file for analysis
-android layout -p -o widget_layout.json
+# Target emulator
+android layout -p --device=emulator-5554
 
-# Diff mode — shows only elements that changed since last dump
-android layout -d -p
-
-# Target a specific device
-android layout -p --device=39111FDJG00F1K
+# Search for specific elements
+android layout -p | grep -B1 -A3 "label_wifi\|status_mic\|last_updated"
 ```
 
 **What to look for in the output:**
-- `sensors_row` measured height vs available height — confirms whether it fills the container
-- `left_section` / `right_section` children — check that `gravity="center_vertical"` is applied and measured positions reflect centering
-- `cell_wifi` / `cell_bt` / `cell_mic` / `cell_cam` top/bottom coordinates — are they equidistant from parent center?
-- `last_updated` position — is it overlapping or below `sensors_row`?
+- Left and right section labels at the same y-position → confirmed aligned centering
+- `last_updated` y-position well below `status_*` → no overlap
+- `widget_root` center → confirms widget bounds
 
-**Workflow for debugging:**
-1. Place widget on home screen (stage 1) → run `android layout` → confirm centered
-2. Wait for MonitoringService push (stage 3) → run `android layout` again → compare view positions
-3. `android layout -d` highlights only the changed nodes between the two dumps
+### Screenshots
 
-### `dumpsys` for widget dimensions
+Takes full screenshot, then extracts widget region by detecting the `#1a1a2e` background:
 
 ```bash
-# Get widget info (bounding box)
-adb shell dumpsys appwidget | grep -A 20 "ezWorkSafe"
-
-# Get widget view hierarchy (API 31+)
-adb shell dumpsys activity containers | grep -A 30 "widget"
+adb exec-out screencap -p > screenshot.png
+python3 << 'PYEOF'
+from PIL import Image
+import numpy as np
+img = Image.open('screenshot.png').convert('RGB')
+arr = np.array(img)
+target = np.array([26, 26, 46])  # #1a1a2e
+mask = np.all(arr == target, axis=2)
+rows = np.where(mask.sum(axis=1) > arr.shape[1] * 0.3)[0]
+cols = np.where(mask.sum(axis=0) > 0)[0]
+widget = img.crop((cols[0], rows[0], cols[-1]+1, rows[-1]+1))
+widget.save('widget.png')
+PYEOF
 ```
 
-### RemoteViews debugging
+---
 
-Add logging to `MonitoringService.pushWidgetUpdate()`:
+## Running Tests
 
-```kotlin
-Log.d("WidgetSpacing", "pushWidgetUpdate: ids=${ids.contentToString()}, sensor_row_height=${...}")
+```bash
+./gradlew lint                         # lint checks
+./gradlew test                         # unit tests
+./gradlew connectedDebugAndroidTest    # E2E tests on emulator/device
 ```
-
-Or temporarily change `buildWidgetRemoteViews()` to use `widget_initial_layout.xml` instead of `widget_sensor_status.xml` to test whether the centering issue follows the XML or the RemoteViews modification calls.
-
----
-
-## Current Path Forward
-
-1. **Verify Fix 3** — Build and install the current LinearLayout-based `widget_sensor_status.xml` on the emulator and observe whether centering persists through all three stages
-2. **If still broken** — Remove variables one at a time:
-   a. Temporarily set background colors in XML instead of via RemoteViews `setInt`
-   b. Simplify the layout to isolate which view/attribute causes the centering to break
-   c. Compare exact measured heights via Layout Inspector between working initial_layout and broken sensor_status
-3. **Unify layout files** — Consider whether all three layout paths (initial XML, live-data RemoteViews, Glance Compose) should share a single XML layout definition to prevent structural divergence
-4. **Test** — Add a widget E2E test that verifies vertical centering by checking child view positions or the parent `gravity` attribute
-
----
-
-## Session State (as of 2026-05-15)
-
-**Branch:** `fix/widget-alignment` (clean)
-**Latest commit:** `ba72ff6`
-
-### What's been done this session
-
-- Fix 1 (`ad6017f`): Added `gravity="center_vertical"` to right section — didn't fix
-- Fix 2 (`52d8250`): Moved timestamp to root level in FrameLayout — didn't fix
-- Fix 3 (`ba72ff6`, current): Converted `widget_sensor_status.xml` from `FrameLayout` + `match_parent` back to `LinearLayout` + `weight=1` (matching `widget_initial_layout.xml`), timestamp below as non-weighted sibling
-- Added `.opencode/` to `.gitignore`
-- Documented `android layout` CLI tool for inspection
-
-### What the next session needs to do
-
-1. **Verify Fix 3** — the app was built and installed to device `39111FDJG00F1K` but never observed. Place the widget and check if centering survives the MonitoringService push.
-2. **Use `android layout -p`** to dump the hierarchy in both stage 1 and stage 3, then use `android layout -d -p` to diff them. This gives exact view coordinates instead of guessing.
-3. If still broken, follow the narrowing-down steps under "Current Path Forward" above.
-
----
-
-## Open Questions
-
-- Does the issue reproduce at different widget heights (different launchers, different grid sizes)?
-- Does `setBackgroundColor` via RemoteViews on LinearLayout trigger any layout pass that resets gravity?
-- Can the `dumpsys appwidget` output confirm whether `sensors_row` receives the expected height in both layouts?
-- Should the initial layout be removed entirely, relying solely on Glance + MonitoringService push?
