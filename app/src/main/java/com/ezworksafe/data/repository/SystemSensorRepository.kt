@@ -22,7 +22,6 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
-import com.ezworksafe.widget.WidgetState
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +33,6 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
     private val refreshTrigger = MutableStateFlow(0)
 
     override fun refresh() {
-        WidgetState.lastRefreshTime = System.currentTimeMillis()
         refreshTrigger.value++
     }
 
