@@ -9,11 +9,12 @@
 
 ## Architecture
 
-MVVM with clear separation of concerns. Interface-based`SensorRepository` +`SystemSensorRepository` implementation.
-  `callbackFlow` +`flatMapLatest` pattern for reactive sensor observations is idiomatic Kotlin coroutines.
+MVVM with clear separation of concerns. Interface-based `SensorRepository` + `SystemSensorRepository` implementation.
+`callbackFlow` + `flatMapLatest` pattern for reactive sensor observations is idiomatic Kotlin coroutines.
 
-The`WidgetState` singleton is a pragmatic choice for cross-component state sharing between the service and Glance
-  widgets, but introduces a data-layer-to-widget-layer dependency (see Issue #1).
+The `WidgetState` singleton is a pragmatic choice for cross-component state sharing between the service and Glance
+widgets. The `lastRefreshTime` is set by `MonitoringService.observeSensors()` alongside the `WidgetState.statuses` write,
+keeping the data layer free of widget dependencies.
 
 ---
 
@@ -30,8 +31,9 @@ The`WidgetState` singleton is a pragmatic choice for cross-component state shari
 - ProGuard strips `Log.d` via `-assumenosideeffects`
 - No dead imports, no unused resources
 - Configuration cache: `./gradlew build` in < 1s on cache hit
-- Previous review issues fixed:`CellIds` dead code removed,`@OptIn(ExperimentalCoroutinesApi)` removed,`isWifiEnabled`
-  replaced with`getWifiState()`
+- Previous review issues fixed: `CellIds` dead code removed, `@OptIn(ExperimentalCoroutinesApi)` removed, `isWifiEnabled`
+  replaced with `getWifiState()`
+- This review fixes: layer violation (WidgetState moved to service), unused import removed
 
 ### UI
 - Edge-to-edge display with `safeDrawingPadding()`
@@ -70,92 +72,70 @@ The`WidgetState` singleton is a pragmatic choice for cross-component state shari
 
 ## Issues Found
 
-### High
-
-**1. Data-layer-to-widget-layer dependency**
-- File: `app/src/main/java/com/ezworksafe/data/repository/SystemSensorRepository.kt:25,37`
-- `SystemSensorRepository` (data/repository) imports`com.ezworksafe.widget.WidgetState` and directly mutates
-  `WidgetState.lastRefreshTime` in`refresh()` .
-- **Impact:** Violates MVVM layering. The repository should not know about the widget. If the widget implementation
-  changes (e.g., Glance → other framework), the data layer must change too.
-- **Fix:** Move`WidgetState.lastRefreshTime = System.currentTimeMillis()` to the service layer (`MonitoringService` ) or
-  to the ViewModel's`refresh()` method.
-
 ### Medium
 
-**2. Missing Glance ProGuard keep rules**
+**1. Missing Glance ProGuard keep rules**
 - File: `app/proguard-rules.pro`
-- ProGuard only strips`Log.d()` calls. Glance components (`SensorWidget` ,`SensorWidgetReceiver` ) are referenced via
-  reflection by the Glance framework for WorkManager-based initial render. Without`-keep` rules, release builds may
+- ProGuard only strips `Log.d()` calls. Glance components (`SensorWidget`, `SensorWidgetReceiver`) are referenced via
+  reflection by the Glance framework for WorkManager-based initial render. Without `-keep` rules, release builds may
   crash or render blank widgets.
 - **Fix:** Add `-keep class com.ezworksafe.widget.** { *; }` to `proguard-rules.pro`.
 
-**3. `foregroundServiceType` may be incorrect**
+**2. `foregroundServiceType` may be incorrect**
 - File: `AndroidManifest.xml:45`, `MonitoringService.kt`
-- Service uses`foregroundServiceType="dataSync"` but the service monitors sensor state, not data synchronization. On
+- Service uses `foregroundServiceType="dataSync"` but the service monitors sensor state, not data synchronization. On
   Android 14+, the system may restrict services whose declared type doesn't match their actual work.
-- **Recommended fix:** Use`foregroundServiceType="specialUse"` with a declaration in the manifest, or evaluate whether
-  `connectedDevice` ,`microphone` , or`camera` types are more appropriate.
+- **Recommended fix:** Use `foregroundServiceType="specialUse"` with a declaration in the manifest, or evaluate whether
+  `connectedDevice`, `microphone`, or `camera` types are more appropriate.
 
-**4. `@OptIn(ExperimentalMaterial3Api::class)` unnecessary**
-- File: `app/src/main/java/com/ezworksafe/ui/view/AppInfoDialog.kt:40`
-- `ModalBottomSheet` with`skipPartiallyExpanded` — Compose BOM`2026.05.00` ships Material3 1.5.x where this API is
-  stable. The annotation is dead code.
-- **Fix:** Remove `@OptIn(ExperimentalMaterial3Api::class)`.
-
-**5. `buildWidgetRemoteViews()` in wrong package**
+**3. `buildWidgetRemoteViews()` in wrong package**
 - File: `app/src/main/java/com/ezworksafe/service/MonitoringService.kt:148-186`
-- The top-level`buildWidgetRemoteViews()` function is defined in the`service` package but belongs in the`widget`
-  package. It manipulates`widget_sensor_status.xml` IDs and uses`R.layout.widget_sensor_status` — widget rendering
+- The top-level `buildWidgetRemoteViews()` function is defined in the `service` package but belongs in the `widget`
+  package. It manipulates `widget_sensor_status.xml` IDs and uses `R.layout.widget_sensor_status` — widget rendering
   logic.
 - **Fix:** Move to `app/src/main/java/com/ezworksafe/widget/BuildWidgetRemoteViews.kt`
 
-**6. PendingIntent request code collision**
+**4. PendingIntent request code collision**
 - File: `app/src/main/java/com/ezworksafe/service/MonitoringService.kt:101,120`
-- Both`pushWidgetUpdate()` (widget click) and`createNotification()` (notification "Refresh" action) use
-  `PendingIntent.getActivity(this, 0, ...)` with the same request code (0). Since both intents target`MainActivity` with
-  the same component (no action/data differences),`Intent.filterEquals()` returns true for both, causing the system to
+- Both `pushWidgetUpdate()` (widget click) and `createNotification()` (notification "Refresh" action) use
+  `PendingIntent.getActivity(this, 0, ...)` with the same request code (0). Since both intents target `MainActivity` with
+  the same component (no action/data differences), `Intent.filterEquals()` returns true for both, causing the system to
   treat them as the same PendingIntent. The last one created overwrites the first, making the launch behavior of widget
   click and notification action identical.
-- **Risk:** No direct security exploit (both use`FLAG_IMMUTABLE` ), but intent flag differences (
-  `FLAG_ACTIVITY_NEW_TASK` vs`FLAG_ACTIVITY_SINGLE_TOP` ) are lost.
+- **Risk:** No direct security exploit (both use `FLAG_IMMUTABLE`), but intent flag differences (
+  `FLAG_ACTIVITY_NEW_TASK` vs `FLAG_ACTIVITY_SINGLE_TOP`) are lost.
 - **Fix:** Use distinct request codes (e.g., `0` for widget, `1` for notification).
-
-**7. Unused import: `height`**
-- File: `app/src/main/java/com/ezworksafe/ui/view/StatusDashboard.kt:15`
-- `import androidx.compose.foundation.layout.height` is never used in the file.
-- **Fix:** Remove the unused import.
 
 ### Low
 
-**8. `BuildConfig` enabled for release builds**
+**5. `BuildConfig` enabled for release builds**
 - File: `app/build.gradle.kts:51`
 - `buildConfig = true` exposes`BuildConfig.DEBUG` and`BuildConfig.VERSION_NAME` . Not used for security decisions (only
   `VERSION_NAME` in`AppInfoDialog` ), but disabling reduces attack surface.
 - **Fix:** Set `buildConfig = false` unless needed.
 
-**9. `Log.w()` calls survive in release builds**
+**6. `Log.w()` calls survive in release builds**
 - Files: `SystemSensorRepository.kt:200`, `SensorWidgetReceiver.kt:26`
 - ProGuard strips`Log.d()` only.`Log.w()` calls survive in release builds. Content is non-sensitive (camera error + FGS
   restriction), but noisy.
 - **Fix:** Strip `Log.w()` in release builds or keep for debugging.
 
-**10. Empty permission rationale callback**
+**7. Empty permission rationale callback**
 - File: `MainActivity.kt:28-29`
 - `requestPermissionLauncher` callback body is empty. If user denies permissions, no rationale or re-prompt is shown.
 - **Fix:** Show rationale Snackbar on denial.
 
-**11. `START_STICKY` on modern Android**
+**8. `START_STICKY` on modern Android**
 - File: `MonitoringService.kt:52-54`
 - On Android 14+, `START_STICKY` restart behavior is restricted — the system may delay or not restart the service.
 - **Impact:** Service may not restart promptly after being killed.
 
-**12. Permission revocation unnoticed while backgrounded**
+**9. Permission revocation unnoticed while backgrounded**
 - If user revokes`CAMERA` or`RECORD_AUDIO` in Settings while app is in background, the service won't detect it until
   `refresh()` is triggered (app opened or notification "Refresh" tapped).
 - **Fix:** Documented as known limitation in AGENTS.md.
 
-**13. Test quality issues**
+**10. Test quality issues**
 - `SensorViewModelTest.kt:34-41`: `assertNotNull` on StateFlows doesn't verify any actual values.
 - `MonitoringServiceTest.kt:129-134`: `bigContentView` assertion may behave differently under Robolectric vs. framework.
 - `StatusDashboardE2eTest.kt`: try/catch swallowing `AssertionError` makes debugging failures harder.
@@ -163,7 +143,7 @@ The`WidgetState` singleton is a pragmatic choice for cross-component state shari
   on error.
 - `WidgetStateLabelTest.kt`: Entirely redundant with `WidgetStateTest.kt` and `SensorStatusTest.kt`.
 
-**14. README emulator command has race condition**
+**11. README emulator command has race condition**
 - File: `README.md:75-77`
 - `android emulator start Pixel_8_Pro &` followed by`./gradlew :app:connectedDebugAndroidTest` — no`wait-for-device` or
   boot check between emulator start and test execution.
@@ -192,6 +172,8 @@ The`WidgetState` singleton is a pragmatic choice for cross-component state shari
 | `WifiManager.isWifiEnabled` deprecated | ✓ Using `getWifiState()` |
 | README stale `targetSdk: 33` reference | ✓ Updated |
 | Widget vertical centering | ✓ Fixed (FrameLayout overlay approach) |
+| Data-layer-to-widget-layer dependency (`WidgetState` in repo) | ✓ Moved to `MonitoringService.observeSensors()` (PR #37) |
+| Unused `height` import in `StatusDashboard.kt:15` | ✓ Removed |
 
 ---
 
@@ -237,13 +219,11 @@ The`WidgetState` singleton is a pragmatic choice for cross-component state shari
 The project is in strong shape. The architecture is clean, tests are thorough (38 unit, 22 E2E), security is handled,
 and documentation is comprehensive.
 
-**New findings this review (2 high, 6 medium, 7 low, 10 info):**
-- **1 high:** `SystemSensorRepository` imports `WidgetState` — MVVM layer violation
+**New findings this review (4 medium, 7 low, 10 info):**
 - **1 medium:** Missing Glance ProGuard keep rules may break release builds
 - **1 medium:** `foregroundServiceType` mismatch may cause issues on Android 14+
-- **1 medium:** Unnecessary `@OptIn(ExperimentalMaterial3Api::class)`
 - **1 medium:** `buildWidgetRemoteViews()` in wrong package
 - **1 medium:** PendingIntent request code collision
-- **1 medium:** Unused import in StatusDashboard
 
-No critical or blocking issues remain. All 3 previous review issues were fixed.
+No critical or blocking issues remain. All 3 previous review issues were fixed plus 2 more from this review (layer
+violation, unused import).
