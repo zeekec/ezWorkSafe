@@ -8,24 +8,17 @@ import android.content.Context
 import android.os.Build
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
-import com.ezworksafe.widget.WidgetState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
 
 class SensorRepositoryTest {
 
     private val mockContext: Context = mock()
-
-    @Before
-    fun setUp() {
-        WidgetState.lastRefreshTime = 0L
-    }
 
     @Test
     fun `isOpBlocked returns false for pre-P SDK`() {
@@ -68,11 +61,13 @@ class SensorRepositoryTest {
     }
 
     @Test
-    fun `refresh updates WidgetState lastRefreshTime`() {
-        WidgetState.lastRefreshTime = 0L
+    fun `refresh triggers flow re-emission`() = runTest {
         val repo = SystemSensorRepository(mockContext)
+        val first = repo.observeSensor(SensorType.WIFI).first()
+        assertEquals(SensorStatus.Unavailable, first)
         repo.refresh()
-        assertTrue(WidgetState.lastRefreshTime > 0)
+        val afterRefresh = repo.observeSensor(SensorType.WIFI).first()
+        assertEquals(SensorStatus.Unavailable, afterRefresh)
     }
 
     @Test

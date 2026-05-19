@@ -75,6 +75,7 @@ class MonitoringService : Service() {
                     SensorType.MICROPHONE to mic,
                     SensorType.CAMERA to cam
                 )
+                WidgetState.lastRefreshTime = System.currentTimeMillis()
                 pushWidgetUpdate(wifi, bt, mic, cam)
                 "WiFi: ${wifi.label} | BT: ${bt.label} | Mic: ${mic.label} | Cam: ${cam.label}"
             }.collect { text ->
