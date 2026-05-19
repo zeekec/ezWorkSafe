@@ -1,6 +1,6 @@
 # Security Audit: ezWorkSafe
 
-**Date:** 2026-05-12
+**Date:** 2026-05-18
 **Scope:** Full codebase audit — permissions, IPC, logging, data handling, crypto, network, build pipeline.
 **Methodology:** Manual source code review. No dynamic analysis or penetration testing performed.
 
@@ -8,15 +8,18 @@
 
 ## Summary
 
-| Risk Level | Count |
-|------------|-------|
-| Critical   | 0     |
-| High       | 0     |
-| Medium     | 0     |
-| Low        | 0     |
-| Informational | 3  |
+| Risk Level | Count | Key Items |
+|------------|-------|-----------|
+| Critical   | 0     | — |
+| High       | 0     | — |
+| Medium     | 3     | `foregroundServiceType` mismatch, PendingIntent request code collision, missing Glance ProGuard keep rules |
+| Low        | 4     | `buildConfig` enabled, `Log.w` in release, empty permission rationale callback, `START_STICKY` on modern Android, stale state on background permission revocation |
+| Informational | 15  | Documented green checks |
 
-The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by design). All medium-severity issues have been addressed.
+The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party
+SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by
+design). All medium-severity issues from the previous audit have been addressed; three new medium-severity issues were
+identified.
 
 ---
 
@@ -24,131 +27,174 @@ The app has a **small attack surface** — no network calls, no storage, no Cont
 
 ### M-1: BLUETOOTH_CONNECT runtime permission never requested
 
-**Status: ✓ FIXED**
+**Status: ✓ FIXED** (previous audit)
 
-**Files changed:**
-- `app/src/main/java/com/ezworksafe/util/PermissionHelper.kt` — `REQUIRED_RUNTIME_PERMISSIONS` is now version-gated: includes `BLUETOOTH_CONNECT` on API 31+
-- `app/src/main/java/com/ezworksafe/data/repository/SystemSensorRepository.kt` — added permission check at top of `observeBluetoothStatus()`; narrowed `catch (e: Exception)` to `catch (e: SecurityException)`
-- `app/src/test/java/com/ezworksafe/util/PermissionHelperTest.kt` — tests for both API level paths
+**Files changed (historical):**
+- `PermissionHelper.kt` — `REQUIRED_RUNTIME_PERMISSIONS` is now version-gated: includes `BLUETOOTH_CONNECT` on API 31+
+- `SystemSensorRepository.kt` — added permission check at top of`observeBluetoothStatus()` ; narrowed
+  `catch (e: Exception)` to`catch (e: SecurityException)`
+- `PermissionHelperTest.kt` — tests for both API level paths
 
-`BLUETOOTH_CONNECT` is a dangerous permission on API 31+ but the app never requests it at runtime. `SystemSensorRepository.observeBluetoothStatus()` calls `BluetoothAdapter.isEnabled()` which throws `SecurityException` without this permission. The broad `catch (e: Exception)` at line 78 catches this and returns `null`, degrading to `Unavailable`.
+### M-2: Release build had debug logs and no minification
 
-**Impact:** On API 31+ devices, Bluetooth status always reports `Unavailable` instead of `Active`/`Blocked`. The user never sees a permission prompt and has no way to grant this permission from within the app.
+**Status: ✓ FIXED** (previous audit)
 
-**Fix:**
-1. Added `BLUETOOTH_CONNECT` to `PermissionHelper.REQUIRED_RUNTIME_PERMISSIONS` (version-gated to API 31+)
-2. Narrowed `catch (e: Exception)` in `observeBluetoothStatus()` to `catch (e: SecurityException)` for explicit handling
-3. Added `BLUETOOTH_CONNECT` permission check (API 31+) that emits `SensorStatus.Denied` if not granted
-
-### M-2: Release build has minification disabled, debug logs persist in production
-
-**Status: ✓ FIXED**
-
-**Files changed:**
+**Files changed (historical):**
 - `app/build.gradle.kts` — `isMinifyEnabled` set to `true` for release builds
 - `app/proguard-rules.pro` — added ProGuard rules to strip `Log.d` calls
 
-`MonitoringService.pushWidgetUpdate()` logs sensor statuses via `Log.d()`. With `isMinifyEnabled = false` and no ProGuard rules, `Log.d` calls are preserved in the release APK. While the data is not sensitive (Active/Inactive/Blocked/Denied/Unavailable), the log tag includes class names and the messages include widget IDs.
+---
 
-**Impact:** Low-severity information disclosure. Widget IDs and sensor state are visible to any app with `READ_LOGS` permission (disallowed on API 24+ for non-system apps, but `adb logcat` on a debug-connected device exposes them).
+### M-3: `foregroundServiceType="dataSync"` may be incorrect
 
-**Fix:**
-1. Enabled minification (`isMinifyEnabled = true`) for release builds
-2. Added ProGuard rule to strip `Log.d` calls in release builds
+**Status: ✓ NEW FINDING**
+
+**File:** `AndroidManifest.xml:45`, `MonitoringService.kt`
+
+The foreground service uses`foregroundServiceType="dataSync"` but its actual work is monitoring sensor state (WiFi,
+  Bluetooth, Mic, Camera). The`dataSync` type is intended for data transfer operations. On Android 14+ (API 34+), the
+  system may restrict or audit services whose declared type doesn't match their actual purpose.
+
+**Impact:** The service may be killed or restricted by the system on Android 14+ devices. On Android 15+, the Play Store
+  may flag`foregroundServiceType` mismatches during review.
+
+**Recommended fix:** Use`foregroundServiceType="specialUse"` with a corresponding`<uses-property>` declaration in the
+  manifest explaining the monitoring purpose, or evaluate whether`connectedDevice` ,`microphone` , and`camera` types are
+  more appropriate for the multi-sensor monitoring use case.
+
+### M-4: Missing Glance ProGuard keep rules
+
+**Status: ✓ NEW FINDING**
+
+**File:** `app/proguard-rules.pro`
+
+ProGuard/R8 only strips`Log.d()` calls. No`-keep` rules exist for Glance widget classes (`SensorWidget` ,
+  `SensorWidgetReceiver` ,`WidgetState` ). Glance accesses widgets via reflection for WorkManager-based initial render.
+  Without keep rules, release APKs may strip widget class names, causing:
+- Blank/empty widget on home screen
+- `ClassNotFoundException` in WorkManager background tasks
+- Crash on widget update
+
+**Impact:** Widget rendering may fail silently in release builds.
+
+**Recommended fix:** Add to `proguard-rules.pro`:
+```
+-keep class com.ezworksafe.widget.** { *; }
+```
+
+### M-5: PendingIntent request code collision
+
+**Status: ✓ NEW FINDING**
+
+**File:** `app/src/main/java/com/ezworksafe/service/MonitoringService.kt:101,120`
+
+Two`PendingIntent.getActivity()` calls use identical request code (0) with the same target component (`MainActivity` ).
+  `Intent.filterEquals()` considers the two intents equal (same component, no action/data/category differences), so the
+  system caches them as a single PendingIntent. With`FLAG_UPDATE_CURRENT` , whichever is created last overwrites the
+  first.
+- `pushWidgetUpdate()` line 101: request code 0, flags `NEW_TASK | CLEAR_TOP`
+- `createNotification()` line 120: request code 0, flags `SINGLE_TOP | CLEAR_TOP`
+
+**Impact:** The launch behavior of widget tap and notification "Refresh" action are identical — both use whichever
+  PendingIntent was most recently created. The intent flag differences are lost. Not exploitable (both use
+  `FLAG_IMMUTABLE` ), but undefined behavior means a widget tap may not create a new task as intended.
+
+**Recommended fix:** Use distinct request codes:
+```kotlin
+// pushWidgetUpdate():
+PendingIntent.getActivity(this, 0, openIntent, ...)  // request code 0
+
+// createNotification():
+PendingIntent.getActivity(this, 1, refreshIntent, ...)  // request code 1
+```
 
 ---
 
 ### L-1: Broad catch blocks mask unexpected errors
 
-**Status: ✓ FIXED**
+**Status: ✓ PREVIOUSLY FIXED** (from original audit)
 
-**Files changed:**
-- `app/src/main/java/com/ezworksafe/data/repository/SystemSensorRepository.kt`
-  - `isAppOpBlocked()`: narrowed `catch (_: Exception)` to `catch (_: SecurityException)`
-  - `observeCameraStatus()`: final fallback `catch (e: Exception)` now logs the unexpected exception via `Log.w`
+**Files changed (historical):**
+- `SystemSensorRepository.kt`: `isAppOpBlocked()` catch narrowed to `SecurityException`
+- `SystemSensorRepository.kt`: camera fallback catch now logs via `Log.w`
 
-Three locations catch `Exception` broadly rather than specific exception types:
-- Line 78: `catch (e: Exception)` in `observeBluetoothStatus()` — narrowed to `SecurityException` (M-1)
-- Line 119: `catch (_: Exception)` in `isAppOpBlocked()` — narrowed to `SecurityException`
-- Line 187: `catch (_: Exception)` in `observeCameraStatus()` — kept as final fallback, now logs
-
-**Impact:** Unexpected `RuntimeException` subtypes (e.g., `NullPointerException`, `IllegalStateException`) are silently swallowed, making debugging difficult.
-
-**Fix:**
-- Narrowed `isAppOpBlocked()` catch to `SecurityException`
-- Added `Log.w` to the camera catch-all fallback for debugging visibility
+Remaining: Camera catch-all at line 199 now logs via `Log.w`, which is appropriate.
 
 ### L-2: android:allowBackup enabled
 
-**Status: ✓ FIXED**
+**Status: ✓ FIXED** (previous audit)
 
-**File:** `AndroidManifest.xml:26`
+`allowBackup="false"` and `fullBackupContent="false"` set in `AndroidManifest.xml:26-27`.
 
-`android:allowBackup="true"` allows the device's backup mechanism to extract the app's data. The app stores no persistent data (no database, SharedPreferences, or files), so the practical risk is near-zero. However, it's a best-practice violation.
+### L-3: Keystore password in plaintext
 
-**Fix:** Set `android:allowBackup="false"` and `android:fullBackupContent="false"`.
+**Status: ✓ FIXED** (previous audit)
 
-### L-3: Keystore password stored in plaintext (in CI and local template)
-
-**Status: ✓ FIXED**
-
-**File:** `.githooks/pre-commit`
-
-**Files changed:**
-- `.githooks/pre-commit` — pre-commit hook that rejects commits staging `keystore.properties`
-
-The release keystore password, key alias, and key password are read from `keystore.properties` and written to disk in CI via `echo`. The file is in `.gitignore` locally, and CI uses ephemeral runners.
-
-**Impact:** Standard Android practice, but plaintext keystore passwords on disk are a risk if the CI runner artifact is compromised or if `keystore.properties` is accidentally committed.
-
-**Fix:** Added `.githooks/pre-commit` hook that checks for `keystore.properties` in the staging area and blocks the commit with an error message. The hooks directory must be enabled via `git config core.hooksPath .githooks`.
+Pre-commit hook (`.githooks/pre-commit`) blocks `keystore.properties` commits.
 
 ### L-4: Widget exposes sensor status on home screen / lock screen
 
-**File:** `SensorWidget.kt`, `widget_sensor_status.xml`
+**Status: By design, no change needed.**
 
-The home screen widget displays real-time sensor status (WiFi Active/Inactive, Mic Active/Inactive, etc.). This is visible without unlocking the device on the lock screen if the widget is placed there.
-
-**Impact:** In shared-device or public-display scenarios, sensor state could be observed by bystanders. This is inherent to the app's purpose (workplace safety monitoring in an employer-provided device context).
-
-**Recommendation:** None required — this is a design feature, not a vulnerability. Document in the app's privacy notice.
+`android:widgetCategory="home_screen"` in`widget_info_sensor.xml:8` limits display to home screen (not lock screen).
+  Home screen data exposure is inherent to the app's purpose (workplace safety monitoring).
 
 ### L-5: Conditional release signing silently falls back to unsigned
 
-**Status: ✓ FIXED**
+**Status: ✓ FIXED** (previous audit)
 
-**File:** `app/build.gradle.kts:45`
-
-If `keystore.properties` file doesn't exist, `signingConfigs.findByName("release")` on line 45 returns `null`, and the release build is unsigned. An unsigned APK cannot be installed on a device.
-
-**Impact:** Build process may produce an unusable APK without warning if keystore is misconfigured.
-
-**Fix:** Added `afterEvaluate` block that logs a warning if `keystore.properties` is missing. This runs during configuration phase and does not block non-release builds:
-```kotlin
-afterEvaluate {
-    if (keystoreProperties == null) {
-        logger.warn("keystore.properties not found; release builds will be unsigned")
-    }
-}
-```
+`afterEvaluate` block logs warning when `keystore.properties` is missing.
 
 ---
 
-### I-1: No network calls, storage, or third-party SDKs
+### L-6: `buildConfig = true` enabled
 
-**Positive finding.** The app makes zero network requests, stores zero data persistently, and uses only Jetpack/AndroidX libraries. This dramatically reduces the attack surface compared to typical Android apps.
+**Status: ✓ NEW FINDING**
 
-### I-2: PendingIntents correctly use FLAG_IMMUTABLE
+**File:** `app/build.gradle.kts:51`
 
-**File:** `MonitoringService.kt:134`
+`buildConfig = true` exposes`BuildConfig.DEBUG` and`BuildConfig.VERSION_NAME` . The app uses`BuildConfig.VERSION_NAME`
+  only in`AppInfoDialog.kt:73` for display. Not used for security decisions, but disabling reduces the exposed surface.
 
-All PendingIntents use `PendingIntent.FLAG_IMMUTABLE`, preventing PendingIntent hijacking attacks (CVE-2019-2114). No implicit PendingIntents exist.
+**Recommended fix:** Set `buildConfig = false` and read version from `packageManager` if needed.
 
-### I-3: Android 16 AppOps background limitation documented
+### L-7: `Log.w()` calls survive in release builds
 
-**File:** `AGENTS.md`
+**Status: ✓ NEW FINDING**
 
-The server-side enforcement of AppOps for background processes on Android 16 is documented as a known limitation. The widget's split-section architecture (left section real-time, right section foreground-refreshed) is a deliberate workaround.
+**Files:** `SystemSensorRepository.kt:200`, `SensorWidgetReceiver.kt:26`
+
+ProGuard strips `Log.d()` only. Two `Log.w()` calls survive in release builds:
+- `SystemSensorRepository.kt:200`: Unexpected camera error logging
+- `SensorWidgetReceiver.kt:26`: FGS restriction warning
+
+Content is non-sensitive, but noisier than necessary in release builds.
+
+### L-8: Empty permission rationale callback
+
+**Status: ✓ NEW FINDING**
+
+**File:** `MainActivity.kt:28-29`
+
+The`ActivityResultContracts.RequestMultiplePermissions()` callback body is empty. If the user denies permissions, no
+  rationale is shown and the user sees "Denied" status with no guidance on how to grant permissions.
+
+### L-9: `START_STICKY` on modern Android
+
+**Status: ✓ NEW FINDING**
+
+**File:** `MonitoringService.kt:52-54`
+
+On Android 14+,`START_STICKY` restart behavior is restricted. The system may delay restart or not restart the service at
+  all under memory pressure.
+
+### L-10: Permission revocation not detected in background
+
+**Status: ✓ NEW FINDING — documented known limitation**
+
+If the user revokes`CAMERA` or`RECORD_AUDIO` in Settings while the app is backgrounded, the service's sensor observation
+  continues showing the old state. Detection only occurs when`refresh()` is triggered (app opened or notification
+  "Refresh" tapped). This is documented in AGENTS.md.
 
 ---
 
@@ -171,15 +217,16 @@ The server-side enforcement of AppOps for background processes on Android 16 is 
 
 ## Recommendations Priority
 
-| Priority | Issue |
-|----------|-------|
-| **Fixed** | M-1: Request BLUETOOTH_CONNECT at runtime on API 31+ |
-| **Fixed** | M-2: Enable minification + strip debug logs in release builds |
-| **Fixed** | L-1: Narrow exception types in catch blocks |
-| **Low** | L-2: Set `android:allowBackup="false"` |
-| **Fixed** | L-3: Add pre-commit hook for `keystore.properties` |
-| **Fixed** | L-5: Fail fast on missing keystore config |
-| **N/A** (design) | L-4: Widget exposes sensor status on home screen |
+| Priority | Issue (since last audit) |
+|----------|--------------------------|
+| **Medium** | M-3: `foregroundServiceType` mismatch — use `specialUse` or appropriate type |
+| **Medium** | M-4: Add Glance ProGuard keep rules for release widget rendering |
+| **Medium** | M-5: Fix PendingIntent request code collision |
+| **Low** | L-6: Consider disabling `buildConfig` for release |
+| **Low** | L-7: Strip `Log.w()` or keep for debugging |
+| **Low** | L-8: Show permission rationale on denial |
+| **Low** | L-9: Evaluate `START_NOT_STICKY` or `START_REDELIVER_INTENT` for modern Android |
+| **Low** | L-10: Document permission revocation limitation (already in AGENTS.md) |
 
 ---
 
@@ -187,21 +234,31 @@ The server-side enforcement of AppOps for background processes on Android 16 is 
 
 | File | Lines |
 |------|-------|
-| `app/build.gradle.kts` | 102 |
-| `AndroidManifest.xml` | 59 |
-| `EzWorkSafeApp.kt` | 15 |
-| `data/repository/SystemSensorRepository.kt` | 212 |
-| `data/repository/SensorRepository.kt` | 10 |
-| `data/model/SensorStatus.kt` | 25 |
-| `ui/view/MainActivity.kt` | 62 |
-| `ui/viewmodel/SensorViewModel.kt` | 36 |
-| `service/MonitoringService.kt` | 159 |
-| `util/PermissionHelper.kt` | 20 |
-| `widget/SensorWidget.kt` | 160 |
-| `widget/SensorWidgetReceiver.kt` | 23 |
-| `widget/WidgetState.kt` | 13 |
-| `res/values/*.xml` | 13 total |
-| `res/layout/*.xml` | 364 total |
-| `.github/workflows/android.yml` | 51 |
+| `app/build.gradle.kts` | 113 |
+| `AndroidManifest.xml` | 60 |
+| `EzWorkSafeApp.kt` | 18 |
+| `data/repository/SystemSensorRepository.kt` | 225 |
+| `data/repository/SensorRepository.kt` | 13 |
+| `data/model/SensorStatus.kt` | 28 |
+| `ui/view/MainActivity.kt` | 67 |
+| `ui/viewmodel/SensorViewModel.kt` | 39 |
+| `ui/view/StatusDashboard.kt` | 138 |
+| `ui/view/EzWorkSafeTheme.kt` | 41 |
+| `ui/view/AppInfoDialog.kt` | 250 |
+| `service/MonitoringService.kt` | 186 |
+| `util/PermissionHelper.kt` | 33 |
+| `util/FormatUtils.kt` | 12 |
+| `widget/SensorWidget.kt` | 147 |
+| `widget/SensorWidgetReceiver.kt` | 43 |
+| `widget/WidgetState.kt` | 16 |
+| `res/values/*.xml` | 12 total |
+| `res/layout/*.xml` | 346 total |
+| `res/xml/widget_info_sensor.xml` | 9 |
+| `proguard-rules.pro` | 4 |
+| `.github/workflows/android.yml` | 57 |
 | `keystore.properties.template` | 6 |
-| `.gitignore` | 10 |
+| `.githooks/pre-commit` | 7 |
+| `.gitignore` | 15 |
+| `gradle.properties` | 6 |
+| `settings.gradle.kts` | 21 |
+| `README.md` | 107 |
