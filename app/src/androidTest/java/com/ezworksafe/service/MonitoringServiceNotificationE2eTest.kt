@@ -39,7 +39,9 @@ class MonitoringServiceNotificationE2eTest {
             val pfd = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
                 "dumpsys activity services com.ezworksafe/.service.MonitoringService"
             )
-            val text = BufferedReader(InputStreamReader(FileInputStream(pfd.fileDescriptor))).readText()
+            val text = FileInputStream(pfd.fileDescriptor).use { fis ->
+                BufferedReader(InputStreamReader(fis)).readText()
+            }
             pfd.close()
             text.contains("isForeground=true") && text.contains("foregroundId=1")
         }
