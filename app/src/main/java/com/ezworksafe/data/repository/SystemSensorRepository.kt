@@ -68,11 +68,18 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
                 emitState()
             }
         }
-        context.registerReceiver(
-            receiver,
-            IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION),
-            Context.RECEIVER_NOT_EXPORTED
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(
+                receiver,
+                IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            context.registerReceiver(
+                receiver,
+                IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION)
+            )
+        }
 
         awaitClose { context.unregisterReceiver(receiver) }
     }
@@ -114,11 +121,18 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
             }
         }
         val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-        context.registerReceiver(
-            receiver,
-            filter,
-            Context.RECEIVER_NOT_EXPORTED
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(
+                receiver,
+                filter,
+                Context.RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            context.registerReceiver(
+                receiver,
+                filter
+            )
+        }
 
         awaitClose { context.unregisterReceiver(receiver) }
     }
