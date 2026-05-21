@@ -11,8 +11,9 @@ import androidx.core.content.ContextCompat
 
 object PermissionHelper {
 
-    val REQUIRED_RUNTIME_PERMISSIONS: Array<String>
-        get() = getRequiredRuntimePermissions()
+    val REQUIRED_RUNTIME_PERMISSIONS: Array<String> by lazy {
+        getRequiredRuntimePermissions()
+    }
 
     fun getRequiredRuntimePermissions(sdk: Int = Build.VERSION.SDK_INT): Array<String> {
         val permissions = mutableListOf(
