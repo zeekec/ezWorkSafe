@@ -73,6 +73,10 @@ Requires a connected device or running emulator.
 
 ```bash
 android emulator start Pixel_8_Pro &
+adb wait-for-device
+while [ "$(adb shell getprop sys.boot_completed)" != "1" ]; do
+  sleep 2
+done
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
