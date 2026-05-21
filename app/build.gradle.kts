@@ -56,7 +56,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    if (name.startsWith("compile") && (name.contains("UnitTest") || name.contains("AndroidTest"))) {
+        source(fileTree("src/testShared/java"))
+    }
 }
 
 base {
