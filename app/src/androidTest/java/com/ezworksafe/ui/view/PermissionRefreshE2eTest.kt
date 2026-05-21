@@ -10,12 +10,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.Lifecycle
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
-import org.junit.Ignore
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 
-@Ignore("executeShellCommand crashes on API 36; revisit with proper Android 16 shell API")
 class PermissionRefreshE2eTest {
 
     private val permissionRule = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -40,11 +39,20 @@ class PermissionRefreshE2eTest {
 
     @Test
     fun revokingCamera_showsDenied_afterResume() {
+        assumeTrue(
+            "executeShellCommand may crash the process on API 36+",
+            Build.VERSION.SDK_INT < 36
+        )
+
         composeRule.waitForIdle()
 
-        InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
-            "pm revoke com.ezworksafe android.permission.CAMERA"
-        ).close()
+        try {
+            InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
+                "pm revoke com.ezworksafe android.permission.CAMERA"
+            ).close()
+        } catch (e: Exception) {
+            assumeTrue("executeShellCommand failed: ${e.message}", false)
+        }
 
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
