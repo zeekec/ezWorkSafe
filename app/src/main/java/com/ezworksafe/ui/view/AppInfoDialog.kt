@@ -34,6 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 
@@ -70,9 +72,14 @@ fun AppInfoDialog(
                 initiallyExpanded = true
             ) {
                 val context = LocalContext.current
-                val versionName = with(context.packageManager) {
+                val versionName = if (Build.VERSION.SDK_INT >= 33) {
+                    context.packageManager.getPackageInfo(
+                        context.packageName,
+                        PackageManager.PackageInfoFlags.of(0)
+                    ).versionName
+                } else {
                     @Suppress("DEPRECATION")
-                    getPackageInfo(context.packageName, 0).versionName
+                    context.packageManager.getPackageInfo(context.packageName, 0).versionName
                 } ?: "?"
                 Text(
                     text = "ezWorkSafe v$versionName",
