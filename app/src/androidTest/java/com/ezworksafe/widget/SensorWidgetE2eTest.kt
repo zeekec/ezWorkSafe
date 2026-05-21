@@ -13,7 +13,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.ezworksafe.R
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
-import com.ezworksafe.service.buildWidgetRemoteViews
+import com.ezworksafe.widget.buildWidgetRemoteViews
 import com.ezworksafe.ui.view.MainActivity
 import java.text.DateFormat
 import org.junit.Assert.assertEquals
