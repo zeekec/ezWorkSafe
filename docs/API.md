@@ -223,7 +223,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | `android.permission.RECORD_AUDIO` | Dangerous | All | Monitor microphone recording state (runtime prompt) |
 | `android.permission.CAMERA` | Dangerous | All | Monitor camera usage state (runtime prompt) |
 | `android.permission.FOREGROUND_SERVICE` | Normal | 28+ | Run a foreground service |
-| `android.permission.FOREGROUND_SERVICE_DATA_SYNC` | Normal | 34+ | Declare `dataSync` foreground service type |
+| `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | Normal | 34+ | Declare `specialUse` foreground service type |
 
 ### Runtime Permissions (CAMERA + RECORD_AUDIO)
 - Requested in `MainActivity.kt:52-55` via `ActivityResultContracts.RequestMultiplePermissions`
@@ -240,7 +240,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 |---------|-------|---------|
 | `android:name=".EzWorkSafeApp"` | Application subclass | Initializes `sensorRepository` on startup |
 | `android:name=".ui.view.MainActivity"` | Activity | Launcher activity with `MAIN`/`LAUNCHER` intent filter |
-| `android:name=".service.MonitoringService"` | Service | Foreground service, `foregroundServiceType="dataSync"`, not exported |
+| `android:name=".service.MonitoringService"` | Service | Foreground service, `foregroundServiceType="specialUse"`, not exported |
 | `android.hardware.camera` (required=false) | Feature | Camera hardware optional — app works without it |
 | `android.hardware.microphone` (required=false) | Feature | Microphone hardware optional — app works without it |
 
