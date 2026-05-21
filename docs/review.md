@@ -81,12 +81,11 @@ keeping the data layer free of widget dependencies.
   crash or render blank widgets.
 - **Fix:** Add `-keep class com.ezworksafe.widget.** { *; }` to `proguard-rules.pro`.
 
-**2. `foregroundServiceType` may be incorrect**
-- File: `AndroidManifest.xml:45`, `MonitoringService.kt`
-- Service uses `foregroundServiceType="dataSync"` but the service monitors sensor state, not data synchronization. On
-  Android 14+, the system may restrict services whose declared type doesn't match their actual work.
-- **Recommended fix:** Use `foregroundServiceType="specialUse"` with a declaration in the manifest, or evaluate whether
-  `connectedDevice`, `microphone`, or `camera` types are more appropriate.
+~~**2. `foregroundServiceType` may be incorrect**~~
+- ~~File: `AndroidManifest.xml:45`, `MonitoringService.kt`~~
+- ~~Service uses `foregroundServiceType="dataSync"` but the service monitors sensor state, not data synchronization. On
+  Android 14+, the system may restrict services whose declared type doesn't match their actual work.~~
+- **Status: ✓ FIXED** — Changed to `specialUse` with `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` declaration (PR #41).
 
 **3. `buildWidgetRemoteViews()` in wrong package**
 - File: `app/src/main/java/com/ezworksafe/service/MonitoringService.kt:148-186`
@@ -174,6 +173,7 @@ keeping the data layer free of widget dependencies.
 | Widget vertical centering | ✓ Fixed (FrameLayout overlay approach) |
 | Data-layer-to-widget-layer dependency (`WidgetState` in repo) | ✓ Moved to `MonitoringService.observeSensors()` (PR #37) |
 | Unused `height` import in `StatusDashboard.kt:15` | ✓ Removed |
+| `foregroundServiceType="dataSync"` incorrect | ✓ Changed to `specialUse` with `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` (PR #41) |
 
 ---
 
@@ -196,7 +196,7 @@ keeping the data layer free of widget dependencies.
 |-----|-------|
 | `colors.xml` background value unused since edge-to-edge | Harmless |
 | CI doesn't run E2E tests | Documented gap — intentional for cost |
-| `foregroundServiceType` rationale undocumented | Why `dataSync` was chosen for a sensor monitoring app |
+ | ~~`foregroundServiceType` rationale undocumented~~ | ✓ Documented via `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` (PR #41) |
 
 ---
 
@@ -219,11 +219,11 @@ keeping the data layer free of widget dependencies.
 The project is in strong shape. The architecture is clean, tests are thorough (38 unit, 22 E2E), security is handled,
 and documentation is comprehensive.
 
-**New findings this review (4 medium, 7 low, 10 info):**
+**New findings this review (3 medium remaining, 7 low, 9 info):**
 - **1 medium:** Missing Glance ProGuard keep rules may break release builds
-- **1 medium:** `foregroundServiceType` mismatch may cause issues on Android 14+
+- ~~**1 medium:** `foregroundServiceType` mismatch may cause issues on Android 14+~~ ✓ Fixed (PR #41)
 - **1 medium:** `buildWidgetRemoteViews()` in wrong package
 - **1 medium:** PendingIntent request code collision
 
-No critical or blocking issues remain. All 3 previous review issues were fixed plus 2 more from this review (layer
-violation, unused import).
+No critical or blocking issues remain. All 3 previous review issues were fixed plus 3 more from this review (layer
+violation, unused import, `foregroundServiceType`).

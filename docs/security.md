@@ -12,14 +12,13 @@
 |------------|-------|-----------|
 | Critical   | 0     | — |
 | High       | 0     | — |
-| Medium     | 3     | `foregroundServiceType` mismatch, PendingIntent request code collision, missing Glance ProGuard keep rules |
+| Medium     | 2     | PendingIntent request code collision, missing Glance ProGuard keep rules |
 | Low        | 4     | `buildConfig` enabled, `Log.w` in release, empty permission rationale callback, `START_STICKY` on modern Android, stale state on background permission revocation |
 | Informational | 15  | Documented green checks |
 
 The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party
 SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by
-design). All medium-severity issues from the previous audit have been addressed; three new medium-severity issues were
-identified.
+design). All medium-severity issues from the previous audit have been addressed; two medium-severity issues remain open.
 
 ---
 
@@ -47,20 +46,14 @@ identified.
 
 ### M-3: `foregroundServiceType="dataSync"` may be incorrect
 
-**Status: ✓ NEW FINDING**
+**Status: ✓ FIXED** (PR #41)
 
-**File:** `AndroidManifest.xml:45`, `MonitoringService.kt`
-
-The foreground service uses`foregroundServiceType="dataSync"` but its actual work is monitoring sensor state (WiFi,
-  Bluetooth, Mic, Camera). The`dataSync` type is intended for data transfer operations. On Android 14+ (API 34+), the
-  system may restrict or audit services whose declared type doesn't match their actual purpose.
-
-**Impact:** The service may be killed or restricted by the system on Android 14+ devices. On Android 15+, the Play Store
-  may flag`foregroundServiceType` mismatches during review.
-
-**Recommended fix:** Use`foregroundServiceType="specialUse"` with a corresponding`<uses-property>` declaration in the
-  manifest explaining the monitoring purpose, or evaluate whether`connectedDevice` ,`microphone` , and`camera` types are
-  more appropriate for the multi-sensor monitoring use case.
+**Files changed:**
+- `AndroidManifest.xml` — Replaced `foregroundServiceType="dataSync"` with `foregroundServiceType="specialUse"`,
+  replaced `FOREGROUND_SERVICE_DATA_SYNC` permission with `FOREGROUND_SERVICE_SPECIAL_USE`, added
+  `<property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE">` with use case description
+- `MonitoringService.kt` — Extracted `startForegroundNotification()` helper using three-parameter
+  `startForeground()` overload with `ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE` on API 34+
 
 ### M-4: Missing Glance ProGuard keep rules
 
@@ -219,7 +212,7 @@ If the user revokes`CAMERA` or`RECORD_AUDIO` in Settings while the app is backgr
 
 | Priority | Issue (since last audit) |
 |----------|--------------------------|
-| **Medium** | M-3: `foregroundServiceType` mismatch — use `specialUse` or appropriate type |
+| ~~**Medium** | M-3: `foregroundServiceType` mismatch — use `specialUse` or appropriate type |~~ ✓ Fixed (PR #41)
 | **Medium** | M-4: Add Glance ProGuard keep rules for release widget rendering |
 | **Medium** | M-5: Fix PendingIntent request code collision |
 | **Low** | L-6: Consider disabling `buildConfig` for release |
@@ -235,17 +228,9 @@ If the user revokes`CAMERA` or`RECORD_AUDIO` in Settings while the app is backgr
 | File | Lines |
 |------|-------|
 | `app/build.gradle.kts` | 113 |
-| `AndroidManifest.xml` | 60 |
-| `EzWorkSafeApp.kt` | 18 |
-| `data/repository/SystemSensorRepository.kt` | 225 |
-| `data/repository/SensorRepository.kt` | 13 |
-| `data/model/SensorStatus.kt` | 28 |
-| `ui/view/MainActivity.kt` | 67 |
-| `ui/viewmodel/SensorViewModel.kt` | 39 |
-| `ui/view/StatusDashboard.kt` | 138 |
-| `ui/view/EzWorkSafeTheme.kt` | 41 |
-| `ui/view/AppInfoDialog.kt` | 250 |
-| `service/MonitoringService.kt` | 186 |
+| `AndroidManifest.xml` | 64 |
+...
+| `service/MonitoringService.kt` | 197 |
 | `util/PermissionHelper.kt` | 33 |
 | `util/FormatUtils.kt` | 12 |
 | `widget/SensorWidget.kt` | 147 |

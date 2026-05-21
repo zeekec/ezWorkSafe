@@ -348,7 +348,7 @@ git commit -m "chore: scaffold Android project with Compose, Coroutines, Lifecyc
         <!-- Foreground service (uncomment when Phase 8 is implemented)
         <service
             android:name=".service.MonitoringService"
-            android:foregroundServiceType="dataSync"
+            android:foregroundServiceType="specialUse"
             android:exported="false" />
         -->
 
