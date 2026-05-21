@@ -31,6 +31,9 @@ import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.ui.view.MainActivity
 
+private val wifiBtSensors = setOf(SensorType.WIFI, SensorType.BLUETOOTH)
+private val micCamSensors = setOf(SensorType.MICROPHONE, SensorType.CAMERA)
+
 class SensorWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -60,14 +63,14 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                 verticalAlignment = Alignment.Vertical.CenterVertically,
                 horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
             ) {
-                val leftEntries = statuses.entries.toList().take(2)
-                leftEntries.forEachIndexed { index, (type, status) ->
+                val wifiBtList = statuses.filterKeys { it in wifiBtSensors }.entries.toList()
+                wifiBtList.forEachIndexed { index, (type, status) ->
                     SensorCell(
                         name = type.shortName,
                         status = status,
                         modifier = GlanceModifier.defaultWeight()
                     )
-                    if (index < leftEntries.lastIndex) {
+                    if (index < wifiBtList.lastIndex) {
                         Box(
                             modifier = GlanceModifier
                                 .width(1.dp)
@@ -94,14 +97,14 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                     verticalAlignment = Alignment.Vertical.CenterVertically,
                     horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
                 ) {
-                    val rightEntries = statuses.entries.toList().drop(2)
-                    rightEntries.forEachIndexed { index, (type, status) ->
+                    val micCamList = statuses.filterKeys { it in micCamSensors }.entries.toList()
+                    micCamList.forEachIndexed { index, (type, status) ->
                         SensorCell(
                             name = type.shortName,
                             status = status,
                             modifier = GlanceModifier.defaultWeight()
                         )
-                        if (index < rightEntries.lastIndex) {
+                        if (index < micCamList.lastIndex) {
                             Box(
                                 modifier = GlanceModifier
                                     .width(1.dp)
