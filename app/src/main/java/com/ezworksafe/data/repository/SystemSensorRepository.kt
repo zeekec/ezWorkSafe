@@ -51,7 +51,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
         if (wifiManager == null) {
             trySend(SensorStatus.Unavailable)
-            close()
+            awaitClose { }
             return@callbackFlow
         }
 
@@ -78,7 +78,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
             ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
         ) {
             trySend(SensorStatus.Denied)
-            close()
+            awaitClose { }
             return@callbackFlow
         }
 
@@ -91,7 +91,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
 
         if (bluetoothAdapter == null) {
             trySend(SensorStatus.Unavailable)
-            close()
+            awaitClose { }
             return@callbackFlow
         }
 

@@ -28,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
@@ -64,10 +65,10 @@ class MonitoringService : Service() {
         val repository: SensorRepository = (application as EzWorkSafeApp).sensorRepository
         serviceScope.launch {
             combine(
-                repository.observeSensor(SensorType.WIFI),
-                repository.observeSensor(SensorType.BLUETOOTH),
-                repository.observeSensor(SensorType.MICROPHONE),
-                repository.observeSensor(SensorType.CAMERA)
+                repository.observeSensor(SensorType.WIFI).catch { emit(SensorStatus.Unavailable) },
+                repository.observeSensor(SensorType.BLUETOOTH).catch { emit(SensorStatus.Unavailable) },
+                repository.observeSensor(SensorType.MICROPHONE).catch { emit(SensorStatus.Unavailable) },
+                repository.observeSensor(SensorType.CAMERA).catch { emit(SensorStatus.Unavailable) }
             ) { wifi, bt, mic, cam ->
                 WidgetState.statuses = mapOf(
                     SensorType.WIFI to wifi,
