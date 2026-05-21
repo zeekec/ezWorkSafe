@@ -10,6 +10,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.ezworksafe.EzWorkSafeApp
+import com.ezworksafe.widget.buildWidgetRemoteViews
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.ui.view.MainActivity
 import org.junit.Assert.assertEquals
