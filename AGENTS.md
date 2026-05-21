@@ -40,6 +40,7 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 - GitHub does NOT recognize `Fixes Issue #N` — the word "Issue" breaks keyword detection
 - The commit message does not matter for auto-close, only the PR body
 - Use `gh pr merge --auto --squash` to enable auto-merge once CI/CodeQL pass
+- **Before merging**, verify docs are updated: search `docs/` for references to the old behavior — check `review.md`, `security.md`, `API.md`, `PLAN.md`, and any `docs/superpowers/` specs/plans
 
 **CI notes:**
 - Workflow requires `permissions: contents: read` for GITHUB_TOKEN
