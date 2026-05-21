@@ -10,11 +10,12 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.Lifecycle
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
-import org.junit.Assume.assumeTrue
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 
+@Ignore("pm revoke kills the app process by design — Android enforces permission revocation by killing the running process. The instrumentation dies before any assertions can run. This is fundamental Android security behavior, not a testing or API-level issue.")
 class PermissionRefreshE2eTest {
 
     private val permissionRule = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -39,20 +40,11 @@ class PermissionRefreshE2eTest {
 
     @Test
     fun revokingCamera_showsDenied_afterResume() {
-        assumeTrue(
-            "executeShellCommand may crash the process on API 36+",
-            Build.VERSION.SDK_INT < 36
-        )
-
         composeRule.waitForIdle()
 
-        try {
-            InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
-                "pm revoke com.ezworksafe android.permission.CAMERA"
-            ).close()
-        } catch (e: Exception) {
-            assumeTrue("executeShellCommand failed: ${e.message}", false)
-        }
+        InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
+            "pm revoke com.ezworksafe android.permission.CAMERA"
+        ).close()
 
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
