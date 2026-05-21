@@ -11,6 +11,7 @@ import android.app.Service
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -45,7 +46,7 @@ class MonitoringService : Service() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, createNotification("Starting..."))
+        startForegroundNotification(createNotification("Starting..."))
         observeSensors()
     }
 
@@ -80,7 +81,7 @@ class MonitoringService : Service() {
                 "WiFi: ${wifi.label} | BT: ${bt.label} | Mic: ${mic.label} | Cam: ${cam.label}"
             }.collect { text ->
                 val notification = createNotification(text)
-                startForeground(NOTIFICATION_ID, notification)
+                startForegroundNotification(notification)
             }
         }
     }
@@ -143,6 +144,15 @@ class MonitoringService : Service() {
         }
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(channel)
+    }
+
+    private fun startForegroundNotification(notification: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            @Suppress("DEPRECATION")
+            startForeground(NOTIFICATION_ID, notification)
+        }
     }
 }
 
