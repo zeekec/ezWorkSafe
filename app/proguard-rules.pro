@@ -2,3 +2,5 @@
     public static boolean isLoggable(java.lang.String, int);
     public static int d(...);
 }
+
+-keep class com.ezworksafe.widget.** { *; }

@@ -74,12 +74,12 @@ keeping the data layer free of widget dependencies.
 
 ### Medium
 
-**1. Missing Glance ProGuard keep rules**
-- File: `app/proguard-rules.pro`
-- ProGuard only strips `Log.d()` calls. Glance components (`SensorWidget`, `SensorWidgetReceiver`) are referenced via
+~~**1. Missing Glance ProGuard keep rules**~~
+- ~~File: `app/proguard-rules.pro`~~
+- ~~ProGuard only strips `Log.d()` calls. Glance components (`SensorWidget`, `SensorWidgetReceiver`) are referenced via
   reflection by the Glance framework for WorkManager-based initial render. Without `-keep` rules, release builds may
-  crash or render blank widgets.
-- **Fix:** Add `-keep class com.ezworksafe.widget.** { *; }` to `proguard-rules.pro`.
+  crash or render blank widgets.~~
+- **Status: ✓ FIXED** — Added `-keep class com.ezworksafe.widget.** { *; }` to `proguard-rules.pro` (PR #43).
 
 ~~**2. `foregroundServiceType` may be incorrect**~~
 - ~~File: `AndroidManifest.xml:45`, `MonitoringService.kt`~~
@@ -174,6 +174,7 @@ keeping the data layer free of widget dependencies.
 | Data-layer-to-widget-layer dependency (`WidgetState` in repo) | ✓ Moved to `MonitoringService.observeSensors()` (PR #37) |
 | Unused `height` import in `StatusDashboard.kt:15` | ✓ Removed |
 | `foregroundServiceType="dataSync"` incorrect | ✓ Changed to `specialUse` with `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` (PR #41) |
+| Missing Glance ProGuard keep rules | ✓ Added `-keep class com.ezworksafe.widget.**` to `proguard-rules.pro` (PR #43) |
 
 ---
 
@@ -219,8 +220,8 @@ keeping the data layer free of widget dependencies.
 The project is in strong shape. The architecture is clean, tests are thorough (38 unit, 22 E2E), security is handled,
 and documentation is comprehensive.
 
-**New findings this review (3 medium remaining, 7 low, 9 info):**
-- **1 medium:** Missing Glance ProGuard keep rules may break release builds
+**New findings this review (2 medium remaining, 7 low, 9 info):**
+- ~~**1 medium:** Missing Glance ProGuard keep rules may break release builds~~ ✓ Fixed (PR #43)
 - ~~**1 medium:** `foregroundServiceType` mismatch may cause issues on Android 14+~~ ✓ Fixed (PR #41)
 - **1 medium:** `buildWidgetRemoteViews()` in wrong package
 - **1 medium:** PendingIntent request code collision

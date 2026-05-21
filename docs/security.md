@@ -12,7 +12,7 @@
 |------------|-------|-----------|
 | Critical   | 0     | — |
 | High       | 0     | — |
-| Medium     | 2     | PendingIntent request code collision, missing Glance ProGuard keep rules |
+| Medium     | 1     | PendingIntent request code collision |
 | Low        | 4     | `buildConfig` enabled, `Log.w` in release, empty permission rationale callback, `START_STICKY` on modern Android, stale state on background permission revocation |
 | Informational | 15  | Documented green checks |
 
@@ -57,23 +57,11 @@ design). All medium-severity issues from the previous audit have been addressed;
 
 ### M-4: Missing Glance ProGuard keep rules
 
-**Status: ✓ NEW FINDING**
+**Status: ✓ FIXED** (PR #43)
 
 **File:** `app/proguard-rules.pro`
 
-ProGuard/R8 only strips`Log.d()` calls. No`-keep` rules exist for Glance widget classes (`SensorWidget` ,
-  `SensorWidgetReceiver` ,`WidgetState` ). Glance accesses widgets via reflection for WorkManager-based initial render.
-  Without keep rules, release APKs may strip widget class names, causing:
-- Blank/empty widget on home screen
-- `ClassNotFoundException` in WorkManager background tasks
-- Crash on widget update
-
-**Impact:** Widget rendering may fail silently in release builds.
-
-**Recommended fix:** Add to `proguard-rules.pro`:
-```
--keep class com.ezworksafe.widget.** { *; }
-```
+Added `-keep class com.ezworksafe.widget.** { *; }` to preserve all widget classes accessed by Glance via reflection.
 
 ### M-5: PendingIntent request code collision
 
@@ -213,7 +201,7 @@ If the user revokes`CAMERA` or`RECORD_AUDIO` in Settings while the app is backgr
 | Priority | Issue (since last audit) |
 |----------|--------------------------|
 | ~~**Medium** | M-3: `foregroundServiceType` mismatch — use `specialUse` or appropriate type |~~ ✓ Fixed (PR #41)
-| **Medium** | M-4: Add Glance ProGuard keep rules for release widget rendering |
+| ~~**Medium** | M-4: Add Glance ProGuard keep rules for release widget rendering |~~ ✓ Fixed (PR #43)
 | **Medium** | M-5: Fix PendingIntent request code collision |
 | **Low** | L-6: Consider disabling `buildConfig` for release |
 | **Low** | L-7: Strip `Log.w()` or keep for debugging |
