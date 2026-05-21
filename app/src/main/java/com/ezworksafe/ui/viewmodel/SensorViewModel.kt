@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
+private const val STOP_TIMEOUT_MILLIS = 5_000L
+
 class SensorViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = (application as EzWorkSafeApp).sensorRepository
@@ -21,19 +23,19 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
 
     val wifiStatus: StateFlow<SensorStatus> = repository
         .observeSensor(SensorType.WIFI)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SensorStatus.Unavailable)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), SensorStatus.Unavailable)
 
     val bluetoothStatus: StateFlow<SensorStatus> = repository
         .observeSensor(SensorType.BLUETOOTH)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SensorStatus.Unavailable)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), SensorStatus.Unavailable)
 
     val micStatus: StateFlow<SensorStatus> = repository
         .observeSensor(SensorType.MICROPHONE)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SensorStatus.Unavailable)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), SensorStatus.Unavailable)
 
     val cameraStatus: StateFlow<SensorStatus> = repository
         .observeSensor(SensorType.CAMERA)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SensorStatus.Unavailable)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), SensorStatus.Unavailable)
 
     fun refresh() = repository.refresh()
 }
