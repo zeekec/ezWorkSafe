@@ -61,6 +61,21 @@ class StatusDashboardE2eTest {
         SensorType.entries.forEach { fakeRepo.setStatus(it, SensorStatus.Inactive) }
     }
 
+    private fun waitForAssertion(timeoutMs: Long = 5_000, assertion: () -> Unit) {
+        var lastError: AssertionError? = null
+        composeRule.waitUntil(timeoutMs) {
+            try {
+                assertion()
+                lastError = null
+                true
+            } catch (e: AssertionError) {
+                lastError = e
+                false
+            }
+        }
+        lastError?.let { throw it }
+    }
+
     @Test
     fun wifi_card_shows_initial_status() {
         composeRule.onNodeWithText("WiFi").assertIsDisplayed()
@@ -69,36 +84,21 @@ class StatusDashboardE2eTest {
     @Test
     fun wifi_toggles_between_active_and_blocked() {
         fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Active)
-        composeRule.waitUntil(5_000) {
-            try {
-                composeRule.onNodeWithText("Active").assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        waitForAssertion {
+            composeRule.onNodeWithText("Active").assertIsDisplayed()
         }
 
         fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Blocked)
-        composeRule.waitUntil(5_000) {
-            try {
-                composeRule.onNode(hasText("Blocked") and hasAnySibling(hasText("WiFi"))).assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        waitForAssertion {
+            composeRule.onNode(hasText("Blocked") and hasAnySibling(hasText("WiFi"))).assertIsDisplayed()
         }
     }
 
     @Test
     fun bluetooth_active_updates_ui() {
         fakeRepo.setStatus(SensorType.BLUETOOTH, SensorStatus.Active)
-        composeRule.waitUntil(5000) {
-            try {
-                composeRule.onNodeWithText("Active").assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        waitForAssertion {
+            composeRule.onNodeWithText("Active").assertIsDisplayed()
         }
     }
 
@@ -113,91 +113,56 @@ class StatusDashboardE2eTest {
     @Test
     fun sensor_shows_denied_status() {
         fakeRepo.setStatus(SensorType.CAMERA, SensorStatus.Denied)
-        composeRule.waitUntil(5000) {
-            try {
-                composeRule.onNodeWithText("Denied").assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        waitForAssertion {
+            composeRule.onNodeWithText("Denied").assertIsDisplayed()
         }
     }
 
     @Test
     fun bluetooth_blocked_updates_ui() {
         fakeRepo.setStatus(SensorType.BLUETOOTH, SensorStatus.Blocked)
-        composeRule.waitUntil(5000) {
-            try {
-                composeRule.onNode(hasText("Blocked") and hasAnySibling(hasText("Bluetooth"))).assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        waitForAssertion {
+            composeRule.onNode(hasText("Blocked") and hasAnySibling(hasText("Bluetooth"))).assertIsDisplayed()
         }
     }
 
     @Test
     fun microphone_shows_active() {
         fakeRepo.setStatus(SensorType.MICROPHONE, SensorStatus.Active)
-        composeRule.waitUntil(5000) {
-            try {
-                composeRule.onNode(hasText("Active") and hasAnySibling(hasText("Microphone"))).assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        waitForAssertion {
+            composeRule.onNode(hasText("Active") and hasAnySibling(hasText("Microphone"))).assertIsDisplayed()
         }
     }
 
     @Test
     fun microphone_shows_blocked() {
         fakeRepo.setStatus(SensorType.MICROPHONE, SensorStatus.Blocked)
-        composeRule.waitUntil(5000) {
-            try {
-                composeRule.onNode(hasText("Blocked") and hasAnySibling(hasText("Microphone"))).assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        waitForAssertion {
+            composeRule.onNode(hasText("Blocked") and hasAnySibling(hasText("Microphone"))).assertIsDisplayed()
         }
     }
 
     @Test
     fun microphone_shows_denied() {
         fakeRepo.setStatus(SensorType.MICROPHONE, SensorStatus.Denied)
-        composeRule.waitUntil(5000) {
-            try {
-                composeRule.onNode(hasText("Denied") and hasAnySibling(hasText("Microphone"))).assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        waitForAssertion {
+            composeRule.onNode(hasText("Denied") and hasAnySibling(hasText("Microphone"))).assertIsDisplayed()
         }
     }
 
     @Test
     fun camera_shows_active() {
         fakeRepo.setStatus(SensorType.CAMERA, SensorStatus.Active)
-        composeRule.waitUntil(5000) {
-            try {
-                composeRule.onNode(hasText("Active") and hasAnySibling(hasText("Camera"))).assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        waitForAssertion {
+            composeRule.onNode(hasText("Active") and hasAnySibling(hasText("Camera"))).assertIsDisplayed()
         }
     }
 
     @Test
     fun camera_shows_unavailable() {
         fakeRepo.setStatus(SensorType.CAMERA, SensorStatus.Unavailable)
-        composeRule.waitUntil(5000) {
-            try {
-                composeRule.onNode(hasText("Unavailable") and hasAnySibling(hasText("Camera"))).assertIsDisplayed()
-                true
-            } catch (_: AssertionError) {
-                false
-            }
+        waitForAssertion {
+            composeRule.onNode(hasText("Unavailable") and hasAnySibling(hasText("Camera"))).assertIsDisplayed()
         }
     }
 }

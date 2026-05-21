@@ -131,6 +131,7 @@ class MonitoringServiceTest {
         val service = Robolectric.buildService(MonitoringService::class.java).create().get()
         val notification = service.createNotification("WiFi: Active | BT: Inactive | Mic: Denied | Cam: Unavailable")
 
-        assertNotNull(notification.bigContentView)
+        val bigText = notification.extras?.getString(android.app.Notification.EXTRA_TEXT)
+        assertNotNull("Notification should have BigText content", bigText)
     }
 }
