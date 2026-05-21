@@ -61,6 +61,7 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 - `BLUETOOTH` / `BLUETOOTH_CONNECT` — Bluetooth status
 - `RECORD_AUDIO` — Mic access monitoring (runtime permission)
 - `CAMERA` — Camera access monitoring (runtime permission)
+- `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_SPECIAL_USE` — Foreground monitoring service
 
 ## Architecture: MVVM
 **Package Structure:**
@@ -71,10 +72,10 @@ app/src/main/java/com/ezworksafe/
 │   └── model/         # SensorStatus sealed class, SensorType enum
 ├── ui/
 │   ├── viewmodel/     # SensorViewModel (exposes StateFlow per sensor)
-│   └── view/          # MainActivity + StatusDashboard (Compose) + EzWorkSafeTheme
+│   └── view/          # MainActivity + StatusDashboard + AppInfoDialog + EzWorkSafeTheme
 ├── service/           # MonitoringService (foreground, pushes widget updates)
 ├── widget/            # SensorWidget (Glance), SensorWidgetReceiver, WidgetState singleton
-└── util/              # PermissionHelper
+└── util/              # PermissionHelper, FormatUtils
 ```
 
 **Real-time Pattern:** `callbackFlow` wrapping system callbacks:
@@ -85,7 +86,7 @@ app/src/main/java/com/ezworksafe/
 
 ## Android Gotchas
 - Mic/Camera need **runtime permission** requests, not just manifest
-- Background monitoring may need **foreground service** + battery whitelist
+- Background monitoring uses a **foreground service** (`MonitoringService`, `foregroundServiceType="specialUse"`) — the service is started on app launch and runs persistently to push widget updates
 - Camera/mic monitoring APIs vary across **API levels**
 - Some `BroadcastReceiver` actions restricted since Android 8+
 - **Android 16 AppOps limitation**: `checkOpNoThrow()` returns `MODE_IGNORED` for background processes regardless of actual privacy toggle state. This is server-side enforced with no client-side workaround. Mic/Cam privacy toggle changes are NOT detectable from background — the widget's right section (Mic/Cam) shows stale state until the user opens the app.
@@ -124,7 +125,7 @@ See [docs/PLAN.md](docs/PLAN.md) for the full implementation breakdown.
   ```
 
 ## Testing
-- Unit: ViewModel + Repository (JUnit + Mockito + `runTest`)
+- Unit: ViewModel + Repository + Service notification (JUnit + Mockito + Robolectric + `runTest`)
 - E2E: Compose UI + `FakeSensorRepository` (instrumented, `connectedDebugAndroidTest`)
 - Widget: Provider metadata + `WidgetState` label verification (instrumented)
 - Notification: `dumpsys activity services` via `UiAutomation.executeShellCommand` (E2E)
