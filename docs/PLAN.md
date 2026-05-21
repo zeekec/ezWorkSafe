@@ -34,7 +34,7 @@ The following were implemented beyond the original plan:
 |--------|-------|
 | `compileSdk` | 36 |
 | `minSdk` | 26 |
-| `targetSdk` | 33 |
+| `targetSdk` | 35 |
 
 ### Key File Additions Not in Original Structure
 
@@ -137,7 +137,7 @@ ezWorkSafe/
 | `AndroidManifest.xml` | Permissions, Activity/Service declarations, Application class, widget receiver, feature flags |
 | `EzWorkSafeApp.kt` | Application subclass with lateinit `sensorRepository` |
 | `SensorStatus.kt` | Sealed class: `Active`, `Inactive`, `Denied`, `Blocked`, `Unavailable` states |
-| `SensorType.kt` | Enum: `WIFI`, `BLUETOOTH`, `MICROPHONE`, `CAMERA` |
+
 | `SensorRepository.kt` | Interface: `observeSensor()`, `refresh()` |
 | `SystemSensorRepository.kt` | Wraps 4 system services → `callbackFlow<SensorStatus>` per sensor, with `refreshTrigger` + `flatMapLatest` |
 | `PermissionHelper.kt` | Runtime permission check + request launcher for CAMERA + RECORD_AUDIO |
@@ -1310,7 +1310,7 @@ git commit -m "chore: fix lint issues and finalize build config"
 | Permission revoked at runtime | Current: stale state until flow restarts; Future: observe permission changes |
 | Configuration change (rotation) | `WhileSubscribed(5_000)` keeps flows alive, ViewModel retained |
 | Android < 24 (no AudioRecordingCallback) | Mic reports `SensorStatus.Unavailable` |
-| BluetoothAdapter.getDefaultAdapter() deprecated in API 33 | Uses `getSystemService(BluetoothAdapter::class.java)` on API 23+ |
+| BluetoothAdapter.getDefaultAdapter() deprecated in API 33 | Uses `getSystemService(Context.BLUETOOTH_SERVICE)` → `BluetoothManager.adapter` on API 23+ |
 | WifiManager deprecated direct instantiation | Uses `getSystemService(Context.WIFI_SERVICE)` |
 | Camera2 unavailable on emulator | `cameraManager.cameraIdList` may throw → `Unavailable` |
 | Dual-SIM / multi-camera devices | Iterates all camera IDs via `cameraIdList` |
