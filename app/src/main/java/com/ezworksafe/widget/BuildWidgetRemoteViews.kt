@@ -19,7 +19,6 @@ internal fun buildWidgetRemoteViews(
     timeFormat: DateFormat,
     openAppIntent: PendingIntent? = null
 ): RemoteViews {
-    val labelColor = 0xFFAAAAAA.toInt()
     val statuses = mapOf(SensorType.WIFI to wifi, SensorType.BLUETOOTH to bt,
         SensorType.MICROPHONE to mic, SensorType.CAMERA to cam)
     val cellMap = mapOf(
@@ -30,21 +29,21 @@ internal fun buildWidgetRemoteViews(
     )
 
     val views = RemoteViews(packageName, R.layout.widget_sensor_status)
-    views.setInt(R.id.widget_root, "setBackgroundColor", 0xFF1a1a2e.toInt())
-    views.setInt(R.id.left_section, "setBackgroundColor", 0xFF1a1a2e.toInt())
-    views.setInt(R.id.right_section, "setBackgroundColor", 0xFF1e1e35.toInt())
+    views.setInt(R.id.widget_root, "setBackgroundColor", widgetBgDark)
+    views.setInt(R.id.left_section, "setBackgroundColor", widgetBgDark)
+    views.setInt(R.id.right_section, "setBackgroundColor", widgetBgRight)
     for ((type, status) in statuses) {
         val (dotId, statusId) = cellMap[type] ?: continue
         views.setInt(dotId, "setBackgroundColor", status.color)
         views.setTextColor(statusId, status.color)
         views.setTextViewText(statusId, status.label)
     }
-    views.setTextColor(R.id.label_wifi, labelColor)
-    views.setTextColor(R.id.label_bt, labelColor)
-    views.setTextColor(R.id.label_mic, labelColor)
-    views.setTextColor(R.id.label_cam, labelColor)
+    views.setTextColor(R.id.label_wifi, widgetLabelText)
+    views.setTextColor(R.id.label_bt, widgetLabelText)
+    views.setTextColor(R.id.label_mic, widgetLabelText)
+    views.setTextColor(R.id.label_cam, widgetLabelText)
     views.setTextViewText(R.id.last_updated, formatLastUpdated(lastRefreshTime, timeFormat))
-    views.setTextColor(R.id.last_updated, labelColor)
+    views.setTextColor(R.id.last_updated, widgetLabelText)
     if (openAppIntent != null) {
         views.setOnClickPendingIntent(R.id.widget_root, openAppIntent)
     }
