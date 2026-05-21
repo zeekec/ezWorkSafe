@@ -57,7 +57,7 @@ design). All medium-severity issues from the previous audit have been addressed;
 
 ### M-4: Missing Glance ProGuard keep rules
 
-**Status: ✓ FIXED** (this PR)
+**Status: ✓ FIXED** (PR #43)
 
 **File:** `app/proguard-rules.pro`
 
@@ -201,7 +201,7 @@ If the user revokes`CAMERA` or`RECORD_AUDIO` in Settings while the app is backgr
 | Priority | Issue (since last audit) |
 |----------|--------------------------|
 | ~~**Medium** | M-3: `foregroundServiceType` mismatch — use `specialUse` or appropriate type |~~ ✓ Fixed (PR #41)
-| ~~**Medium** | M-4: Add Glance ProGuard keep rules for release widget rendering |~~ ✓ Fixed (this PR)
+| ~~**Medium** | M-4: Add Glance ProGuard keep rules for release widget rendering |~~ ✓ Fixed (PR #43)
 | **Medium** | M-5: Fix PendingIntent request code collision |
 | **Low** | L-6: Consider disabling `buildConfig` for release |
 | **Low** | L-7: Strip `Log.w()` or keep for debugging |
