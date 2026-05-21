@@ -11,3 +11,4 @@ build/
 keystore.properties
 *.keystore
 .kotlin/
+.idea/
