@@ -36,10 +36,12 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 > `main` branch has repository rulesets requiring all changes through PRs (no direct pushes).
 
 **PR workflow:**
+- **Before starting a new fix**, checkout `main` and pull latest: `git checkout main && git pull origin main`
 - Use `Fixes #N` (not `Fixes Issue #N`) in the PR body to auto-close issues on merge
 - GitHub does NOT recognize `Fixes Issue #N` — the word "Issue" breaks keyword detection
 - The commit message does not matter for auto-close, only the PR body
 - Use `gh pr merge --auto --squash` to enable auto-merge once CI/CodeQL pass
+- **Before enabling auto-merge**, run E2E tests: `./gradlew connectedDebugAndroidTest` (requires emulator/device)
 - **Before merging**, verify docs are updated: search `docs/` for references to the old behavior — check `review.md`, `security.md`, `API.md`, `PLAN.md`, and any `docs/superpowers/` specs/plans
 
 **CI notes:**
