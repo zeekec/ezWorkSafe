@@ -1,8 +1,8 @@
 # Code & Documentation Review
 
-**Date:** 2026-05-18
-**Last updated:** 2026-05-18 (session 3)
-**Commit:** `755c9e4` (HEAD of `main`)
+**Date:** 2026-05-21
+**Last updated:** 2026-05-21 (session 4)
+**Commit:** `27ac322` (HEAD of `main`)
 **Review scope:** Full codebase, tests, config, docs, CI, security
 
 ---
@@ -28,12 +28,14 @@ keeping the data layer free of widget dependencies.
 - `isOpBlocked()` extracted as pure function
 - `buildWidgetRemoteViews()` extracted as top-level testable function
 - Permission helper is version-aware (`BLUETOOTH_CONNECT` on API 31+)
-- ProGuard strips `Log.d` via `-assumenosideeffects`
+- ProGuard strips `Log.d` and `Log.w` via `-assumenosideeffects`
+- `WidgetColors.kt` centralizes widget colors (eliminates duplication)
+- `STOP_TIMEOUT_MILLIS` named constant replaces magic number `5_000`
 - No dead imports, no unused resources
 - Configuration cache: `./gradlew build` in < 1s on cache hit
 - Previous review issues fixed: `CellIds` dead code removed, `@OptIn(ExperimentalCoroutinesApi)` removed, `isWifiEnabled`
-  replaced with `getWifiState()`
-- This review fixes: layer violation (WidgetState moved to service), unused import removed
+  replaced with `getWifiState()`, widget colors extracted to `WidgetColors.kt`, `5_000` extracted to `STOP_TIMEOUT_MILLIS`,
+  "This review fixes": layer violation (WidgetState moved to service), unused import removed
 
 ### UI
 - Edge-to-edge display with `safeDrawingPadding()`
@@ -107,6 +109,18 @@ keeping the data layer free of widget dependencies.
 - ~~**Fix:** Use distinct request codes (e.g., `0` for widget, `1` for notification).~~
 - **Status: ✓ FIXED** — Distinct request codes (`REQUEST_CODE_WIDGET = 0`, `REQUEST_CODE_REFRESH = 1`).
 
+### Medium
+
+**14. `RECEIVER_NOT_EXPORTED` used without API version guard**
+- File: `SystemSensorRepository.kt:74,120`
+- `registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)` on API 26-32 (`minSdk = 26`) silently ignores the flag (`0x4` is unrecognized). The receiver is exported and any app can send spoofed WiFi/BT state broadcasts.
+- **Fix:** Guard with API 33+ check.
+
+**15. `PermissionHelper.REQUIRED_RUNTIME_PERMISSIONS` re-allocates array on every access**
+- File: `PermissionHelper.kt:14-15`
+- `val` with custom getter creates a new list + `toTypedArray()` on each access. Called every time `areRuntimePermissionsGranted()` runs.
+- **Fix:** Use `private val` with `lazy` delegation or make it a top-level constant.
+
 ### Low
 
 ~~**5. `BuildConfig` enabled for release builds**~~
@@ -137,7 +151,7 @@ keeping the data layer free of widget dependencies.
 - **Status: ✓ FIXED** — Documented as known limitation in AGENTS.md (Android 16 AppOps restriction).
 
 **10. Test quality issues**
-- `SensorViewModelTest.kt:34-41`: `assertNotNull` on StateFlows doesn't verify any actual values.
+- `SensorViewModelTest.kt`: `assertNotNull` on StateFlows replaced with behavioral assertions (PR #64) — partially fixed, `WhileSubscribed` lazy subscription limits synchronous verification.
 - `MonitoringServiceTest.kt:129-134`: `bigContentView` assertion may behave differently under Robolectric vs. framework.
 - `StatusDashboardE2eTest.kt`: try/catch swallowing `AssertionError` makes debugging failures harder.
 - `MonitoringServiceNotificationE2eTest.kt:42` :`FileInputStream` without try-with-resources leaks`ParcelFileDescriptor`
@@ -154,9 +168,9 @@ keeping the data layer free of widget dependencies.
 
 | # | Finding | File | Description |
 |---|---------|------|-------------|
-| 1 | `5_000` magic number | `SensorViewModel.kt:23-28` | Extract `WhileSubscribed` timeout to named constant |
-| 2 | Color constants duplicated | `MonitoringService.kt:156-158`, `SensorWidget.kt:50,75,85,109` | Same 5 widget colors appear as raw integers in 2 files |
-| 3 | Camera emit ignores callback | `SystemSensorRepository.kt:187-194` | `emitState()` always probes hardware, doesn't use `AvailabilityCallback` state |
+| 1 | `5_000` magic number | `SensorViewModel.kt:23-28` | Extract `WhileSubscribed` timeout to named constant | ✓ Fixed — `STOP_TIMEOUT_MILLIS` (PR #63) |
+| 2 | Color constants duplicated | `MonitoringService.kt:156-158`, `SensorWidget.kt:50,75,85,109` | Same 5 widget colors appear as raw integers in 2 files | ✓ Fixed — `WidgetColors.kt` |
+| 3 | Camera/mic emit ignores callback data | `SystemSensorRepository.kt:150-209` | `emitState()` checks permission + AppOps, ignores callback data about actual hardware usage | By design — app reports whether hardware *can* be used, not whether it's currently in use |
 | 4 | `Arrangement.spacedBy(12.dp)` | `StatusDashboard.kt:67` | Magic number for spacing |
 | 5 | CI doesn't run E2E | `.github/workflows/android.yml:49` | Only `build` + `lint` + `test`. E2E skipped intentionally for cost. |
 | 6 | CI secrets in build log | `.github/workflows/android.yml:37-38` | `STORE_PASSWORD`/`KEY_ALIAS`/`KEY_PASSWORD` written to file via `echo` |
@@ -164,6 +178,8 @@ keeping the data layer free of widget dependencies.
 | 8 | Camera status detection fragility | `SystemSensorRepository.kt:187` | `getCameraCharacteristics()` may succeed even when camera is in use; `AvailabilityCallback` `onCameraUnavailable` is more reliable |
 | 9 | Pre-commit hook scope narrow | `.githooks/pre-commit` | Only checks `keystore.properties` — doesn't catch `.env`, `release.keystore`, etc. |
 | 10 | `PermissionRefreshE2eTest` is `@Ignored` | E2E test | Correctly ignored (API 36 shell restriction), but compiles and is never run |
+| 11 | PermissionHelper recomputation | `PermissionHelper.kt:14-15` | `val` getter re-allocates array on every access | See Medium issue #15 |
+| 12 | testShared sourceSet config | `app/build.gradle.kts:61-65` | Task name pattern matching is fragile | Alternative: `android.sourceSets` |
 
 ### Fixed Since Last Review
 
@@ -180,6 +196,12 @@ keeping the data layer free of widget dependencies.
 | Missing Glance ProGuard keep rules | ✓ Added `-keep class com.ezworksafe.widget.**` to `proguard-rules.pro` (PR #43) |
 | `buildWidgetRemoteViews()` in wrong package | ✓ Moved to `BuildWidgetRemoteViews.kt` in widget package (PR #39) |
 | PendingIntent request code collision | ✓ Distinct request codes (`REQUEST_CODE_WIDGET = 0`, `REQUEST_CODE_REFRESH = 1`) |
+| `FakeSensorRepository` duplicated in test/testShared/androidTest | ✓ Consolidated to `src/testShared/java` (PR #60, fixes #50) |
+| Widget enum iteration uses positional `take(2)`/`drop(2)` | ✓ Replaced with `filterKeys` + `wifiBtSensors`/`micCamSensors` sets (PR #61, fixes #56) |
+| `RECEIVER_NOT_EXPORTED` flag missing | ✓ Added to WiFi + BT `registerReceiver()` calls (PR #62, fixes #52) |
+| `WhileSubscribed(5_000)` magic number | ✓ Extracted to `STOP_TIMEOUT_MILLIS` named constant (PR #63, fixes #55) |
+| `SensorViewModelTest` uses Mockito `verify` | ✓ Replaced with `FakeSensorRepository` + behavioral assertions (PR #64, fixes #53) |
+| docs: stale references in API.md, PLAN.md, review.md | ✓ Updated `targetSdk`, BOM, lifecycle versions, `Blocked` state, `shortName`, removed `@OptIn` ref, marked review issues #3/#4 fixed (PR #65, fixes #54) |
 
 ---
 
@@ -223,6 +245,12 @@ keeping the data layer free of widget dependencies.
 ## Summary
 
 The project is in strong shape. The architecture is clean, tests are thorough (38 unit, 22 E2E), security is handled,
-and documentation is comprehensive.
+and documentation is comprehensive. Key findings this session:
+
+- **2 Medium:** `RECEIVER_NOT_EXPORTED` flag used on API 26-32 without guard (exported receivers); `PermissionHelper`
+  re-allocates permission array on every access.
+- **4 Low:** Remaining test quality issues, stale PLAN.md scaffolding, fragile testShared sourceSet config,
+  PendingIntent code could theoretically collide.
+- **All findings from previous review sessions remain resolved.** No regressions.
 
 **All findings from this review now resolved.**
