@@ -47,7 +47,7 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
         modifier = GlanceModifier
             .fillMaxSize()
             .padding(8.dp)
-            .background(ColorProvider(ComposeColor(0xFF1a1a2e.toInt())))
+            .background(ColorProvider(widgetBgDarkColor))
             .clickable(actionStartActivity<MainActivity>()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -72,7 +72,7 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                             modifier = GlanceModifier
                                 .width(1.dp)
                                 .size(1.dp, 30.dp)
-                                .background(ColorProvider(ComposeColor(0xFF333355.toInt())))
+                                .background(ColorProvider(widgetBorderColor))
                         ) { }
                     }
                 }
@@ -82,7 +82,7 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                 modifier = GlanceModifier
                     .width(2.dp)
                     .size(2.dp, 40.dp)
-                    .background(ColorProvider(ComposeColor(0xFF5555AA.toInt())))
+                    .background(ColorProvider(widgetAccentColor))
             ) { }
 
             Box(
@@ -106,7 +106,7 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Cont
                                 modifier = GlanceModifier
                                     .width(1.dp)
                                     .size(1.dp, 30.dp)
-                                    .background(ColorProvider(ComposeColor(0xFF333355.toInt())))
+                                .background(ColorProvider(widgetBorderColor))
                             ) { }
                         }
                     }
@@ -132,7 +132,7 @@ private fun SensorCell(name: String, status: SensorStatus, modifier: GlanceModif
         Text(
             text = name,
             style = TextStyle(
-                color = ColorProvider(ComposeColor(0xFFAAAAAA.toInt())),
+                color = ColorProvider(widgetLabelTextColor),
                 fontSize = 9.sp
             )
         )

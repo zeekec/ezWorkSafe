@@ -47,7 +47,7 @@
         <TextView
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="#333355"
+            android:background="@color/widget_border"
             android:text="" />
 
         <LinearLayout
@@ -83,7 +83,7 @@
         android:id="@+id/section_divider"
         android:layout_width="2dp"
         android:layout_height="match_parent"
-        android:background="#5555AA"
+        android:background="@color/widget_accent"
         android:text="" />
 
     <FrameLayout
@@ -131,7 +131,7 @@
             <TextView
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
-                android:background="#333355"
+                android:background="@color/widget_border"
                 android:text="" />
 
             <LinearLayout

@@ -3,7 +3,7 @@
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1a1a2e"
+    android:background="@color/widget_bg_dark"
     android:orientation="vertical"
     android:padding="8dp">
 
@@ -18,7 +18,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="#1a1a2e"
+            android:background="@color/widget_bg_dark"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -33,27 +33,27 @@
                     android:layout_width="10dp"
                     android:layout_height="10dp"
                     android:layout_marginBottom="4dp"
-                    android:background="#9E9E9E" />
+                    android:background="@color/widget_placeholder" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="WiFi"
-                    android:textColor="#AAAAAA"
+                    android:textColor="@color/widget_label"
                     android:textSize="9sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="..."
-                    android:textColor="#9E9E9E"
+                    android:textColor="@color/widget_placeholder"
                     android:textSize="10sp" />
             </LinearLayout>
 
             <TextView
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
-                android:background="#333355"
+                android:background="@color/widget_border"
                 android:text="" />
 
             <LinearLayout
@@ -67,20 +67,20 @@
                     android:layout_width="10dp"
                     android:layout_height="10dp"
                     android:layout_marginBottom="4dp"
-                    android:background="#9E9E9E" />
+                    android:background="@color/widget_placeholder" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="BT"
-                    android:textColor="#AAAAAA"
+                    android:textColor="@color/widget_label"
                     android:textSize="9sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="..."
-                    android:textColor="#9E9E9E"
+                    android:textColor="@color/widget_placeholder"
                     android:textSize="10sp" />
             </LinearLayout>
         </LinearLayout>
@@ -88,14 +88,14 @@
         <TextView
             android:layout_width="2dp"
             android:layout_height="match_parent"
-            android:background="#5555AA"
+            android:background="@color/widget_accent"
             android:text="" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="#1e1e35"
+            android:background="@color/widget_bg_right"
             android:gravity="center_vertical"
             android:orientation="vertical">
 
@@ -116,27 +116,27 @@
                         android:layout_width="10dp"
                         android:layout_height="10dp"
                         android:layout_marginBottom="4dp"
-                        android:background="#9E9E9E" />
+                        android:background="@color/widget_placeholder" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Mic"
-                        android:textColor="#AAAAAA"
+                        android:textColor="@color/widget_label"
                         android:textSize="9sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="..."
-                        android:textColor="#9E9E9E"
+                        android:textColor="@color/widget_placeholder"
                         android:textSize="10sp" />
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="1dp"
                     android:layout_height="match_parent"
-                    android:background="#333355"
+                    android:background="@color/widget_border"
                     android:text="" />
 
                 <LinearLayout
@@ -150,20 +150,20 @@
                         android:layout_width="10dp"
                         android:layout_height="10dp"
                         android:layout_marginBottom="4dp"
-                        android:background="#9E9E9E" />
+                        android:background="@color/widget_placeholder" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Cam"
-                        android:textColor="#AAAAAA"
+                        android:textColor="@color/widget_label"
                         android:textSize="9sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="..."
-                        android:textColor="#9E9E9E"
+                        android:textColor="@color/widget_placeholder"
                         android:textSize="10sp" />
                 </LinearLayout>
             </LinearLayout>
