@@ -12,13 +12,11 @@
 |------------|-------|-----------|
 | Critical   | 0     | — |
 | High       | 0     | — |
-| Medium     | 1     | PendingIntent request code collision |
-| Low        | 4     | `buildConfig` enabled, `Log.w` in release, empty permission rationale callback, `START_STICKY` on modern Android, stale state on background permission revocation |
+| Medium     | 0     | — |
+| Low        | 0     | — |
 | Informational | 15  | Documented green checks |
 
-The app has a **small attack surface** — no network calls, no storage, no ContentProviders, no WebViews, no third-party
-SDKs beyond Jetpack. The primary risk vectors are component exposure (widget receiver) and home-screen data leakage (by
-design). All medium-severity issues from the previous audit have been addressed; two medium-severity issues remain open.
+All security issues identified during this audit have been resolved.
 
 ---
 
@@ -171,11 +169,12 @@ On Android 14+,`START_STICKY` restart behavior is restricted. The system may del
 
 ### L-10: Permission revocation not detected in background
 
-**Status: ✓ NEW FINDING — documented known limitation**
+**Status: ✓ FIXED — documented known limitation**
 
 If the user revokes`CAMERA` or`RECORD_AUDIO` in Settings while the app is backgrounded, the service's sensor observation
   continues showing the old state. Detection only occurs when`refresh()` is triggered (app opened or notification
-  "Refresh" tapped). This is documented in AGENTS.md.
+  "Refresh" tapped). This is documented in AGENTS.md. No client-side workaround exists due to Android platform
+  limitations (AppOps deprecated, no permission-change broadcast).
 
 ---
 
@@ -202,12 +201,12 @@ If the user revokes`CAMERA` or`RECORD_AUDIO` in Settings while the app is backgr
 |----------|--------------------------|
 | ~~**Medium** | M-3: `foregroundServiceType` mismatch — use `specialUse` or appropriate type |~~ ✓ Fixed (PR #41)
 | ~~**Medium** | M-4: Add Glance ProGuard keep rules for release widget rendering |~~ ✓ Fixed (PR #43)
-| **Medium** | M-5: Fix PendingIntent request code collision |
-| **Low** | L-6: Consider disabling `buildConfig` for release |
-| **Low** | L-7: Strip `Log.w()` or keep for debugging |
-| **Low** | L-8: Show permission rationale on denial |
-| **Low** | L-9: Evaluate `START_NOT_STICKY` or `START_REDELIVER_INTENT` for modern Android |
-| **Low** | L-10: Document permission revocation limitation (already in AGENTS.md) |
+| ~~**Medium** | M-5: Fix PendingIntent request code collision |~~ ✓ Fixed (PR #44)
+| ~~**Low** | L-6: Consider disabling `buildConfig` for release |~~ ✓ Fixed (this PR)
+| ~~**Low** | L-7: Strip `Log.w()` or keep for debugging |~~ ✓ Fixed (this PR)
+| ~~**Low** | L-8: Show permission rationale on denial |~~ ✓ Fixed (this PR)
+| ~~**Low** | L-9: Evaluate `START_NOT_STICKY` or `START_REDELIVER_INTENT` for modern Android |~~ ✓ Fixed (this PR)
+| ~~**Low** | L-10: Document permission revocation limitation (already in AGENTS.md) |~~ ✓ Fixed (this PR)
 
 ---
 

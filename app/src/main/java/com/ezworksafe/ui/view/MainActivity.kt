@@ -5,6 +5,7 @@ package com.ezworksafe.ui.view
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,7 +26,15 @@ class MainActivity : ComponentActivity() {
     private val viewModel: SensorViewModel by viewModels()
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { _ ->
+    ) { result ->
+        val anyDenied = result.values.any { !it }
+        if (anyDenied) {
+            Toast.makeText(
+                this,
+                "Camera and microphone permissions were denied. Status for these sensors may be unavailable.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

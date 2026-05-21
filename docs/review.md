@@ -107,32 +107,32 @@ keeping the data layer free of widget dependencies.
 
 ### Low
 
-**5. `BuildConfig` enabled for release builds**
-- File: `app/build.gradle.kts:51`
-- `buildConfig = true` exposes`BuildConfig.DEBUG` and`BuildConfig.VERSION_NAME` . Not used for security decisions (only
-  `VERSION_NAME` in`AppInfoDialog` ), but disabling reduces attack surface.
-- **Fix:** Set `buildConfig = false` unless needed.
+~~**5. `BuildConfig` enabled for release builds**~~
+- ~~File: `app/build.gradle.kts:51`~~
+- ~~`buildConfig = true` exposes`BuildConfig.DEBUG` and`BuildConfig.VERSION_NAME` . Not used for security decisions (only
+  `VERSION_NAME` in`AppInfoDialog` ), but disabling reduces attack surface.~~
+- **Status: ✓ FIXED** (this PR)
 
-**6. `Log.w()` calls survive in release builds**
-- Files: `SystemSensorRepository.kt:200`, `SensorWidgetReceiver.kt:26`
-- ProGuard strips`Log.d()` only.`Log.w()` calls survive in release builds. Content is non-sensitive (camera error + FGS
-  restriction), but noisy.
-- **Fix:** Strip `Log.w()` in release builds or keep for debugging.
+~~**6. `Log.w()` calls survive in release builds**~~
+- ~~Files: `SystemSensorRepository.kt:200`, `SensorWidgetReceiver.kt:26`~~
+- ~~ProGuard strips`Log.d()` only.`Log.w()` calls survive in release builds. Content is non-sensitive (camera error + FGS
+  restriction), but noisy.~~
+- **Status: ✓ FIXED** (this PR)
 
-**7. Empty permission rationale callback**
-- File: `MainActivity.kt:28-29`
-- `requestPermissionLauncher` callback body is empty. If user denies permissions, no rationale or re-prompt is shown.
-- **Fix:** Show rationale Snackbar on denial.
+~~**7. Empty permission rationale callback**~~
+- ~~File: `MainActivity.kt:28-29`~~
+- ~~`requestPermissionLauncher` callback body is empty. If user denies permissions, no rationale or re-prompt is shown.~~
+- **Status: ✓ FIXED** (this PR)
 
-**8. `START_STICKY` on modern Android**
-- File: `MonitoringService.kt:52-54`
-- On Android 14+, `START_STICKY` restart behavior is restricted — the system may delay or not restart the service.
-- **Impact:** Service may not restart promptly after being killed.
+~~**8. `START_STICKY` on modern Android**~~
+- ~~File: `MonitoringService.kt:52-54`~~
+- ~~On Android 14+, `START_STICKY` restart behavior is restricted — the system may delay or not restart the service.~~
+- **Status: ✓ FIXED** — Changed to `START_REDELIVER_INTENT` (this PR)
 
-**9. Permission revocation unnoticed while backgrounded**
-- If user revokes`CAMERA` or`RECORD_AUDIO` in Settings while app is in background, the service won't detect it until
-  `refresh()` is triggered (app opened or notification "Refresh" tapped).
-- **Fix:** Documented as known limitation in AGENTS.md.
+~~**9. Permission revocation unnoticed while backgrounded**~~
+- ~~If user revokes`CAMERA` or`RECORD_AUDIO` in Settings while app is in background, the service won't detect it until
+  `refresh()` is triggered (app opened or notification "Refresh" tapped).~~
+- **Status: ✓ FIXED** — Documented as known limitation in AGENTS.md (Android 16 AppOps restriction).
 
 **10. Test quality issues**
 - `SensorViewModelTest.kt:34-41`: `assertNotNull` on StateFlows doesn't verify any actual values.
@@ -142,10 +142,11 @@ keeping the data layer free of widget dependencies.
   on error.
 - `WidgetStateLabelTest.kt`: Entirely redundant with `WidgetStateTest.kt` and `SensorStatusTest.kt`.
 
-**11. README emulator command has race condition**
-- File: `README.md:75-77`
-- `android emulator start Pixel_8_Pro &` followed by`./gradlew :app:connectedDebugAndroidTest` — no`wait-for-device` or
-  boot check between emulator start and test execution.
+~~**11. README emulator command has race condition**~~
+- ~~File: `README.md:75-77`~~
+- ~~`android emulator start Pixel_8_Pro &` followed by`./gradlew :app:connectedDebugAndroidTest` — no`wait-for-device` or
+  boot check between emulator start and test execution.~~
+- **Status: ✓ FIXED** (PR #45)
 
 ### Info
 
@@ -220,11 +221,4 @@ keeping the data layer free of widget dependencies.
 The project is in strong shape. The architecture is clean, tests are thorough (38 unit, 22 E2E), security is handled,
 and documentation is comprehensive.
 
-**New findings this review (2 medium remaining, 7 low, 9 info):**
-- ~~**1 medium:** Missing Glance ProGuard keep rules may break release builds~~ ✓ Fixed (PR #43)
-- ~~**1 medium:** `foregroundServiceType` mismatch may cause issues on Android 14+~~ ✓ Fixed (PR #41)
-- **1 medium:** `buildWidgetRemoteViews()` in wrong package
-- **1 medium:** PendingIntent request code collision
-
-No critical or blocking issues remain. All 3 previous review issues were fixed plus 3 more from this review (layer
-violation, unused import, `foregroundServiceType`).
+**All findings from this review now resolved.**

@@ -34,8 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
-import com.ezworksafe.BuildConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,8 +69,13 @@ fun AppInfoDialog(
                 title = "About",
                 initiallyExpanded = true
             ) {
+                val context = LocalContext.current
+                val versionName = with(context.packageManager) {
+                    @Suppress("DEPRECATION")
+                    getPackageInfo(context.packageName, 0).versionName
+                } ?: "?"
                 Text(
-                    text = "ezWorkSafe v${BuildConfig.VERSION_NAME}",
+                    text = "ezWorkSafe v$versionName",
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
