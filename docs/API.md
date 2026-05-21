@@ -126,7 +126,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | `ActivityResultContracts.RequestMultiplePermissions()` | `MainActivity.kt:21` | Contract for requesting multiple runtime permissions |
 | **Docs** | https://developer.android.com/jetpack/androidx/releases/activity | |
 
-### 3.2 Compose UI (`androidx.compose.ui:ui` via BOM `2026.03.00`)
+### 3.2 Compose UI (`androidx.compose.ui:ui` via BOM `2026.05.00`)
 | APIs used | `Modifier`, `fillMaxSize`, `background`, `padding`, `size`, `width`, `weight`, `clip`, `draw.clip`, `graphics.Color`, `foundation.background`, `foundation.shape.CircleShape`, `foundation.shape.RoundedCornerShape`, `foundation.layout.*` |
 |-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Used in** | `StatusDashboard.kt` |
@@ -141,7 +141,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | **Docs** | https://developer.android.com/jetpack/compose/material3 |
 
 ### 3.4 Lifecycle (`androidx.lifecycle:lifecycle-*-2.10.0`)
-| Artifacts | `lifecycle-runtime-ktx:2.7.0`, `lifecycle-viewmodel-compose:2.7.0`, `lifecycle-runtime-compose:2.7.0` |
+| Artifacts | `lifecycle-runtime-ktx:2.10.0`, `lifecycle-viewmodel-compose:2.10.0`, `lifecycle-runtime-compose:2.10.0` |
 |-----------|-------------------------------------------------------------------------------------------------------|
 | **APIs used** | `AndroidViewModel`, `viewModelScope`, `viewModel()` (compose function), `ViewModelProvider` |
 | **Used in** | `SensorViewModel.kt`, `MainActivity.kt` |
@@ -188,13 +188,12 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | `kotlinx.coroutines.channels.awaitClose` | `SystemSensorRepository.kt:71,105,152,204` | Suspend until flow collection is cancelled, then run cleanup (unregister receiver/callback) |
 | `kotlinx.coroutines.flow.flatMapLatest` | `SystemSensorRepository.kt:40` | Restart the sensor observation flow when `refreshTrigger` emits a new value |
 | `kotlinx.coroutines.flow.stateIn` | `SensorViewModel.kt:21-33` | Convert cold `Flow<SensorStatus>` into hot `StateFlow` scoped to `viewModelScope` |
-| `kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5_000)` | `SensorViewModel.kt:21-33` | Keep upstream flow alive for 5s after last subscriber (survives rotation) |
+| `kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS)` | `SensorViewModel.kt:21-33` | Keep upstream flow alive for 5s after last subscriber (survives rotation) |
 | `kotlinx.coroutines.flow.MutableStateFlow` | `SystemSensorRepository.kt:31` | Observable state holder for the refresh trigger counter |
 | `kotlinx.coroutines.flow.combine` | `MonitoringService.kt:63` | Merge four sensor flows into a single notification text string |
 | `kotlinx.coroutines.CoroutineScope` | `MonitoringService.kt:40` | Custom scope for foreground service coroutines |
 | `kotlinx.coroutines.SupervisorJob` | `MonitoringService.kt:40` | Job that allows child coroutines to fail independently |
 | `kotlinx.coroutines.Dispatchers.Main` | `MonitoringService.kt:40` | Main-thread dispatcher for UI-bound operations |
-| `kotlinx.coroutines.ExperimentalCoroutinesApi` | `SystemSensorRepository.kt:22` | Opt-in for `flatMapLatest` (experimental in 1.7.x) |
 
 **Docs:**
 - Coroutines guide: https://kotlinlang.org/docs/coroutines-overview.html
@@ -259,7 +258,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 |--------|-------|
 | `compileSdk` | 36 |
 | `minSdk` | 26 |
-| `targetSdk` | 33 |
+| `targetSdk` | 35 |
 | `namespace` / `applicationId` | `com.ezworksafe` |
 | Java compatibility | `VERSION_17` |
 
@@ -306,17 +305,18 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | `Active` | Sensor is enabled or resource is in use | Green `0xFF4CAF50` |
 | `Inactive` | Sensor is disabled or resource is idle | Gray `0xFF9E9E9E` |
 | `Denied` | Runtime permission not granted | Red `0xFFF44336` |
+| `Blocked` | Hardware is off (WiFi/BT radio disabled) | Orange `0xFFFF9800` |
 | `Unavailable` | Hardware missing, service null, or API level too low | Dark gray `0xFF616161` |
 
 **File:** `data/model/SensorStatus.kt:9-18`
 
 ### 9.2 SensorType (enum)
-| Value | Display Name |
-|-------|-------------|
-| `WIFI` | "WiFi" |
-| `BLUETOOTH` | "Bluetooth" |
-| `MICROPHONE` | "Microphone" |
-| `CAMERA` | "Camera" |
+| Value | Display Name | Short Name |
+|-------|-------------|-----------|
+| `WIFI` | "WiFi" | "WiFi" |
+| `BLUETOOTH` | "Bluetooth" | "BT" |
+| `MICROPHONE` | "Microphone" | "Mic" |
+| `CAMERA` | "Camera" | "Cam" |
 
 **File:** `data/model/SensorStatus.kt:20-25`
 

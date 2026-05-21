@@ -87,23 +87,25 @@ keeping the data layer free of widget dependencies.
   Android 14+, the system may restrict services whose declared type doesn't match their actual work.~~
 - **Status: ✓ FIXED** — Changed to `specialUse` with `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` declaration (PR #41).
 
-**3. `buildWidgetRemoteViews()` in wrong package**
-- File: `app/src/main/java/com/ezworksafe/service/MonitoringService.kt:148-186`
-- The top-level `buildWidgetRemoteViews()` function is defined in the `service` package but belongs in the `widget`
+~~**3. `buildWidgetRemoteViews()` in wrong package**~~
+- ~~File: `app/src/main/java/com/ezworksafe/service/MonitoringService.kt:148-186`~~
+- ~~The top-level `buildWidgetRemoteViews()` function is defined in the `service` package but belongs in the `widget`
   package. It manipulates `widget_sensor_status.xml` IDs and uses `R.layout.widget_sensor_status` — widget rendering
-  logic.
-- **Fix:** Move to `app/src/main/java/com/ezworksafe/widget/BuildWidgetRemoteViews.kt`
+  logic.~~
+- ~~**Fix:** Move to `app/src/main/java/com/ezworksafe/widget/BuildWidgetRemoteViews.kt`~~
+- **Status: ✓ FIXED** — Moved to `BuildWidgetRemoteViews.kt` in widget package (PR #39).
 
-**4. PendingIntent request code collision**
-- File: `app/src/main/java/com/ezworksafe/service/MonitoringService.kt:101,120`
-- Both `pushWidgetUpdate()` (widget click) and `createNotification()` (notification "Refresh" action) use
+~~**4. PendingIntent request code collision**~~
+- ~~File: `app/src/main/java/com/ezworksafe/service/MonitoringService.kt:101,120`~~
+- ~~Both `pushWidgetUpdate()` (widget click) and `createNotification()` (notification "Refresh" action) use
   `PendingIntent.getActivity(this, 0, ...)` with the same request code (0). Since both intents target `MainActivity` with
   the same component (no action/data differences), `Intent.filterEquals()` returns true for both, causing the system to
   treat them as the same PendingIntent. The last one created overwrites the first, making the launch behavior of widget
-  click and notification action identical.
-- **Risk:** No direct security exploit (both use `FLAG_IMMUTABLE`), but intent flag differences (
-  `FLAG_ACTIVITY_NEW_TASK` vs `FLAG_ACTIVITY_SINGLE_TOP`) are lost.
-- **Fix:** Use distinct request codes (e.g., `0` for widget, `1` for notification).
+  click and notification action identical.~~
+- ~~**Risk:** No direct security exploit (both use `FLAG_IMMUTABLE`), but intent flag differences (
+  `FLAG_ACTIVITY_NEW_TASK` vs `FLAG_ACTIVITY_SINGLE_TOP`) are lost.~~
+- ~~**Fix:** Use distinct request codes (e.g., `0` for widget, `1` for notification).~~
+- **Status: ✓ FIXED** — Distinct request codes (`REQUEST_CODE_WIDGET = 0`, `REQUEST_CODE_REFRESH = 1`).
 
 ### Low
 
@@ -176,6 +178,8 @@ keeping the data layer free of widget dependencies.
 | Unused `height` import in `StatusDashboard.kt:15` | ✓ Removed |
 | `foregroundServiceType="dataSync"` incorrect | ✓ Changed to `specialUse` with `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` (PR #41) |
 | Missing Glance ProGuard keep rules | ✓ Added `-keep class com.ezworksafe.widget.**` to `proguard-rules.pro` (PR #43) |
+| `buildWidgetRemoteViews()` in wrong package | ✓ Moved to `BuildWidgetRemoteViews.kt` in widget package (PR #39) |
+| PendingIntent request code collision | ✓ Distinct request codes (`REQUEST_CODE_WIDGET = 0`, `REQUEST_CODE_REFRESH = 1`) |
 
 ---
 
