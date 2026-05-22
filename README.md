@@ -34,9 +34,9 @@ and Camera access status at a glance.
 
 ## Screenshots
 
-| App dashboard | Home screen widget |
-|:---:|:---:|
-| ![App dashboard](docs/screenshot_app.png) | ![Widget](docs/screenshot_widget.png) |
+| App dashboard | Home screen widget | Compact widget |
+|:---:|:---:|:---:|
+| ![App dashboard](docs/screenshot_app.png) | ![Widget](docs/screenshot_widget.png) | ![Compact widget](docs/widget-compact-screenshot.png) |
 
 ## Build
 
@@ -83,17 +83,19 @@ done
 Or run from Android Studio: Device Manager → start a device → run
 `connectedDebugAndroidTest` from the Gradle panel.
 
-## Widget
+## Widgets
 
-The home screen widget has two sections:
+Two home screen widgets are available:
 
-- **Left** — WiFi and Bluetooth status (updates in real time via system
-  broadcasts)
-- **Right** — Microphone and Camera status (reflects last foreground refresh;
-  Android 16 privacy toggles are not detectable from background)
-
-The divider visually separates the two sections. A timestamp shows when the
-right section was last refreshed.
+- **Bar widget** — horizontal bar with two sections:
+  - **Left** — WiFi and Bluetooth status (updates in real time via system
+    broadcasts)
+  - **Right** — Microphone and Camera status (reflects last foreground refresh;
+    Android 16 privacy toggles are not detectable from background)
+  - A divider separates the two sections. A timestamp shows when the right
+    section was last refreshed.
+- **Compact widget** — 1×1 square showing colored dots + labels for all four
+  sensors (WiFi, BT, Mic, Cam). No status text or timestamp.
 
 ## Permissions
 
