@@ -127,6 +127,17 @@ class MonitoringServiceTest {
 
     @Test
     @Config(application = EzWorkSafeApp::class, sdk = [Build.VERSION_CODES.O_MR1])
+    fun `pushWidgetUpdate with no widgets does not throw`() {
+        val service = Robolectric.buildService(MonitoringService::class.java).create().get()
+
+        service.pushWidgetUpdate(
+            SensorStatus.Active, SensorStatus.Blocked,
+            SensorStatus.Denied, SensorStatus.Unavailable
+        )
+    }
+
+    @Test
+    @Config(application = EzWorkSafeApp::class, sdk = [Build.VERSION_CODES.O_MR1])
     fun `service notification has BigTextStyle with summary text`() {
         val service = Robolectric.buildService(MonitoringService::class.java).create().get()
         val notification = service.createNotification("WiFi: Active | BT: Inactive | Mic: Denied | Cam: Unavailable")

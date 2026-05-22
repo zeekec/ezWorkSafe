@@ -89,7 +89,7 @@ class MonitoringService : Service() {
         }
     }
 
-    private fun pushWidgetUpdate(
+    internal fun pushWidgetUpdate(
         wifi: SensorStatus, bt: SensorStatus,
         mic: SensorStatus, cam: SensorStatus
     ) {
