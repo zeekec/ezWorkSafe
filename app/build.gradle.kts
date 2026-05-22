@@ -39,6 +39,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -55,6 +58,16 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    testCoverage {
+        jacocoVersion = "0.8.12"
+    }
+}
+
+kotlin {
+    compilerOptions {
+        allWarningsAsErrors.set(true)
     }
 }
 

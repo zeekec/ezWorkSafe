@@ -22,6 +22,7 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 | `./gradlew build` | Build project |
 | `./gradlew lint` | Run lint checks |
 | `./gradlew test` | Run unit tests |
+| `./gradlew createDebugUnitTestCoverageReport` | Unit test coverage report (JaCoCo) |
 | `./gradlew installDebug` | Install to device |
 | `./gradlew connectedDebugAndroidTest` | Run E2E tests (device/emulator) |
 
