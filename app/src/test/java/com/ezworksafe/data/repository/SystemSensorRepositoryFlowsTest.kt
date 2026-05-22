@@ -143,6 +143,14 @@ class SystemSensorRepositoryFlowsTest {
         assertEquals(SensorStatus.Unavailable, status)
     }
 
+    @Test
+    fun `camera unavailable when no cameras available`() = runTest {
+        grantCameraPermission()
+        val repo = SystemSensorRepository(context)
+        val status = repo.observeSensor(SensorType.CAMERA).first()
+        assertEquals(SensorStatus.Unavailable, status)
+    }
+
     @Suppress("DEPRECATION")
     @Test
     fun `refresh triggers flow re-emission after state change`() = runTest {

@@ -18,7 +18,6 @@ import android.media.AudioRecordingConfiguration
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Process
-import android.util.Log
 import androidx.core.content.ContextCompat
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
@@ -212,14 +211,10 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
                     trySend(SensorStatus.Unavailable)
                     return
                 }
-                cameraManager.getCameraCharacteristics(ids[0])
                 trySend(SensorStatus.Active)
             } catch (_: SecurityException) {
                 trySend(SensorStatus.Blocked)
             } catch (_: CameraAccessException) {
-                trySend(SensorStatus.Unavailable)
-            } catch (e: Exception) {
-                Log.w("SystemSensorRepository", "Unexpected error in camera status", e)
                 trySend(SensorStatus.Unavailable)
             }
         }
