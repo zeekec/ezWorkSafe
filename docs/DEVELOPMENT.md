@@ -71,7 +71,7 @@ done
 | Min SDK | 26 |
 | Target SDK | 35 |
 | Compile SDK | 36 |
-| Kotlin | 2.2.10 |
+| Kotlin | 2.3.21 |
 
 ---
 

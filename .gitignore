@@ -3,6 +3,9 @@ local.properties
 .gradle/
 build/
 .superpowers/
+.kotlin/
+.idea/
+.agents/
 
 # opencode agent configuration
 .opencode/
@@ -10,5 +13,3 @@ build/
 # Release signing
 keystore.properties
 *.keystore
-.kotlin/
-.idea/

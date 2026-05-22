@@ -16,7 +16,7 @@
 | Low        | 0     | — |
 | Informational | 17  | N-1 by design, N-2 and N-3 actionable |
 
-All security issues identified during this audit have been resolved. Two informational findings are documented for code health; one additional item is noted as by-design.
+All security issues identified during this audit have been resolved. One informational finding remains actionable (N-2: update deprecated `getPackageInfo` call); one is noted as by-design (N-1).
 
 ---
 
@@ -57,14 +57,14 @@ All security issues identified during this audit have been resolved. Two informa
 
 Added `-keep class com.ezworksafe.widget.** { *; }` to preserve all widget classes accessed by Glance via reflection.
 
-### ~~M-5: PendingIntent request code collision~~
+### M-5: PendingIntent request code collision
 
 **Status: ✓ FIXED** (PR #44)
 
 **Files:**
-- `MonitoringService.kt:40-41` — Added `REQUEST_CODE_WIDGET = 0` and `REQUEST_CODE_REFRESH = 1`
+- `MonitoringService.kt:43-44` — Added `REQUEST_CODE_WIDGET = 0` and `REQUEST_CODE_REFRESH = 1`
 - `MonitoringService.kt:102` — Widget PendingIntent uses `REQUEST_CODE_WIDGET`
-- `MonitoringService.kt:121` — Notification Refresh PendingIntent uses `REQUEST_CODE_REFRESH`
+- `MonitoringService.kt:141-143` — Notification Refresh PendingIntent uses `REQUEST_CODE_REFRESH`
 
 Both use `FLAG_IMMUTABLE` and `FLAG_UPDATE_CURRENT`. Distinct request codes prevent the two PendingIntents from being treated as identical by the system.
 
@@ -104,23 +104,23 @@ Pre-commit hook (`.githooks/pre-commit`) blocks `keystore.properties` commits. `
 
 `afterEvaluate` block logs warning when `keystore.properties` is missing.
 
-### ~~L-6: `buildConfig = true` enabled~~
+### L-6: `buildConfig = true` enabled
 
 **Status: ✓ FIXED**
 
 **File:** `app/build.gradle.kts:51`
 
-`buildConfig = false` is now set. Version name is read from `PackageManager` in `AppInfoDialog.kt:73-75` instead of `BuildConfig.VERSION_NAME`.
+`buildConfig = false` is now set. Version name is read from `PackageManager` in `AppInfoDialog.kt:82` instead of `BuildConfig.VERSION_NAME`.
 
-### ~~L-7: `Log.w()` calls survive in release builds~~
+### L-7: `Log.w()` calls survive in release builds
 
 **Status: ✓ FIXED**
 
 **File:** `app/proguard-rules.pro:4`
 
-`-assumenosideeffects` now includes `public static int w(...);` in addition to `d(...)`. Both `Log.w()` call sites (`SystemSensorRepository.kt:206`, `SensorWidgetReceiver.kt:26`) are now stripped in release builds.
+`-assumenosideeffects` now includes `public static int w(...);` in addition to `d(...)`. Both `Log.w()` call sites (`SystemSensorRepository.kt:222`, `SensorWidgetReceiver.kt:26`) are now stripped in release builds.
 
-### ~~L-8: Empty permission rationale callback~~
+### L-8: Empty permission rationale callback
 
 **Status: ✓ FIXED**
 
@@ -128,11 +128,11 @@ Pre-commit hook (`.githooks/pre-commit`) blocks `keystore.properties` commits. `
 
 The `ActivityResultContracts.RequestMultiplePermissions()` callback now shows a `Toast` explaining that denied permissions will cause sensor status to be unavailable.
 
-### ~~L-9: `START_STICKY` on modern Android~~
+### L-9: `START_STICKY` on modern Android
 
 **Status: ✓ FIXED**
 
-**File:** `MonitoringService.kt:53-55`
+**File:** `MonitoringService.kt:56-58`
 
 `onStartCommand` now returns `START_REDELIVER_INTENT` instead of `START_STICKY`, which is more appropriate for this service's purpose and aligns with modern Android restart behavior.
 
@@ -148,7 +148,7 @@ If the user revokes `CAMERA` or `RECORD_AUDIO` in Settings while the app is back
 
 **Status: ✓ BY DESIGN**
 
-**File:** `SystemSensorRepository.kt:142-227`
+**File:** `SystemSensorRepository.kt:158-243`
 
 The `observeMicStatus()` and `observeCameraStatus()` flows check permission and AppOps privacy toggle state, then return `Active` if both allow it. They don't inspect callback data (`AudioRecordingCallback.configs`, `AvailabilityCallback.cameraAvailable`) to determine whether another app is currently using the hardware.
 
@@ -158,7 +158,7 @@ The `observeMicStatus()` and `observeCameraStatus()` flows check permission and 
 
 ### N-2 (Info): Deprecated `getPackageInfo(String, int)` on API 33+
 
-**File:** `AppInfoDialog.kt:74-75`
+**File:** `AppInfoDialog.kt:82`
 
 ```kotlin
 @Suppress("DEPRECATION")
@@ -184,20 +184,11 @@ val versionName = if (Build.VERSION.SDK_INT >= 33) {
 
 ### N-3 (Info): `RECEIVER_NOT_EXPORTED` used without API version guard
 
-**Files:** `SystemSensorRepository.kt:74,120`
+**Status: ✓ FIXED**
 
-`context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)` passes `RECEIVER_NOT_EXPORTED` (added in API 33) to the `registerReceiver(receiver, filter, flags)` overload. On API 26-32 (`minSdk = 26`), the flag value `0x4` is unrecognized and silently ignored, meaning the receiver is exported (visible to all apps).
+**Files:** `SystemSensorRepository.kt:77,130`
 
-**Impact:** Low — both receivers listen for system-level broadcasts (`WIFI_STATE_CHANGED_ACTION`, `ACTION_STATE_CHANGED`) which any app can send. A malicious app could spoof WiFi/Bluetooth state changes, causing inaccurate sensor display. No data exposure or privilege escalation.
-
-**Recommendation:** Guard with API 33+ check:
-```kotlin
-if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-    context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-} else {
-    context.registerReceiver(receiver, filter)
-}
-```
+`context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)` calls are now guarded with `Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU` checks, falling back to the two-parameter `registerReceiver(receiver, filter)` on API 26-32.
 
 ---
 
@@ -208,7 +199,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 | Network calls          | No | No HTTP, WebSocket, or network I/O |
 | Local storage          | No | No files, DB, or SharedPreferences |
 | ContentProviders       | No | None declared |
-| BroadcastReceivers     | Yes | `SensorWidgetReceiver` (exported, widget system only); context-registered with `RECEIVER_NOT_EXPORTED` (API 33+ only, see N-3) |
+| BroadcastReceivers     | Yes | `SensorWidgetReceiver` (exported, widget system only); context-registered with `RECEIVER_NOT_EXPORTED` (API 33+ guard, see N-3) |
 | Bound services         | No | `onBind` returns null |
 | WebViews               | No | None used |
 | Deep links             | No | No intent filters matching URLs |
@@ -226,7 +217,6 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 | Priority | Issue |
 |----------|-------|
 | **Info** | N-2: Update `getPackageInfo()` call to use `PackageInfoFlags` on API 33+ |
-| **Info** | N-3: Add API 33+ guard to `RECEIVER_NOT_EXPORTED` flag in `registerReceiver` calls |
 
 ---
 

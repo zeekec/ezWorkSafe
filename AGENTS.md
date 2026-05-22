@@ -89,6 +89,7 @@ app/src/main/java/com/ezworksafe/
 
 ## Android Gotchas
 - Mic/Camera need **runtime permission** requests, not just manifest
+- **By design**: "Active" means permission granted + AppOps allows hardware use, not that hardware is currently in use. The status indicates whether the sensor *can be accessed*, matching the app's workplace safety monitoring purpose. See security.md N-1.
 - Background monitoring uses a **foreground service** (`MonitoringService`, `foregroundServiceType="specialUse"`) — the service is started on app launch and runs persistently to push widget updates
 - Camera/mic monitoring APIs vary across **API levels**
 - Some `BroadcastReceiver` actions restricted since Android 8+

@@ -47,8 +47,8 @@ keeping the data layer free of widget dependencies.
 - AppInfoDialog with expandable sections for About, How It Works, Permissions
 
 ### Testing
-- 38 unit tests (Model, Repository, ViewModel, WidgetState, FormatUtils, PermissionHelper, MonitoringService)
-- 22 E2E tests (dashboard, widget, notification, theme, widget metadata)
+- 52 unit tests (Model, Repository, ViewModel, WidgetState, FormatUtils, PermissionHelper, MonitoringService, widget receivers)
+- 24 E2E tests (dashboard, widget, notification, theme, widget metadata) — 1 @Ignored
 - `FakeSensorRepository` shared between unit and E2E tests
 - Robolectric for service notification tests
 - E2E notification verification via `dumpsys`
@@ -111,15 +111,15 @@ keeping the data layer free of widget dependencies.
 
 ### Medium
 
-**14. `RECEIVER_NOT_EXPORTED` used without API version guard**
-- File: `SystemSensorRepository.kt:74,120`
-- `registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)` on API 26-32 (`minSdk = 26`) silently ignores the flag (`0x4` is unrecognized). The receiver is exported and any app can send spoofed WiFi/BT state broadcasts.
-- **Fix:** Guard with API 33+ check.
+~~**14. `RECEIVER_NOT_EXPORTED` used without API version guard**~~
+- ~~File: `SystemSensorRepository.kt:74,120`~~
+- ~~`registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)` on API 26-32 (`minSdk = 26`) silently ignores the flag (`0x4` is unrecognized). The receiver is exported and any app can send spoofed WiFi/BT state broadcasts.~~
+- **Status: ✓ FIXED** — Both WiFi and Bluetooth calls now guarded with `Build.VERSION.SDK_INT >= TIRAMISU` checks.
 
-**15. `PermissionHelper.REQUIRED_RUNTIME_PERMISSIONS` re-allocates array on every access**
-- File: `PermissionHelper.kt:14-15`
-- `val` with custom getter creates a new list + `toTypedArray()` on each access. Called every time `areRuntimePermissionsGranted()` runs.
-- **Fix:** Use `private val` with `lazy` delegation or make it a top-level constant.
+~~**15. `PermissionHelper.REQUIRED_RUNTIME_PERMISSIONS` re-allocates array on every access**~~
+- ~~File: `PermissionHelper.kt:14-15`~~
+- ~~`val` with custom getter creates a new list + `toTypedArray()` on each access. Called every time `areRuntimePermissionsGranted()` runs.~~
+- **Status: ✓ FIXED** — Changed to `by lazy` delegation.
 
 ### Low
 
@@ -178,7 +178,6 @@ keeping the data layer free of widget dependencies.
 | 8 | Camera status detection fragility | `SystemSensorRepository.kt:187` | `getCameraCharacteristics()` may succeed even when camera is in use; `AvailabilityCallback` `onCameraUnavailable` is more reliable |
 | 9 | Pre-commit hook scope narrow | `.githooks/pre-commit` | Only checks `keystore.properties` — doesn't catch `.env`, `release.keystore`, etc. |
 | 10 | `PermissionRefreshE2eTest` is `@Ignored` | E2E test | Correctly ignored (API 36 shell restriction), but compiles and is never run |
-| 11 | PermissionHelper recomputation | `PermissionHelper.kt:14-15` | `val` getter re-allocates array on every access | See Medium issue #15 |
 | 12 | testShared sourceSet config | `app/build.gradle.kts:61-65` | Task name pattern matching is fragile | Alternative: `android.sourceSets` |
 
 ### Fixed Since Last Review
@@ -186,7 +185,7 @@ keeping the data layer free of widget dependencies.
 | Previous Issue | Status |
 |----------------|--------|
 | `CellIds` dead code in `MonitoringService` | ✓ Removed |
-| `@OptIn(ExperimentalCoroutinesApi::class)` on `flatMapLatest` | ✓ Removed |
+| `@OptIn(ExperimentalCoroutinesApi::class)` on `flatMapLatest` | Still needed — `flatMapLatest` requires opt-in in kotlinx-coroutines 1.11.0 |
 | `WifiManager.isWifiEnabled` deprecated | ✓ Using `getWifiState()` |
 | README stale `targetSdk: 33` reference | ✓ Updated |
 | Widget vertical centering | ✓ Fixed (FrameLayout overlay approach) |
@@ -201,7 +200,8 @@ keeping the data layer free of widget dependencies.
 | `RECEIVER_NOT_EXPORTED` flag missing | ✓ Added to WiFi + BT `registerReceiver()` calls (PR #62, fixes #52) |
 | `WhileSubscribed(5_000)` magic number | ✓ Extracted to `STOP_TIMEOUT_MILLIS` named constant (PR #63, fixes #55) |
 | `SensorViewModelTest` uses Mockito `verify` | ✓ Replaced with `FakeSensorRepository` + behavioral assertions (PR #64, fixes #53) |
-| docs: stale references in API.md, PLAN.md, review.md | ✓ Updated `targetSdk`, BOM, lifecycle versions, `Blocked` state, `shortName`, removed `@OptIn` ref, marked review issues #3/#4 fixed (PR #65, fixes #54) |
+| `PermissionHelper.REQUIRED_RUNTIME_PERMISSIONS` array re-allocation | ✓ Changed to `by lazy` delegation (see Medium issue #15) |
+| docs: stale references in API.md, PLAN.md, review.md | ✓ Updated `targetSdk`, BOM, lifecycle versions, `Blocked` state, `shortName`, corrected `@OptIn` claim, marked review issues #3/#4 fixed (PR #65, fixes #54) |
 
 ---
 
@@ -222,7 +222,6 @@ keeping the data layer free of widget dependencies.
 
 | Gap | Notes |
 |-----|-------|
-| `colors.xml` background value unused since edge-to-edge | Harmless |
 | CI doesn't run E2E tests | Documented gap — intentional for cost |
  | ~~`foregroundServiceType` rationale undocumented~~ | ✓ Documented via `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` (PR #41) |
 
@@ -234,8 +233,8 @@ keeping the data layer free of widget dependencies.
 |-------|--------|
 | `./gradlew build` | ✅ Passes |
 | `./gradlew lint` | ✅ Clean (no warnings) |
-| `./gradlew test` | ✅ 38 tests pass |
-| `./gradlew connectedDebugAndroidTest` | ✅ 22 tests pass (1 skipped) |
+| `./gradlew test` | ✅ 52 tests pass |
+| `./gradlew connectedDebugAndroidTest` | ✅ 23 tests pass (1 @Ignored) |
 | GitHub Actions workflow | ✅ `permissions: contents: read`, guarded keystore steps |
 | Dependabot config | ✅ Weekly Gradle scanning |
 | Configuration cache | ✅ Enabled, <1s build on cache hit |
