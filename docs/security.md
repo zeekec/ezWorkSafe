@@ -12,11 +12,11 @@
 |------------|-------|-----------|
 | Critical   | 0     | — |
 | High       | 0     | — |
-| Medium     | 1     | M-6: `noteOpNoThrow` AppOp recording side effect on API 28 |
+| Medium     | 0     | — |
 | Low        | 0     | — |
 | Informational | 17  | N-1 by design, N-3 fixed |
 
-All security issues identified during this audit have been resolved. One new medium-severity finding (M-6) has been identified in this session.
+All security issues identified during this audit have been resolved.
 
 ---
 
@@ -70,26 +70,24 @@ Both use `FLAG_IMMUTABLE` and `FLAG_UPDATE_CURRENT`. Distinct request codes prev
 
 ### M-6: `noteOpNoThrow` records AppOp on API 28 (side effect)
 
-**Status: Open (Medium)**
+**Status: ✓ FIXED**
 
 **File:** `SystemSensorRepository.kt:150`
 
+**Before:**
 ```kotlin
 } else {
     appOps.noteOpNoThrow(opStr, Process.myUid(), context.packageName)
 }
 ```
 
-On API 28 (`Build.VERSION_CODES.P`), the else branch calls `appOps.noteOpNoThrow()` which *records* the AppOp as having been performed in the AppOps usage history / permission usage screen. The app should only *check* whether the operation is allowed, not *note* that it was performed.
+On API 28 (`Build.VERSION_CODES.P`), the else branch called `appOps.noteOpNoThrow()` which *recorded* the AppOp as having been performed in the AppOps usage history / permission usage screen.
 
-`checkOpNoThrow()` exists since API 19 (deprecated in API 29 in favor of `unsafeCheckOpNoThrow`) and only checks without recording. The `@Suppress("DEPRECATION")` function-level annotation already handles the deprecation warning.
+**Fix:** Replaced with `checkOpNoThrow()` (exists since API 19, only checks without recording). The `@Suppress("DEPRECATION")` function-level annotation already handles the deprecation warning.
 
-**Impact:** Minor — pollutes the AppOps usage history by recording a check as an actual operation. The usage screen will show that the app "used" microphone/camera permissions even though it only checked their state. No functional impact on Android behavior or permission enforcement.
-
-**Fix:**
+**After:**
 ```kotlin
 } else {
-    @Suppress("DEPRECATION")
     appOps.checkOpNoThrow(opStr, Process.myUid(), context.packageName)
 }
 ```
@@ -229,7 +227,7 @@ Now version-gated with `PackageInfoFlags` on API 33+ with a fallback for earlier
 | Implicit intents       | None | All intents use explicit component names |
 | PendingIntents         | Secure | All use `FLAG_IMMUTABLE`; request codes are distinct |
 | Notification           | Secure | No PII; uses `PRIORITY_LOW`; stripped by ProGuard in release |
-| AppOps checking        | Low | `noteOpNoThrow` on API 28 records ops (see M-6); `unsafeCheckOpNoThrow` on API 29+ is correct |
+| AppOps checking        | Low | `checkOpNoThrow` on API 28 (fixed); `unsafeCheckOpNoThrow` on API 29+ |
 
 ---
 
@@ -237,7 +235,7 @@ Now version-gated with `PackageInfoFlags` on API 33+ with a fallback for earlier
 
 | Priority | Issue |
 |----------|-------|
-| **Medium** | M-6: Replace `noteOpNoThrow` with `checkOpNoThrow` on API 28 to avoid recording AppOps |
+| None     | All findings resolved. |
 
 ---
 

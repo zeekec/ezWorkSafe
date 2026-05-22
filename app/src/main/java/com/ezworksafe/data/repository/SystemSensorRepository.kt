@@ -147,7 +147,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
             val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 appOps.unsafeCheckOpNoThrow(opStr, Process.myUid(), context.packageName)
             } else {
-                appOps.noteOpNoThrow(opStr, Process.myUid(), context.packageName)
+                appOps.checkOpNoThrow(opStr, Process.myUid(), context.packageName)
             }
             isOpBlocked(Build.VERSION.SDK_INT, result)
         } catch (_: SecurityException) {
