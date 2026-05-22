@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/widget_bg_dark"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/cell_wifi"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/dot_wifi"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/label_wifi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="WiFi"
+                android:textColor="@color/widget_label"
+                android:textSize="9sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cell_bt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/dot_bt"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/label_bt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BT"
+                android:textColor="@color/widget_label"
+                android:textSize="9sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/cell_mic"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/dot_mic"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/label_mic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mic"
+                android:textColor="@color/widget_label"
+                android:textSize="9sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cell_cam"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/dot_cam"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:id="@+id/label_cam"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cam"
+                android:textColor="@color/widget_label"
+                android:textSize="9sp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

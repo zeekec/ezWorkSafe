@@ -15,12 +15,15 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import com.ezworksafe.R
 import com.ezworksafe.EzWorkSafeApp
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.data.repository.SensorRepository
 import com.ezworksafe.ui.view.MainActivity
+import com.ezworksafe.widget.CompactWidgetReceiver
 import com.ezworksafe.widget.SensorWidgetReceiver
 import com.ezworksafe.widget.WidgetState
 import com.ezworksafe.widget.buildWidgetRemoteViews
@@ -91,10 +94,7 @@ class MonitoringService : Service() {
         mic: SensorStatus, cam: SensorStatus
     ) {
         val appWidgetManager = AppWidgetManager.getInstance(this)
-        val componentName = ComponentName(this, SensorWidgetReceiver::class.java)
-        val ids = appWidgetManager.getAppWidgetIds(componentName)
-        Log.d("MonitoringService", "pushWidgetUpdate: ids=${ids.contentToString()}, wifi=$wifi, bt=$bt, mic=$mic, cam=$cam")
-        if (ids.isEmpty()) return
+        Log.d("MonitoringService", "pushWidgetUpdate: wifi=$wifi, bt=$bt, mic=$mic, cam=$cam")
 
         val openIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -103,14 +103,34 @@ class MonitoringService : Service() {
             this, REQUEST_CODE_WIDGET, openIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val views = buildWidgetRemoteViews(
-            packageName, wifi, bt, mic, cam,
-            WidgetState.lastRefreshTime, android.text.format.DateFormat.getTimeFormat(this),
-            openAppIntent = openAppIntent
+
+        val sensorIds = appWidgetManager.getAppWidgetIds(
+            ComponentName(this, SensorWidgetReceiver::class.java)
         )
-        for (widgetId in ids) {
-            appWidgetManager.updateAppWidget(widgetId, views)
-            Log.d("MonitoringService", "pushWidgetUpdate: updated widgetId=$widgetId")
+        if (sensorIds.isNotEmpty()) {
+            val views = buildWidgetRemoteViews(
+                packageName, wifi, bt, mic, cam,
+                WidgetState.lastRefreshTime, android.text.format.DateFormat.getTimeFormat(this),
+                openAppIntent = openAppIntent
+            )
+            for (widgetId in sensorIds) {
+                appWidgetManager.updateAppWidget(widgetId, views)
+            }
+        }
+
+        val compactIds = appWidgetManager.getAppWidgetIds(
+            ComponentName(this, CompactWidgetReceiver::class.java)
+        )
+        if (compactIds.isNotEmpty()) {
+            val compactViews = RemoteViews(packageName, R.layout.widget_compact_initial)
+            compactViews.setInt(R.id.dot_wifi, "setBackgroundColor", wifi.color)
+            compactViews.setInt(R.id.dot_bt, "setBackgroundColor", bt.color)
+            compactViews.setInt(R.id.dot_mic, "setBackgroundColor", mic.color)
+            compactViews.setInt(R.id.dot_cam, "setBackgroundColor", cam.color)
+            compactViews.setOnClickPendingIntent(R.id.widget_root, openAppIntent)
+            for (widgetId in compactIds) {
+                appWidgetManager.updateAppWidget(widgetId, compactViews)
+            }
         }
     }
 
