@@ -192,10 +192,10 @@ keeping the data layer free of widget dependencies.
 - ~~On API 28 (`Build.VERSION_CODES.P`), the else branch called `appOps.noteOpNoThrow()` which *recorded* the AppOp as having been performed (polluting the AppOps usage history / permission usage screen). `checkOpNoThrow()` exists since API 19 and only checks without recording.~~
 - **Status: ✓ FIXED** — Replaced `noteOpNoThrow` with `checkOpNoThrow` (PR #91).
 
-**17. Exception-based control flow in camera status**
-- File: `SystemSensorRepository.kt:215`
-- `cameraManager.getCameraCharacteristics(ids[0])` is called purely for its side effect of possibly throwing. The return value is discarded. This is a control-flow-via-exception anti-pattern.
-- **Fix:** Use `tryGetCameraCharacteristics()` or check `onCameraUnavailable` callback data instead.
+~~**17. Exception-based control flow in camera status**~~
+- ~~File: `SystemSensorRepository.kt:215`~~
+- ~~`cameraManager.getCameraCharacteristics(ids[0])` was called purely for its side effect of possibly throwing. The return value was discarded.~~
+- **Status: ✓ FIXED** — Removed `getCameraCharacteristics()` call; `Active` now emitted once the camera ID list is non-empty (PR #92).
 
 #### Low
 
@@ -264,7 +264,7 @@ keeping the data layer free of widget dependencies.
 | # | Finding | File | Description |
 |---|---------|------|-------------|
 | 13 | `noteOpNoThrow` side effect (API 28) | `SystemSensorRepository.kt:150` | ✓ FIXED — use `checkOpNoThrow()` instead | See Medium #16 |
-| 14 | Exception-based camera control flow | `SystemSensorRepository.kt:215` | `getCameraCharacteristics()` called only to throw; return value discarded | See Medium #17 |
+| 14 | Exception-based camera control flow | `SystemSensorRepository.kt:215` | ✓ FIXED — `getCameraCharacteristics()` removed; `Active` on non-empty ID list | See Medium #17 |
 | 15 | Redundant SDK guard in `isOpBlocked` | `SystemSensorRepository.kt:246-247` | Caller already guarantees `sdk >= P`; check is dead code | See Low #18 |
 | 16 | `Inactive` never emitted | `SensorStatus.kt:17` | Placeholder-only status, may confuse developers | See Low #19 |
 | 17 | Glance modifier redundancy | `SensorWidget.kt:76-77,86-88,110-111` | `.width()` overridden by `.size()` | See Low #20 |
@@ -345,8 +345,8 @@ keeping the data layer free of widget dependencies.
 The project is in strong shape. The architecture is clean, security posture is sound, and documentation is
 comprehensive. Key findings this session:
 
-- **1 Medium:** Exception-based control flow in camera status detection.
-  ~~`noteOpNoThrow` side effect on API 28~~ **(✓ FIXED)**
+- **0 Medium:** All medium findings resolved.
+  ~~`noteOpNoThrow` side effect on API 28~~ **(✓ FIXED)** ~~Exception-based camera control flow~~ **(✓ FIXED)**
 - **12 Low:** Redundant SDK guard, `Inactive` never emitted, redundant Glance modifiers, unsafe cast in
   MonitoringService, WidgetState encapsulation, duplicate receiver code, PFD leak in E2E test, ambiguous test
   matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test,
