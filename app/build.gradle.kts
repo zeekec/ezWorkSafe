@@ -4,6 +4,19 @@ import java.io.FileInputStream
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("jacoco")
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+// JaCoCo must include classes loaded without CodeSource (Robolectric sandbox)
+tasks.withType<Test> {
+    configure<JacocoTaskExtension> {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
