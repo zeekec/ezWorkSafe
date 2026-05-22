@@ -161,12 +161,12 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
             return@callbackFlow
         }
 
-        fun emitState() {
+        fun emitState(shouldCheckAppOp: Boolean = true) {
             if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 trySend(SensorStatus.Denied)
                 return
             }
-            if (isAppOpBlocked(AppOpsManager.OPSTR_RECORD_AUDIO)) {
+            if (shouldCheckAppOp && isAppOpBlocked(AppOpsManager.OPSTR_RECORD_AUDIO)) {
                 trySend(SensorStatus.Blocked)
                 return
             }
@@ -177,7 +177,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
 
         val audioCallback = object : AudioManager.AudioRecordingCallback() {
             override fun onRecordingConfigChanged(configs: List<AudioRecordingConfiguration>) {
-                emitState()
+                emitState(shouldCheckAppOp = false)
             }
         }
         audioManager.registerAudioRecordingCallback(audioCallback, null)
@@ -195,12 +195,12 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
             return@callbackFlow
         }
 
-        fun emitState() {
+        fun emitState(shouldCheckAppOp: Boolean = true) {
             if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 trySend(SensorStatus.Denied)
                 return
             }
-            if (isAppOpBlocked(AppOpsManager.OPSTR_CAMERA)) {
+            if (shouldCheckAppOp && isAppOpBlocked(AppOpsManager.OPSTR_CAMERA)) {
                 trySend(SensorStatus.Blocked)
                 return
             }
@@ -226,11 +226,11 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
 
         val availabilityCallback = object : CameraManager.AvailabilityCallback() {
             override fun onCameraAvailable(cameraId: String) {
-                emitState()
+                emitState(shouldCheckAppOp = false)
             }
 
             override fun onCameraUnavailable(cameraId: String) {
-                emitState()
+                emitState(shouldCheckAppOp = false)
             }
         }
         cameraManager.registerAvailabilityCallback(availabilityCallback, null)
