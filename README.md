@@ -1,5 +1,15 @@
 # ezWorkSafe
 
+[![Build](https://img.shields.io/github/actions/workflow/status/zeekec/ezWorkSafe/android.yml?branch=main&logo=github)]()
+[![codecov](https://codecov.io/gh/zeekec/ezWorkSafe/branch/main/graph/badge.svg)](https://codecov.io/gh/zeekec/ezWorkSafe)
+[![License](https://img.shields.io/github/license/zeekec/ezWorkSafe)]()
+[![Min SDK](https://img.shields.io/badge/minSDK-26-brightgreen)]()
+[![Kotlin](https://img.shields.io/badge/kotlin-2.3-7A1FA2?logo=kotlin&logoColor=white)]()
+
+> ⚠️ **Disclaimer** — Personal project built to explore agentic coding
+> workflows. Almost entirely vibe-coded via AI agents. Not a production-grade
+> security tool.
+
 Real-time privacy monitoring for Android — view WiFi, Bluetooth, Microphone,
 and Camera access status at a glance.
 

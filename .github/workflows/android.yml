@@ -68,3 +68,9 @@ jobs:
         with:
           name: coverage-report
           path: app/build/reports/coverage/**/*
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: app/build/reports/coverage/test/debug/report.xml
