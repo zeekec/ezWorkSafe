@@ -5,7 +5,7 @@ package com.ezworksafe.ui.view
 
 import android.Manifest
 import android.os.Build
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.Lifecycle
 import androidx.test.platform.app.InstrumentationRegistry
