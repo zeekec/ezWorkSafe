@@ -1,7 +1,7 @@
 # Code & Documentation Review
 
-**Date:** 2026-05-21
-**Last updated:** 2026-05-21 (session 4)
+**Date:** 2026-05-22
+**Last updated:** 2026-05-22 (session 5)
 **Commit:** `27ac322` (HEAD of `main`)
 **Review scope:** Full codebase, tests, config, docs, CI, security
 
@@ -23,7 +23,7 @@ keeping the data layer free of widget dependencies.
 ### Code quality
 - Clean MVVM with interface-based repository pattern
 - Well-chosen `callbackFlow` + `flatMapLatest` for reactive sensor observations
-- `FakeSensorRepository` enables deterministic E2E tests
+- `FakeSensorRepository` enables deterministic E2E and unit tests
 - `FormatUtils.formatLastUpdated()` extracted as pure-Kotlin function — testable without Android mocking
 - `isOpBlocked()` extracted as pure function
 - `buildWidgetRemoteViews()` extracted as top-level testable function
@@ -32,10 +32,13 @@ keeping the data layer free of widget dependencies.
 - `WidgetColors.kt` centralizes widget colors (eliminates duplication)
 - `STOP_TIMEOUT_MILLIS` named constant replaces magic number `5_000`
 - No dead imports, no unused resources
+- `FakeSensorRepository` consolidated in `testShared` source set (PR #60)
 - Configuration cache: `./gradlew build` in < 1s on cache hit
-- Previous review issues fixed: `CellIds` dead code removed, `@OptIn(ExperimentalCoroutinesApi)` removed, `isWifiEnabled`
-  replaced with `getWifiState()`, widget colors extracted to `WidgetColors.kt`, `5_000` extracted to `STOP_TIMEOUT_MILLIS`,
-  "This review fixes": layer violation (WidgetState moved to service), unused import removed
+- `SensorStatus.Blocked` state distinguishes hardware-off from denied
+- `AppInfoDialog` uses `PackageManager.PackageInfoFlags` on API 33+ (API.md N-2 resolved)
+- Previous review issues fixed: `CellIds` dead code removed, `@OptIn(ExperimentalCoroutinesApi)` retained where needed,
+  `isWifiEnabled` replaced with `getWifiState()`, widget colors extracted to `WidgetColors.kt`,
+  `5_000` extracted to `STOP_TIMEOUT_MILLIS`, layer violation moved to service, unused import removed
 
 ### UI
 - Edge-to-edge display with `safeDrawingPadding()`
@@ -47,11 +50,12 @@ keeping the data layer free of widget dependencies.
 - AppInfoDialog with expandable sections for About, How It Works, Permissions
 
 ### Testing
-- 52 unit tests (Model, Repository, ViewModel, WidgetState, FormatUtils, PermissionHelper, MonitoringService, widget receivers)
-- 24 E2E tests (dashboard, widget, notification, theme, widget metadata) — 1 @Ignored
-- `FakeSensorRepository` shared between unit and E2E tests
-- Robolectric for service notification tests
-- E2E notification verification via `dumpsys`
+- Unit tests: ViewModel, Repository (System + Fake), WidgetState, FormatUtils, PermissionHelper, MonitoringService, widget receivers, Robolectric flow integration
+- E2E tests: dashboard (sensor states), widget metadata, notification via `dumpsys`, theme, compact widget — 1 @Ignored
+- `FakeSensorRepository` shared between unit and E2E tests via `testShared` source set
+- `SystemSensorRepositoryFlowsTest.kt` uses Robolectric for real system-service integration
+- `SensorRepositoryTest.kt` tests `isOpBlocked()` pure function exhaustively (5 test methods)
+- E2E notification verification via `dumpsys activity services`
 
 ### Security & compliance
 - `allowBackup="false"`, `fullBackupContent="false"`
@@ -153,10 +157,9 @@ keeping the data layer free of widget dependencies.
 **10. Test quality issues**
 - `SensorViewModelTest.kt`: `assertNotNull` on StateFlows replaced with behavioral assertions (PR #64) — partially fixed, `WhileSubscribed` lazy subscription limits synchronous verification.
 - `MonitoringServiceTest.kt:129-134`: `bigContentView` assertion may behave differently under Robolectric vs. framework.
-- `StatusDashboardE2eTest.kt`: try/catch swallowing `AssertionError` makes debugging failures harder.
-- `MonitoringServiceNotificationE2eTest.kt:42` :`FileInputStream` without try-with-resources leaks`ParcelFileDescriptor`
-  on error.
-- `WidgetStateLabelTest.kt`: Entirely redundant with `WidgetStateTest.kt` and `SensorStatusTest.kt`.
+- `StatusDashboardE2eTest.kt:64-77`: `waitForAssertion` re-throws last error, losing original stack trace from failing assertion.
+- `MonitoringServiceNotificationE2eTest.kt:42-45`: `FileInputStream(pfd.fileDescriptor).use {}` then `pfd.close()` — if read fails, `ParcelFileDescriptor` leaks. Should wrap in `pfd.use {}`.
+- ~~`WidgetStateLabelTest.kt`: Entirely redundant with `WidgetStateTest.kt` and `SensorStatusTest.kt`.~~ **Removed from codebase.**
 
 ~~**11. README emulator command has race condition**~~
 - ~~File: `README.md:75-77`~~
@@ -180,6 +183,106 @@ keeping the data layer free of widget dependencies.
 | 10 | `PermissionRefreshE2eTest` is `@Ignored` | E2E test | Correctly ignored (API 36 shell restriction), but compiles and is never run |
 | 12 | testShared sourceSet config | `app/build.gradle.kts:61-65` | Task name pattern matching is fragile | Alternative: `android.sourceSets` |
 
+### New This Session
+
+#### Medium
+
+**16. `noteOpNoThrow` side effect on API 28**
+- File: `SystemSensorRepository.kt:150`
+- On API 28 (`Build.VERSION_CODES.P`), the else branch calls `appOps.noteOpNoThrow()` which *records* the AppOp as having been performed (polluting the AppOps usage history / permission usage screen). `checkOpNoThrow()` exists since API 19 and only checks without recording.
+- **Fix:** Replace `noteOpNoThrow` with `checkOpNoThrow` with `@Suppress("DEPRECATION").
+```kotlin
+} else {
+    @Suppress("DEPRECATION")
+    appOps.checkOpNoThrow(opStr, Process.myUid(), context.packageName)
+}
+```
+
+**17. Exception-based control flow in camera status**
+- File: `SystemSensorRepository.kt:215`
+- `cameraManager.getCameraCharacteristics(ids[0])` is called purely for its side effect of possibly throwing. The return value is discarded. This is a control-flow-via-exception anti-pattern.
+- **Fix:** Use `tryGetCameraCharacteristics()` or check `onCameraUnavailable` callback data instead.
+
+#### Low
+
+**18. Redundant SDK guard in `isOpBlocked()`**
+- File: `SystemSensorRepository.kt:246-247`
+- `isOpBlocked(sdk, opResult)` checks `sdk >= Build.VERSION_CODES.P && ...` but the only caller `isAppOpBlocked()` already returns `false` on line 144 when `sdk < P`. The SDK guard is dead code.
+- **Fix:** Remove the SDK check from `isOpBlocked()`.
+
+**19. `SensorStatus.Inactive` never emitted by any flow**
+- File: `SensorStatus.kt:17`
+- `Inactive` is defined as a valid status but never produced by `observeWifiStatus()`, `observeBluetoothStatus()`, `observeMicStatus()`, or `observeCameraStatus()`. It appears only as the default initial value in `WidgetState.kt:12`.
+- **Fix:** Either remove `Inactive` and use another default (e.g., `Unavailable`), or document as placeholder-only.
+
+**20. Redundant Glance modifier chaining**
+- File: `SensorWidget.kt:76-77, 86-88, 110-111`
+- `.width(1.dp)` followed by `.size(1.dp, 30.dp)` — the `.width()` is overridden by `.size()`. Same pattern at lines 86-88 (`.width(2.dp)` before `.size(2.dp, 40.dp)`).
+- **Fix:** Remove the redundant `.width()` calls.
+
+**21. Unsafe cast in MonitoringService**
+- File: `MonitoringService.kt:68`
+- `(application as EzWorkSafeApp)` will throw `ClassCastException` if the Application is not `EzWorkSafeApp`. Works in production (manifest guarantees it) but fragile in Robolectric tests with custom Application classes.
+- **Fix:** Use `(application as? EzWorkSafeApp)?.sensorRepository` with a fallback.
+
+**22. WidgetState singleton has no encapsulation**
+- File: `WidgetState.kt:9-15`
+- `object WidgetState` exposes public `@Volatile var` fields. Nothing prevents third-party code from writing to `WidgetState.statuses` from any thread.
+- **Fix:** Make fields `internal` or wrap in `AtomicReference` / `StateFlow`.
+
+**23. Duplicate receiver click-handler code**
+- Files: `SensorWidgetReceiver.kt:30-41`, `CompactWidgetReceiver.kt:30-41`
+- Both receivers have identical `onUpdate` logic differing only in the layout resource used (`widget_initial_layout` vs `widget_compact_initial`).
+- **Fix:** Extract shared logic into a helper function.
+
+**24. Test: PFD leak in notification E2E**
+- File: `MonitoringServiceNotificationE2eTest.kt:39-46`
+- `executeShellCommand` returns a `ParcelFileDescriptor`. If `FileInputStream.use { readText() }` throws, the `pfd.close()` on line 45 is never reached. Also, closing the `FileInputStream` closes the underlying FD before `pfd.close()` runs.
+- **Fix:** Wrap the entire block in `pfd.use { pfd -> ... }`.
+
+**25. Test: Ambiguous matchers in StatusDashboardE2eTest**
+- File: `StatusDashboardE2eTest.kt:88,101`
+- `onNodeWithText("Active")` matches ANY composable with text "Active". If two sensors show "Active" simultaneously, this crashes with `AmbiguousViewMatcherException`.
+- The `microphone_shows_active` test (line 132-134) correctly uses `hasAnySibling(hasText("Microphone"))` to disambiguate. The `wifi_toggles_between_active_and_blocked` and `bluetooth_active_updates_ui` tests should follow this pattern.
+
+**26. Test: WidgetState singleton not reset between E2E classes**
+- File: `SensorWidgetE2eTest.kt:68-74`
+- The test modifies `WidgetState.statuses` but does not reset it in `@Before`. Since E2E tests share a process, `WidgetState` state leaks across test classes.
+- **Fix:** Add `@Before` reset (or use `@BeforeClass` teardown).
+
+**27. Test: Refresh-reemission test is tautological**
+- File: `SensorRepositoryTest.kt:64-71`
+- `refresh triggers flow re-emission` uses a null-service mock context, so both `first` and `afterRefresh` return `Unavailable`. The test name claims re-emission is verified, but the assertion is tautological.
+- **Fix:** Use `SystemSensorRepositoryFlowsTest.kt:148-159` (which actually changes state) instead; remove the tautological test.
+
+**28. Test: Widget rendering not actually tested**
+- File: `SensorWidgetE2eTest.kt:67-80`
+- Test name says "widget renders" but only checks `WidgetState.statuses` label strings. No RemoteViews layout inflation or rendering verification occurs.
+- **Fix:** Rename test to match what it actually tests, or add RemoteViews inflation assertions.
+
+**29. Test: buildWidgetRemoteViews assertions are shallow**
+- File: `MonitoringServiceTest.kt:33-99`
+- Four tests only assert `assertNotNull(views)` on buildWidgetRemoteViews output. No RemoteViews content (text values, colors, click handlers) is verified.
+- **Fix:** Add RemoteViews content assertions or parameterize.
+
+### Info
+
+| # | Finding | File | Description |
+|---|---------|------|-------------|
+| 13 | `noteOpNoThrow` side effect (API 28) | `SystemSensorRepository.kt:150` | Records AppOp on API 28; use `checkOpNoThrow()` instead | See Medium #16 |
+| 14 | Exception-based camera control flow | `SystemSensorRepository.kt:215` | `getCameraCharacteristics()` called only to throw; return value discarded | See Medium #17 |
+| 15 | Redundant SDK guard in `isOpBlocked` | `SystemSensorRepository.kt:246-247` | Caller already guarantees `sdk >= P`; check is dead code | See Low #18 |
+| 16 | `Inactive` never emitted | `SensorStatus.kt:17` | Placeholder-only status, may confuse developers | See Low #19 |
+| 17 | Glance modifier redundancy | `SensorWidget.kt:76-77,86-88,110-111` | `.width()` overridden by `.size()` | See Low #20 |
+| 18 | Unsafe cast in MonitoringService | `MonitoringService.kt:68` | `as EzWorkSafeApp` crashes on custom Application in tests | See Low #21 |
+| 19 | WidgetState no encapsulation | `WidgetState.kt:9-15` | Public mutable fields, no concurrency protection | See Low #22 |
+| 20 | Duplicate receiver click-handler code | `SensorWidgetReceiver.kt:30-41`, `CompactWidgetReceiver.kt:30-41` | Same logic, different layout resource | See Low #23 |
+| 21 | PFD leak in notification E2E | `MonitoringServiceNotificationE2eTest.kt:42-45` | `pfd.close()` not reached if read throws | See Low #24 |
+| 22 | Ambiguous "Active" matcher | `StatusDashboardE2eTest.kt:88,101` | `onNodeWithText("Active")` matches any sensor | See Low #25 |
+| 23 | WidgetState not reset in E2E | `SensorWidgetE2eTest.kt:68-74` | Singleton state leaks across E2E test classes | See Low #26 |
+| 24 | Tautological refresh-reemission test | `SensorRepositoryTest.kt:64-71` | Same value before and after refresh (null-service) | See Low #27 |
+| 25 | buildWidgetRemoteViews tests shallow | `MonitoringServiceTest.kt:33-99` | 4 tests, all only check `assertNotNull` | See Low #29 |
+
 ### Fixed Since Last Review
 
 | Previous Issue | Status |
@@ -202,6 +305,8 @@ keeping the data layer free of widget dependencies.
 | `SensorViewModelTest` uses Mockito `verify` | ✓ Replaced with `FakeSensorRepository` + behavioral assertions (PR #64, fixes #53) |
 | `PermissionHelper.REQUIRED_RUNTIME_PERMISSIONS` array re-allocation | ✓ Changed to `by lazy` delegation (see Medium issue #15) |
 | docs: stale references in API.md, PLAN.md, review.md | ✓ Updated `targetSdk`, BOM, lifecycle versions, `Blocked` state, `shortName`, corrected `@OptIn` claim, marked review issues #3/#4 fixed (PR #65, fixes #54) |
+| `WidgetStateLabelTest.kt` redundant test | ✓ Removed from codebase |
+| `AppInfoDialog.kt` deprecated `getPackageInfo()` (security.md N-2) | ✓ Fixed — version-gated with `PackageInfoFlags` on API 33+ |
 
 ---
 
@@ -210,11 +315,11 @@ keeping the data layer free of widget dependencies.
 | Area | Status |
 |------|--------|
 | `MonitoringService.combine` collector integration | Untested — requires Robolectric with service lifecycle |
-| `pushWidgetUpdate()` end-to-end | Untested — requires widget binding |
-| `SystemSensorRepository` system-service integration | Untested at unit level (mock Context returns null for all services) |
+| `pushWidgetUpdate()` RemoteViews content | 5 tests verify non-null, none check actual text/color values |
+| `SystemSensorRepository` system-service flow re-emission | `SensorRepositoryTest.kt:64` is tautological (null-service); real test exists at `SystemSensorRepositoryFlowsTest.kt:148` |
 | `PermissionRefreshE2eTest` | `@Ignored` — `executeShellCommand` crashes on API 36 |
 | Widget `AppOps` foreground/background behavior | Untestable without API 36+ device with specific AppOps config |
-| `FakeSensorRepository` is shared mutable singleton | Tests not fully isolated; state leaks across tests if `@Before` fails |
+| `WidgetState` singleton — shared mutable state | Not reset between E2E test classes; leaks across classes |
 
 ---
 
@@ -233,8 +338,8 @@ keeping the data layer free of widget dependencies.
 |-------|--------|
 | `./gradlew build` | ✅ Passes |
 | `./gradlew lint` | ✅ Clean (no warnings) |
-| `./gradlew test` | ✅ 52 tests pass |
-| `./gradlew connectedDebugAndroidTest` | ✅ 23 tests pass (1 @Ignored) |
+| `./gradlew test` | ✅ All unit tests pass |
+| `./gradlew connectedDebugAndroidTest` | ✅ E2E tests pass (1 @Ignored) |
 | GitHub Actions workflow | ✅ `permissions: contents: read`, guarded keystore steps |
 | Dependabot config | ✅ Weekly Gradle scanning |
 | Configuration cache | ✅ Enabled, <1s build on cache hit |
@@ -243,13 +348,13 @@ keeping the data layer free of widget dependencies.
 
 ## Summary
 
-The project is in strong shape. The architecture is clean, tests are thorough (38 unit, 22 E2E), security is handled,
-and documentation is comprehensive. Key findings this session:
+The project is in strong shape. The architecture is clean, security posture is sound, and documentation is
+comprehensive. Key findings this session:
 
-- **2 Medium:** `RECEIVER_NOT_EXPORTED` flag used on API 26-32 without guard (exported receivers); `PermissionHelper`
-  re-allocates permission array on every access.
-- **4 Low:** Remaining test quality issues, stale PLAN.md scaffolding, fragile testShared sourceSet config,
-  PendingIntent code could theoretically collide.
-- **All findings from previous review sessions remain resolved.** No regressions.
-
-**All findings from this review now resolved.**
+- **2 Medium:** `noteOpNoThrow` side effect on API 28 (records AppOp instead of just checking); exception-based
+  control flow in camera status detection.
+- **12 Low:** Redundant SDK guard, `Inactive` never emitted, redundant Glance modifiers, unsafe cast in
+  MonitoringService, WidgetState encapsulation, duplicate receiver code, PFD leak in E2E test, ambiguous test
+  matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test,
+  shallow RemoteViews assertions.
+- **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.

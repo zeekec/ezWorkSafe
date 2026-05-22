@@ -1,6 +1,6 @@
 # Security Audit: ezWorkSafe
 
-**Date:** 2026-05-21
+**Date:** 2026-05-22
 **Scope:** Full codebase audit — permissions, IPC, logging, data handling, crypto, network, build pipeline.
 **Methodology:** Manual source code review. No dynamic analysis or penetration testing performed.
 
@@ -12,11 +12,11 @@
 |------------|-------|-----------|
 | Critical   | 0     | — |
 | High       | 0     | — |
-| Medium     | 0     | — |
+| Medium     | 1     | M-6: `noteOpNoThrow` AppOp recording side effect on API 28 |
 | Low        | 0     | — |
-| Informational | 17  | N-1 by design, N-2 and N-3 actionable |
+| Informational | 17  | N-1 by design, N-3 fixed |
 
-All security issues identified during this audit have been resolved. One informational finding remains actionable (N-2: update deprecated `getPackageInfo` call); one is noted as by-design (N-1).
+All security issues identified during this audit have been resolved. One new medium-severity finding (M-6) has been identified in this session.
 
 ---
 
@@ -67,6 +67,32 @@ Added `-keep class com.ezworksafe.widget.** { *; }` to preserve all widget class
 - `MonitoringService.kt:141-143` — Notification Refresh PendingIntent uses `REQUEST_CODE_REFRESH`
 
 Both use `FLAG_IMMUTABLE` and `FLAG_UPDATE_CURRENT`. Distinct request codes prevent the two PendingIntents from being treated as identical by the system.
+
+### M-6: `noteOpNoThrow` records AppOp on API 28 (side effect)
+
+**Status: Open (Medium)**
+
+**File:** `SystemSensorRepository.kt:150`
+
+```kotlin
+} else {
+    appOps.noteOpNoThrow(opStr, Process.myUid(), context.packageName)
+}
+```
+
+On API 28 (`Build.VERSION_CODES.P`), the else branch calls `appOps.noteOpNoThrow()` which *records* the AppOp as having been performed in the AppOps usage history / permission usage screen. The app should only *check* whether the operation is allowed, not *note* that it was performed.
+
+`checkOpNoThrow()` exists since API 19 (deprecated in API 29 in favor of `unsafeCheckOpNoThrow`) and only checks without recording. The `@Suppress("DEPRECATION")` function-level annotation already handles the deprecation warning.
+
+**Impact:** Minor — pollutes the AppOps usage history by recording a check as an actual operation. The usage screen will show that the app "used" microphone/camera permissions even though it only checked their state. No functional impact on Android behavior or permission enforcement.
+
+**Fix:**
+```kotlin
+} else {
+    @Suppress("DEPRECATION")
+    appOps.checkOpNoThrow(opStr, Process.myUid(), context.packageName)
+}
+```
 
 ---
 
@@ -158,18 +184,10 @@ The `observeMicStatus()` and `observeCameraStatus()` flows check permission and 
 
 ### N-2 (Info): Deprecated `getPackageInfo(String, int)` on API 33+
 
-**File:** `AppInfoDialog.kt:82`
+**Status: ✓ FIXED** (this session)
 
-```kotlin
-@Suppress("DEPRECATION")
-getPackageInfo(context.packageName, 0).versionName
-```
+**File:** `AppInfoDialog.kt:75-83`
 
-On API 33+, the two-parameter `getPackageInfo()` is deprecated in favor of `getPackageInfo(String, PackageInfoFlags)`. The `@Suppress("DEPRECATION")` annotation silences the warning rather than fixing the call.
-
-**Impact:** Functions correctly on current API levels (up to API 36). If Google removes the deprecated overload in a future SDK release, the version display in the About dialog will break. No security impact — display only.
-
-**Recommendation:** Version-gate with an API 33+ check:
 ```kotlin
 val versionName = if (Build.VERSION.SDK_INT >= 33) {
     context.packageManager.getPackageInfo(
@@ -181,6 +199,8 @@ val versionName = if (Build.VERSION.SDK_INT >= 33) {
     context.packageManager.getPackageInfo(context.packageName, 0).versionName
 } ?: "?"
 ```
+
+Now version-gated with `PackageInfoFlags` on API 33+ with a fallback for earlier versions.
 
 ### N-3 (Info): `RECEIVER_NOT_EXPORTED` used without API version guard
 
@@ -209,6 +229,7 @@ val versionName = if (Build.VERSION.SDK_INT >= 33) {
 | Implicit intents       | None | All intents use explicit component names |
 | PendingIntents         | Secure | All use `FLAG_IMMUTABLE`; request codes are distinct |
 | Notification           | Secure | No PII; uses `PRIORITY_LOW`; stripped by ProGuard in release |
+| AppOps checking        | Low | `noteOpNoThrow` on API 28 records ops (see M-6); `unsafeCheckOpNoThrow` on API 29+ is correct |
 
 ---
 
@@ -216,7 +237,7 @@ val versionName = if (Build.VERSION.SDK_INT >= 33) {
 
 | Priority | Issue |
 |----------|-------|
-| **Info** | N-2: Update `getPackageInfo()` call to use `PackageInfoFlags` on API 33+ |
+| **Medium** | M-6: Replace `noteOpNoThrow` with `checkOpNoThrow` on API 28 to avoid recording AppOps |
 
 ---
 
@@ -224,28 +245,32 @@ val versionName = if (Build.VERSION.SDK_INT >= 33) {
 
 | File | Lines |
 |------|-------|
-| `app/build.gradle.kts` | 118 |
+| `app/build.gradle.kts` | 144 |
 | `AndroidManifest.xml` | 64 |
-| `service/MonitoringService.kt` | 157 |
-| `data/repository/SystemSensorRepository.kt` | 231 |
+| `service/MonitoringService.kt` | 177 |
+| `data/repository/SystemSensorRepository.kt` | 247 |
 | `data/repository/SensorRepository.kt` | 13 |
 | `data/model/SensorStatus.kt` | 28 |
 | `ui/view/MainActivity.kt` | 76 |
 | `ui/view/StatusDashboard.kt` | 137 |
-| `ui/view/AppInfoDialog.kt` | 255 |
+| `ui/view/AppInfoDialog.kt` | 262 |
 | `ui/view/EzWorkSafeTheme.kt` | 41 |
 | `ui/viewmodel/SensorViewModel.kt` | 41 |
-| `util/PermissionHelper.kt` | 33 |
+| `util/PermissionHelper.kt` | 34 |
 | `util/FormatUtils.kt` | 12 |
 | `widget/SensorWidget.kt` | 150 |
 | `widget/SensorWidgetReceiver.kt` | 43 |
+| `widget/CompactWidget.kt` | 110 |
+| `widget/CompactWidgetReceiver.kt` | 43 |
 | `widget/BuildWidgetRemoteViews.kt` | 51 |
 | `widget/WidgetState.kt` | 16 |
 | `widget/WidgetColors.kt` | 18 |
 | `EzWorkSafeApp.kt` | 18 |
 | `res/layout/widget_initial_layout.xml` | 172 |
 | `res/layout/widget_sensor_status.xml` | 174 |
+| `res/layout/widget_compact_initial.xml` | — |
 | `res/xml/widget_info_sensor.xml` | 9 |
+| `res/xml/widget_info_compact.xml` | — |
 | `proguard-rules.pro` | 7 |
 | `.github/workflows/android.yml` | 55 |
 | `keystore.properties.template` | 6 |
@@ -253,4 +278,4 @@ val versionName = if (Build.VERSION.SDK_INT >= 33) {
 | `.gitignore` | 14 |
 | `gradle.properties` | 6 |
 | `settings.gradle.kts` | 21 |
-| Test files (17 files across `src/test/`, `src/testShared/`, `src/androidTest/`) | ~1,100 |
+| Test files (18 files across `src/test/`, `src/testShared/`, `src/androidTest/`) | ~1,200 |
