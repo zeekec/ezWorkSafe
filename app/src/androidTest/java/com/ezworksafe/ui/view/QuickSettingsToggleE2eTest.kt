@@ -71,6 +71,50 @@ class QuickSettingsToggleE2eTest {
         ensureCamActive()
     }
 
+    @Test
+    fun micShowsBlockedViaPollingWhenQSToggled() {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA)
+
+        ensureMicActive()
+        executeShell("cmd sensor_privacy enable 0 microphone")
+        composeRule.waitUntil(6000) {
+            composeRule.onAllNodesWithText("Blocked").fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    @Test
+    fun micRestoresToActiveViaPollingWhenQSToggled() {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA)
+
+        ensureMicBlocked()
+        executeShell("cmd sensor_privacy disable 0 microphone")
+        composeRule.waitUntil(6000) {
+            composeRule.onAllNodesWithText("Active").fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    @Test
+    fun camShowsBlockedViaPollingWhenQSToggled() {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA)
+
+        ensureCamActive()
+        executeShell("cmd sensor_privacy enable 0 camera")
+        composeRule.waitUntil(6000) {
+            composeRule.onAllNodesWithText("Blocked").fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    @Test
+    fun camRestoresToActiveViaPollingWhenQSToggled() {
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA)
+
+        ensureCamBlocked()
+        executeShell("cmd sensor_privacy disable 0 camera")
+        composeRule.waitUntil(6000) {
+            composeRule.onAllNodesWithText("Active").fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
     private fun ensureMicActive() {
         executeShell("cmd sensor_privacy disable 0 microphone")
         cycleActivityLifecycle()

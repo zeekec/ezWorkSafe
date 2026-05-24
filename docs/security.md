@@ -178,7 +178,9 @@ The `observeMicStatus()` and `observeCameraStatus()` flows check permission and 
 
 **Intent:** The app's purpose is to report whether the hardware *can* be used (permission granted, privacy toggle not blocking), not whether it's currently *in use*. The label "Active" means "this sensor is available for use."
 
-No `AvailabilityCallback` or `AudioRecordingCallback` is registered — they were removed to avoid spontaneous state changes from callbacks. Camera/mic state is only queried on flow creation and re-queried via `flatMapLatest` re-subscription when `refresh()` is called (from `ON_RESUME`). No polling is used — the AppOp check is unreliable when called from background contexts on Android 16.
+No `AvailabilityCallback` or `AudioRecordingCallback` is registered — they were removed to avoid spontaneous state changes from callbacks. Camera/mic state is snapshot-only in the repository: a single `emitState()` call on flow creation, re-queried via `flatMapLatest` re-subscription when `refresh()` is called. `SystemSensorRepository` does not poll.
+
+A foreground polling loop in `MainActivity` (`lifecycle.repeatOnLifecycle(STARTED)` + `while(true) { delay(2_000L); viewModel.refresh() }`) runs only while the activity is visible (lifecycle >= STARTED). When the app is backgrounded (< STARTED), the coroutine is cancelled immediately — avoiding the Android 16 limitation where `checkOpNoThrow` returns `MODE_IGNORED` for background processes regardless of the actual toggle state. An `ON_RESUME` observer provides an immediate refresh when the activity returns to foreground.
 
 ---
 

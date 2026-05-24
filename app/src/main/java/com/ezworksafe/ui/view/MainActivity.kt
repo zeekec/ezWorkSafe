@@ -17,7 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.ezworksafe.service.MonitoringService
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.ezworksafe.ui.viewmodel.SensorViewModel
 import com.ezworksafe.util.PermissionHelper
 
@@ -46,6 +50,15 @@ class MainActivity : ComponentActivity() {
                 refreshSensorFlows()
             }
         })
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    delay(2_000L)
+                    viewModel.refresh()
+                }
+            }
+        }
 
         requestRuntimePermissionsIfNeeded()
         startMonitoringService()
