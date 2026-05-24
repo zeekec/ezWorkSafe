@@ -1,0 +1,3 @@
+ignore:
+  - "app/src/main/java/com/ezworksafe/ui/view/AppInfoDialog.kt"
+  - "app/src/main/java/com/ezworksafe/ui/view/MainActivity.kt"
