@@ -176,7 +176,9 @@ If the user revokes `CAMERA` or `RECORD_AUDIO` in Settings while the app is back
 
 The `observeMicStatus()` and `observeCameraStatus()` flows check permission and AppOps privacy toggle state, then return `Active` if both allow it. They don't inspect callback data (`AudioRecordingCallback.configs`, `AvailabilityCallback.cameraAvailable`) to determine whether another app is currently using the hardware.
 
-**Intent:** The app's purpose is to report whether the hardware *can* be used (permission granted, privacy toggle not blocking), not whether it's currently *in use*. The label "Active" means "this sensor is available for use." The callbacks are still registered to re-emit when permission/toggle state changes, even though the hardware-usage data is not used.
+**Intent:** The app's purpose is to report whether the hardware *can* be used (permission granted, privacy toggle not blocking), not whether it's currently *in use*. The label "Active" means "this sensor is available for use."
+
+**Polling mechanism:** Camera/mic states use foreground polling. `emitState()` is called once on flow creation, then every 2 seconds via `while(true) { delay(2_000L); emitState() }` while the flow is collected. When the app is backgrounded, `WhileSubscribed(5_000)` stops collection and polling halts. No `AvailabilityCallback` or `AudioRecordingCallback` is registered — they were removed to avoid spontaneous state changes from callbacks.
 
 ---
 

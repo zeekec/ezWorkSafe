@@ -14,7 +14,6 @@ import android.content.pm.PackageManager
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
-import android.media.AudioRecordingConfiguration
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Process
@@ -23,6 +22,7 @@ import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
@@ -162,12 +162,12 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
             return@callbackFlow
         }
 
-        fun emitState(shouldCheckAppOp: Boolean = true) {
+        fun emitState() {
             if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 trySend(SensorStatus.Denied)
                 return
             }
-            if (shouldCheckAppOp && isAppOpBlocked(AppOpsManager.OPSTR_RECORD_AUDIO)) {
+            if (isAppOpBlocked(AppOpsManager.OPSTR_RECORD_AUDIO)) {
                 trySend(SensorStatus.Blocked)
                 return
             }
@@ -175,16 +175,9 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         }
 
         emitState()
-
-        val audioCallback = object : AudioManager.AudioRecordingCallback() {
-            override fun onRecordingConfigChanged(configs: List<AudioRecordingConfiguration>) {
-                emitState(shouldCheckAppOp = false)
-            }
-        }
-        audioManager.registerAudioRecordingCallback(audioCallback, null)
-
-        awaitClose {
-            audioManager.unregisterAudioRecordingCallback(audioCallback)
+        while (true) {
+            delay(2_000L)
+            emitState()
         }
     }
 
@@ -196,12 +189,12 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
             return@callbackFlow
         }
 
-        fun emitState(shouldCheckAppOp: Boolean = true) {
+        fun emitState() {
             if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 trySend(SensorStatus.Denied)
                 return
             }
-            if (shouldCheckAppOp && isAppOpBlocked(AppOpsManager.OPSTR_CAMERA)) {
+            if (isAppOpBlocked(AppOpsManager.OPSTR_CAMERA)) {
                 trySend(SensorStatus.Blocked)
                 return
             }
@@ -220,20 +213,9 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         }
 
         emitState()
-
-        val availabilityCallback = object : CameraManager.AvailabilityCallback() {
-            override fun onCameraAvailable(cameraId: String) {
-                emitState(shouldCheckAppOp = false)
-            }
-
-            override fun onCameraUnavailable(cameraId: String) {
-                emitState(shouldCheckAppOp = false)
-            }
-        }
-        cameraManager.registerAvailabilityCallback(availabilityCallback, null)
-
-        awaitClose {
-            cameraManager.unregisterAvailabilityCallback(availabilityCallback)
+        while (true) {
+            delay(2_000L)
+            emitState()
         }
     }
 }
