@@ -311,6 +311,115 @@ class AppOpsBlockedApi28Test {
     }
 }
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [Build.VERSION_CODES.BAKLAVA])
+class AppOpsBlockedApi36Test {
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `mic blocked when checkOpNoThrow returns IGNORED on API 36`() = runTest {
+        shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(Manifest.permission.RECORD_AUDIO)
+
+        val appOps = mock<AppOpsManager>().apply {
+            whenever(checkOpNoThrow(AppOpsManager.OPSTR_RECORD_AUDIO, Process.myUid(), "com.ezworksafe"))
+                .doReturn(AppOpsManager.MODE_IGNORED)
+        }
+        val realContext = ApplicationProvider.getApplicationContext<Context>()
+        val context = mock<Context>().apply {
+            whenever(getSystemService(Context.APP_OPS_SERVICE)).doReturn(appOps)
+            whenever(getSystemService(Context.AUDIO_SERVICE)).doReturn(
+                realContext.getSystemService(Context.AUDIO_SERVICE)
+            )
+            whenever(applicationContext).doReturn(this)
+            whenever(packageName).doReturn("com.ezworksafe")
+        }
+
+        val repo = SystemSensorRepository(context)
+        val status = repo.observeSensor(SensorType.MICROPHONE).first()
+        assertEquals(SensorStatus.Blocked, status)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `mic active when checkOpNoThrow returns ALLOWED on API 36`() = runTest {
+        shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(Manifest.permission.RECORD_AUDIO)
+
+        val appOps = mock<AppOpsManager>().apply {
+            whenever(checkOpNoThrow(AppOpsManager.OPSTR_RECORD_AUDIO, Process.myUid(), "com.ezworksafe"))
+                .doReturn(AppOpsManager.MODE_ALLOWED)
+        }
+        val realContext = ApplicationProvider.getApplicationContext<Context>()
+        val context = mock<Context>().apply {
+            whenever(getSystemService(Context.APP_OPS_SERVICE)).doReturn(appOps)
+            whenever(getSystemService(Context.AUDIO_SERVICE)).doReturn(
+                realContext.getSystemService(Context.AUDIO_SERVICE)
+            )
+            whenever(applicationContext).doReturn(this)
+            whenever(packageName).doReturn("com.ezworksafe")
+        }
+
+        val repo = SystemSensorRepository(context)
+        val status = repo.observeSensor(SensorType.MICROPHONE).first()
+        assertEquals(SensorStatus.Active, status)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `camera blocked when checkOpNoThrow returns IGNORED on API 36`() = runTest {
+        shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(Manifest.permission.CAMERA)
+
+        val appOps = mock<AppOpsManager>().apply {
+            whenever(checkOpNoThrow(AppOpsManager.OPSTR_CAMERA, Process.myUid(), "com.ezworksafe"))
+                .doReturn(AppOpsManager.MODE_IGNORED)
+        }
+        val realContext = ApplicationProvider.getApplicationContext<Context>()
+        val context = mock<Context>().apply {
+            whenever(getSystemService(Context.APP_OPS_SERVICE)).doReturn(appOps)
+            whenever(getSystemService(Context.CAMERA_SERVICE)).doReturn(
+                realContext.getSystemService(Context.CAMERA_SERVICE)
+            )
+            whenever(applicationContext).doReturn(this)
+            whenever(packageName).doReturn("com.ezworksafe")
+        }
+
+        val cameraManager = realContext.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        val shadowCam = shadowOf(cameraManager)
+        shadowCam.addCamera("0", mock())
+
+        val repo = SystemSensorRepository(context)
+        val status = repo.observeSensor(SensorType.CAMERA).first()
+        assertEquals(SensorStatus.Blocked, status)
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `camera active when checkOpNoThrow returns ALLOWED on API 36`() = runTest {
+        shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(Manifest.permission.CAMERA)
+
+        val appOps = mock<AppOpsManager>().apply {
+            whenever(checkOpNoThrow(AppOpsManager.OPSTR_CAMERA, Process.myUid(), "com.ezworksafe"))
+                .doReturn(AppOpsManager.MODE_ALLOWED)
+        }
+        val realContext = ApplicationProvider.getApplicationContext<Context>()
+        val context = mock<Context>().apply {
+            whenever(getSystemService(Context.APP_OPS_SERVICE)).doReturn(appOps)
+            whenever(getSystemService(Context.CAMERA_SERVICE)).doReturn(
+                realContext.getSystemService(Context.CAMERA_SERVICE)
+            )
+            whenever(applicationContext).doReturn(this)
+            whenever(packageName).doReturn("com.ezworksafe")
+        }
+
+        val cameraManager = realContext.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        val shadowCam = shadowOf(cameraManager)
+        shadowCam.addCamera("0", mock())
+
+        val repo = SystemSensorRepository(context)
+        val status = repo.observeSensor(SensorType.CAMERA).first()
+        assertEquals(SensorStatus.Active, status)
+    }
+}
+
 private fun mockContextForNullService(): Context = mock<Context>().apply {
     whenever(getSystemService(any<String>())).doReturn(null)
     whenever(applicationContext).doReturn(mock())

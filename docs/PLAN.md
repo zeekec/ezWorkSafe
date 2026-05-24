@@ -27,6 +27,7 @@ The following were implemented beyond the original plan:
 | **Notification "Refresh" action** | Notification includes a button that opens MainActivity → triggers `refreshSensorFlows()`. |
 | **E2E tests** | Compose UI tests for dashboard (all sensor states), widget provider metadata, notification verification via `dumpsys`, and theme. |
 | **`FakeSensorRepository`** | Deterministic test double with `setStatus()` for E2E and unit tests. |
+| **`QuickSettingsToggleE2eTest`** | Compose UI tests that toggle mic/camera Quick Settings privacy toggles via shell commands and verify the UI updates to "Blocked"/"Active" after lifecycle cycling. |
 | **Configuration cache** | `org.gradle.configuration-cache=true` — builds complete in <1s on cache hit. |
 
 ### Current SDK Versions (from `app/build.gradle.kts`)
@@ -57,6 +58,7 @@ app/src/androidTest/
     ├── service/
     │   └── MonitoringServiceNotificationE2eTest.kt
     ├── ui/view/
+    │   ├── QuickSettingsToggleE2eTest.kt
     │   ├── StatusDashboardE2eTest.kt
     │   ├── PermissionRefreshE2eTest.kt   # @Ignored (API 36 shell restriction)
     │   └── EzWorkSafeThemeTest.kt
@@ -83,6 +85,8 @@ app/src/main/res/
 `AppOpsManager.checkOpNoThrow()` returns `MODE_IGNORED` for background processes on Android 16 regardless of actual toggle state (server-side enforcement). No client-side workaround exists. `SensorPrivacyManager` is `@SystemApi`. This is why Mic/Cam show stale state in the widget's right section until the user opens the app.
 
 **Sensor status semantics (N-1 by design):** "Active" means permission granted + AppOps allows hardware use, not that hardware is currently in use. The app reports whether sensors *can be accessed*, matching its workplace safety monitoring purpose vs. a usage monitor. See `docs/security.md#n-1-info-cameramic-monitoring-shows-active-based-on-permissionappops-not-actual-hardware-usage`.
+
+**`CameraManager.AvailabilityCallback` immediate-fire:** Registering the callback fires `onCameraAvailable()` synchronously for each known camera. The initial `emitState()` correctly checks AppOp, but the callback's subsequent `emitState(shouldCheckAppOp = false)` overwrites the result. Both `AvailabilityCallback` and `AudioRecordingCallback` must use `shouldCheckAppOp = true` to prevent this. See AGENTS.md Android Gotchas and review.md Medium #30.
 
 ---
 

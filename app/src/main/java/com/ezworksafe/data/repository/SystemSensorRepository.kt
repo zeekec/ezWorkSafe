@@ -143,7 +143,9 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false
         return try {
             val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-            val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+                appOps.checkOpNoThrow(opStr, Process.myUid(), context.packageName)
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 appOps.unsafeCheckOpNoThrow(opStr, Process.myUid(), context.packageName)
             } else {
                 appOps.checkOpNoThrow(opStr, Process.myUid(), context.packageName)
@@ -178,7 +180,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
 
         val audioCallback = object : AudioManager.AudioRecordingCallback() {
             override fun onRecordingConfigChanged(configs: List<AudioRecordingConfiguration>) {
-                emitState(shouldCheckAppOp = false)
+                emitState(shouldCheckAppOp = true)
             }
         }
         audioManager.registerAudioRecordingCallback(audioCallback, null)
@@ -223,11 +225,11 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
 
         val availabilityCallback = object : CameraManager.AvailabilityCallback() {
             override fun onCameraAvailable(cameraId: String) {
-                emitState(shouldCheckAppOp = false)
+                emitState(shouldCheckAppOp = true)
             }
 
             override fun onCameraUnavailable(cameraId: String) {
-                emitState(shouldCheckAppOp = false)
+                emitState(shouldCheckAppOp = true)
             }
         }
         cameraManager.registerAvailabilityCallback(availabilityCallback, null)

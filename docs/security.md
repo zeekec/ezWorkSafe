@@ -178,6 +178,8 @@ The `observeMicStatus()` and `observeCameraStatus()` flows check permission and 
 
 **Intent:** The app's purpose is to report whether the hardware *can* be used (permission granted, privacy toggle not blocking), not whether it's currently *in use*. The label "Active" means "this sensor is available for use." The callbacks are still registered to re-emit when permission/toggle state changes, even though the hardware-usage data is not used.
 
+**Gotcha:** `CameraManager.AvailabilityCallback` fires `onCameraAvailable()` synchronously for each known camera during `registerAvailabilityCallback()`. This can overwrite the correct "Blocked" state emitted by the initial `emitState()` call if `shouldCheckAppOp` is `false` in the callback. Both `AvailabilityCallback` and `AudioRecordingCallback` must call `emitState(shouldCheckAppOp = true)` to avoid this.
+
 ---
 
 ### N-2 (Info): Deprecated `getPackageInfo(String, int)` on API 33+

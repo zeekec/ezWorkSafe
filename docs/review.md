@@ -187,6 +187,12 @@ keeping the data layer free of widget dependencies.
 
 #### Medium
 
+**30. `AvailabilityCallback` immediate-fire overrides AppOp "Blocked" state**
+- File: `SystemSensorRepository.kt:193-248`
+- `CameraManager.AvailabilityCallback` fires `onCameraAvailable()` synchronously for each known camera during `registerAvailabilityCallback()`. When a `flatMapLatest` re-subscription occurs (via `refresh()`), the new `callbackFlow` calls `emitState()` → `isAppOpBlocked()` returns `MODE_IGNORED` → emits `SensorStatus.Blocked` — but then `registerAvailabilityCallback()` immediately fires, calling `emitState(shouldCheckAppOp = false)` which skipped the AppOp check and emitted `SensorStatus.Active`, overwriting the correct state. Same pattern in `observeMicStatus()` with `AudioRecordingCallback`.
+- **Root cause:** `shouldCheckAppOp = false` in availability callbacks assumed AppOp only needed checking on initial emit; the callback's immediate-fire wasn't accounted for.
+- **Status: ✓ FIXED** — Both `AvailabilityCallback` and `AudioRecordingCallback` now use `shouldCheckAppOp = true`.
+
 ~~**16. `noteOpNoThrow` side effect on API 28**~~
 - ~~File: `SystemSensorRepository.kt:150`~~
 - ~~On API 28 (`Build.VERSION_CODES.P`), the else branch called `appOps.noteOpNoThrow()` which *recorded* the AppOp as having been performed (polluting the AppOps usage history / permission usage screen). `checkOpNoThrow()` exists since API 19 and only checks without recording.~~
@@ -276,6 +282,7 @@ keeping the data layer free of widget dependencies.
 | 23 | WidgetState not reset in E2E | `SensorWidgetE2eTest.kt:68-74` | Singleton state leaks across E2E test classes | See Low #26 |
 | 24 | Tautological refresh-reemission test | `SensorRepositoryTest.kt:64-71` | Same value before and after refresh (null-service) | See Low #27 |
 | 25 | buildWidgetRemoteViews tests shallow | `MonitoringServiceTest.kt:33-99` | 4 tests, all only check `assertNotNull` | See Low #29 |
+| 26 | `AvailabilityCallback` immediate-fire overrides AppOp block | `SystemSensorRepository.kt:193-248` | ✓ FIXED — `shouldCheckAppOp = true` in both availability callbacks | See Medium #30 |
 
 ### Fixed Since Last Review
 
@@ -310,7 +317,7 @@ keeping the data layer free of widget dependencies.
 |------|--------|
 | `MonitoringService.combine` collector integration | Untested — requires Robolectric with service lifecycle |
 | `pushWidgetUpdate()` RemoteViews content | 5 tests verify non-null, none check actual text/color values |
-| `SystemSensorRepository` system-service flow re-emission | `SensorRepositoryTest.kt:64` is tautological (null-service); real test exists at `SystemSensorRepositoryFlowsTest.kt:148` |
+| `SystemSensorRepository` system-service flow re-emission | `SensorRepositoryTest.kt:64` is tautological (null-service); real tests at `SystemSensorRepositoryFlowsTest.kt:148` and `QuickSettingsToggleE2eTest` |
 | `PermissionRefreshE2eTest` | `@Ignored` — `executeShellCommand` crashes on API 36 |
 | Widget `AppOps` foreground/background behavior | Untestable without API 36+ device with specific AppOps config |
 | `WidgetState` singleton — shared mutable state | Not reset between E2E test classes; leaks across classes |
@@ -345,8 +352,7 @@ keeping the data layer free of widget dependencies.
 The project is in strong shape. The architecture is clean, security posture is sound, and documentation is
 comprehensive. Key findings this session:
 
-- **0 Medium:** All medium findings resolved.
-  ~~`noteOpNoThrow` side effect on API 28~~ **(✓ FIXED)** ~~Exception-based camera control flow~~ **(✓ FIXED)**
+- **1 Medium:** ~~`AvailabilityCallback` immediate-fire overrides AppOp "Blocked" state~~ **(✓ FIXED)**
 - **12 Low:** Redundant SDK guard, `Inactive` never emitted, redundant Glance modifiers, unsafe cast in
   MonitoringService, WidgetState encapsulation, duplicate receiver code, PFD leak in E2E test, ambiguous test
   matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test,
