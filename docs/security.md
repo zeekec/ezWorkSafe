@@ -178,7 +178,7 @@ The `observeMicStatus()` and `observeCameraStatus()` flows check permission and 
 
 **Intent:** The app's purpose is to report whether the hardware *can* be used (permission granted, privacy toggle not blocking), not whether it's currently *in use*. The label "Active" means "this sensor is available for use."
 
-**Polling mechanism:** Camera/mic states use foreground polling. `emitState()` is called once on flow creation, then every 2 seconds via `while(true) { delay(2_000L); emitState() }` while the flow is collected. When the app is backgrounded, `WhileSubscribed(5_000)` stops collection and polling halts. No `AvailabilityCallback` or `AudioRecordingCallback` is registered — they were removed to avoid spontaneous state changes from callbacks.
+No `AvailabilityCallback` or `AudioRecordingCallback` is registered — they were removed to avoid spontaneous state changes from callbacks. Camera/mic state is only queried on flow creation and re-queried via `flatMapLatest` re-subscription when `refresh()` is called (from `ON_RESUME`). No polling is used — the AppOp check is unreliable when called from background contexts on Android 16.
 
 ---
 

@@ -22,7 +22,6 @@ import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
@@ -175,10 +174,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         }
 
         emitState()
-        while (true) {
-            delay(2_000L)
-            emitState()
-        }
+        awaitClose { }
     }
 
     private fun observeCameraStatus(): Flow<SensorStatus> = callbackFlow {
@@ -213,10 +209,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         }
 
         emitState()
-        while (true) {
-            delay(2_000L)
-            emitState()
-        }
+        awaitClose { }
     }
 }
 
