@@ -5,6 +5,10 @@ Android app (Native Kotlin, MVVM) that displays real-time status of
 WiFi, Bluetooth, Microphone access, and Camera access for work
 safety/privacy monitoring.
 
+**Getting started:**
+- [README.md](README.md) — project overview, features, screenshots, quick start
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — build commands, architecture, sensor monitoring, testing, widget docs
+
 ## Context7 Usage
 Use Context7 MCP for ALL Android SDK/API lookups — permission APIs,
 system services (WifiManager, BluetoothAdapter, AudioManager,
@@ -41,9 +45,9 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 - Use `Fixes #N` (not `Fixes Issue #N`) in the PR body to auto-close issues on merge
 - GitHub does NOT recognize `Fixes Issue #N` — the word "Issue" breaks keyword detection
 - The commit message does not matter for auto-close, only the PR body
-- Use `gh pr merge --auto --squash` to enable auto-merge once CI/CodeQL pass
+- Verify docs are updated: search `docs/` for references to the old behavior — check `DEVELOPMENT.md`, `review.md`, `security.md`, `API.md`, `PLAN.md`, and any `docs/superpowers/` specs/plans
 - **Before enabling auto-merge**, run E2E tests: `./gradlew connectedDebugAndroidTest` (requires emulator/device)
-- **Before merging**, verify docs are updated: search `docs/` for references to the old behavior — check `review.md`, `security.md`, `API.md`, `PLAN.md`, and any `docs/superpowers/` specs/plans
+- Use `gh pr merge --auto --squash` to enable auto-merge once CI/CodeQL pass
 
 **CI notes:**
 - Workflow requires `permissions: contents: read` for GITHUB_TOKEN
@@ -89,7 +93,7 @@ app/src/main/java/com/ezworksafe/
 
 ## Android Gotchas
 - Mic/Camera need **runtime permission** requests, not just manifest
-- **By design**: "Active" means permission granted + AppOps allows hardware use, not that hardware is currently in use. The status indicates whether the sensor *can be accessed*, matching the app's workplace safety monitoring purpose. See security.md N-1.
+- **By design**: "Active" means permission granted + AppOps allows hardware use, not that hardware is currently in use. The status indicates whether the sensor *can be accessed*, matching the app's workplace safety monitoring purpose. See [DEVELOPMENT.md](docs/DEVELOPMENT.md#sensor-monitoring).
 - Background monitoring uses a **foreground service** (`MonitoringService`, `foregroundServiceType="specialUse"`) — the service is started on app launch and runs persistently to push widget updates
 - Camera/mic are foreground-only snapshot (no system callbacks, no polling): `observeMicStatus()` and `observeCameraStatus()` take a single snapshot via `emitState()` on flow creation. When backgrounded, `WhileSubscribed(5_000)` stops collection. State updates only happen on `ON_RESUME` via `refresh()` → `flatMapLatest` re-subscription. No `AvailabilityCallback` or `AudioRecordingCallback` is registered — they were removed to avoid spontaneous state changes.
 - Some `BroadcastReceiver` actions restricted since Android 8+
