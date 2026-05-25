@@ -28,6 +28,10 @@ val keystoreProperties = if (keystorePropertiesFile.exists()) {
     null
 }
 
+if (keystoreProperties == null) {
+    logger.warn("keystore.properties not found; release builds will be unsigned")
+}
+
 android {
     namespace = "com.ezworksafe"
     compileSdk = 36
@@ -73,9 +77,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    testCoverage {
-        jacocoVersion = "0.8.12"
-    }
 }
 
 kotlin {
@@ -140,8 +141,3 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
 
-afterEvaluate {
-    if (keystoreProperties == null) {
-        logger.warn("keystore.properties not found; release builds will be unsigned")
-    }
-}

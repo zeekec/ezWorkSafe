@@ -6,7 +6,3 @@
 
 -keep class com.ezworksafe.widget.** { *; }
 
-# Room database _Impl constructors needed for reflection-based instantiation (R8 full mode)
--keep class * extends androidx.room.RoomDatabase {
-    <init>();
-}
