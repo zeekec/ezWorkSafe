@@ -35,6 +35,19 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
+/**
+ * Persistent foreground service that keeps sensor monitoring alive while backgrounded.
+ *
+ * **Widget dual-path architecture:**
+ * 1. Glance [androidx.glance.appwidget.GlanceAppWidget] provides the initial widget
+ *    render (via WorkManager, ~45s delay).
+ * 2. This service pushes real-time updates directly via [RemoteViews] — bypassing Glance
+ *    entirely. See [pushWidgetUpdate].
+ *
+ * **Notification "Refresh" action:** Tapping opens [MainActivity], whose `ON_RESUME`
+ * handler calls [SensorRepository.refresh], triggering re-emission of all sensor flows
+ * via [kotlinx.coroutines.flow.flatMapLatest] in [SystemSensorRepository].
+ */
 class MonitoringService : Service() {
 
     companion object {
@@ -64,6 +77,7 @@ class MonitoringService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    /** Combines all four sensor flows and pushes updates to widget + notification. */
     private fun observeSensors() {
         val repository: SensorRepository = (application as EzWorkSafeApp).sensorRepository
         serviceScope.launch {
@@ -89,6 +103,12 @@ class MonitoringService : Service() {
         }
     }
 
+    /**
+     * Pushes [RemoteViews] widget updates for both SensorWidget and CompactWidget.
+     *
+     * This is the real-time update path that bypasses Glance. Called on every sensor
+     * status change and on initial subscription.
+     */
     internal fun pushWidgetUpdate(
         wifi: SensorStatus, bt: SensorStatus,
         mic: SensorStatus, cam: SensorStatus
@@ -134,6 +154,12 @@ class MonitoringService : Service() {
         }
     }
 
+    /**
+     * Builds the persistent foreground notification with a "Refresh" action.
+     *
+     * The Refresh action opens [MainActivity], which triggers [SensorRepository.refresh]
+     * on `ON_RESUME`, bringing Mic/Cam snapshot statuses up to date.
+     */
     internal fun createNotification(text: String): Notification {
         val refreshIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP

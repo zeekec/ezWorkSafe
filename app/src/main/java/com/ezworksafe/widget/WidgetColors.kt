@@ -5,6 +5,8 @@ package com.ezworksafe.widget
 
 import androidx.compose.ui.graphics.Color as ComposeColor
 
+/** Dark theme widget colors. [Int] values used by [RemoteViews], [ComposeColor] for Glance. */
+
 val widgetBgDark = 0xFF1A1A2E.toInt()
 val widgetBgRight = 0xFF1E1E35.toInt()
 val widgetBorder = 0xFF333355.toInt()

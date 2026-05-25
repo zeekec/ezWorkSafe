@@ -46,7 +46,7 @@
             android:exported="false">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Real-time monitoring of WiFi, Bluetooth, microphone, and camera sensor state for workplace safety/privacy awareness. Observes system service callbacks to detect state changes and pushes updates to home screen widget and persistent notification. Does not fit standard FGS types because it passively monitors multiple unrelated sensor types without directly accessing the hardware." />
+                android:value="Real-time monitoring of WiFi, Bluetooth, microphone, and camera sensor access for workplace safety/privacy awareness. WiFi and BT use system broadcasts for real-time updates; Mic and Cam check permission grants and privacy toggles (snapshot). Pushes updates to home screen widget and persistent notification. Does not fit standard FGS types because it passively monitors multiple unrelated sensor types without directly accessing the hardware." />
         </service>
 
         <receiver

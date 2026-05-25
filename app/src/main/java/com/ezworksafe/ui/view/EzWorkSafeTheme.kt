@@ -22,6 +22,7 @@ private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF4CAF50),
 )
 
+/** Material3 theme using dynamic colors on Android 12+ with a green primary accent. */
 @Composable
 fun EzWorkSafeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

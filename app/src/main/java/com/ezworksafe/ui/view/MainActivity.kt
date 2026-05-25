@@ -25,6 +25,16 @@ import kotlinx.coroutines.launch
 import com.ezworksafe.ui.viewmodel.SensorViewModel
 import com.ezworksafe.util.PermissionHelper
 
+/**
+ * Main activity hosting the [StatusDashboard] Compose UI.
+ *
+ * **Refresh triggers:**
+ * - [Lifecycle.Event.ON_RESUME]: Immediate single refresh — brings Mic/Cam snapshot
+ *   statuses up to date after returning to foreground.
+ * - Foreground polling loop (2s interval while [Lifecycle.State.STARTED]): Continuously
+ *   refreshes to ensure the UI reflects current state and to work around Android 16's
+ *   `checkOpNoThrow` limitation for background processes.
+ */
 class MainActivity : ComponentActivity() {
 
     private val viewModel: SensorViewModel by viewModels()
@@ -82,6 +92,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Starts [MonitoringService] to keep sensor observation alive while backgrounded. */
     private fun startMonitoringService() {
         val intent = Intent(this, MonitoringService::class.java)
         ContextCompat.startForegroundService(this, intent)

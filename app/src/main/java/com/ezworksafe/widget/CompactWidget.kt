@@ -30,6 +30,12 @@ import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.ui.view.MainActivity
 
+/**
+ * Compact Glance widget (2x2 grid of colored dots).
+ *
+ * Shows all four sensors as colored dots in a 2x2 layout with short labels.
+ * Real-time updates pushed from [MonitoringService.pushWidgetUpdate].
+ */
 class CompactWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {

@@ -39,6 +39,13 @@ import android.os.Build
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 
+/**
+ * Modal bottom sheet with About, How It Works, and Permissions sections.
+ *
+ * The About section shows the app version and a summary of its purpose.
+ * How It Works explains the real-time (WiFi/BT) vs snapshot (Mic/Cam) architecture.
+ * Permissions lists each permission with an explanation specific to this app's use.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppInfoDialog(

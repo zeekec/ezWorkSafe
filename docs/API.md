@@ -33,10 +33,9 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 |---|---|
 | **Package** | `android.media.AudioManager` |
 | **Acquired via** | `context.getSystemService(Context.AUDIO_SERVICE)` |
-| **Methods used** | `registerAudioRecordingCallback()`, `unregisterAudioRecordingCallback()` |
-| **Callback class** | `AudioManager.AudioRecordingCallback` — `onRecordingConfigChanged()` |
+| **Methods used** | (instance reference only — used as non-null check before AppOps query) |
 | **Used in** | `SystemSensorRepository.kt` |
-| **Purpose** | Monitor microphone recording state via audio recording configuration callbacks (API 24+) |
+| **Purpose** | Verify the system service exists, then check microphone access via AppOps (permission + privacy toggle). No `AudioRecordingCallback` is registered — access is snapshot-only. |
 | **Docs** | https://developer.android.com/reference/android/media/AudioManager |
 
 ### 1.4 CameraManager
@@ -45,10 +44,8 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | **Package** | `android.hardware.camera2.CameraManager` |
 | **Acquired via** | `context.getSystemService(Context.CAMERA_SERVICE)` |
 | **Properties used** | `cameraIdList` |
-| **Methods used** | `registerAvailabilityCallback()`, `unregisterAvailabilityCallback()` |
-| **Callback class** | `CameraManager.AvailabilityCallback` — `onCameraAvailable()`, `onCameraUnavailable()` |
 | **Used in** | `SystemSensorRepository.kt` |
-| **Purpose** | Monitor camera usage state (available vs. in-use) via camera2 availability callbacks |
+| **Purpose** | Verify cameras exist via `cameraIdList`, then check camera access via AppOps (permission + privacy toggle). No `AvailabilityCallback` is registered — access is snapshot-only. |
 | **Docs** | https://developer.android.com/reference/android/hardware/camera2/CameraManager |
 
 ---
@@ -80,7 +77,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 |---|---|
 | **Package** | `android.app.Service` |
 | **Methods** | `onCreate()`, `onStartCommand()`, `onDestroy()`, `onBind()` |
-| **Return constant** | `START_STICKY` |
+| **Return constant** | `START_REDELIVER_INTENT` |
 | **Used in** | `MonitoringService.kt` |
 | **Purpose** | Base class for foreground service that runs background sensor monitoring with a persistent notification |
 | **Docs** | https://developer.android.com/reference/android/app/Service |
@@ -184,7 +181,7 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 
 | API | Used in | Purpose |
 |-----|---------|---------|
-| `kotlinx.coroutines.flow.callbackFlow` | `SystemSensorRepository.kt` | Create a `Flow` from callback-based APIs (BroadcastReceiver, AudioManager callback, CameraManager callback) |
+| `kotlinx.coroutines.flow.callbackFlow` | `SystemSensorRepository.kt` | Create a `Flow` from callback-based APIs (BroadcastReceiver for WiFi/BT) or snapshot emission (Mic/Cam) |
 | `kotlinx.coroutines.channels.awaitClose` | `SystemSensorRepository.kt` | Suspend until flow collection is cancelled, then run cleanup (unregister receiver/callback) |
 | `kotlinx.coroutines.flow.flatMapLatest` | `SystemSensorRepository.kt` | Restart the sensor observation flow when `refreshTrigger` emits a new value |
 | `kotlinx.coroutines.flow.stateIn` | `SensorViewModel.kt` | Convert cold `Flow<SensorStatus>` into hot `StateFlow` scoped to `viewModelScope` |
@@ -219,8 +216,8 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 | `android.permission.ACCESS_WIFI_STATE` | Normal | All | Read WiFi radio state (enabled/disabled) |
 | `android.permission.BLUETOOTH` | Normal | All | Legacy Bluetooth state access (pre-API 31) |
 | `android.permission.BLUETOOTH_CONNECT` | Dangerous | 31+ | Bluetooth state access on modern Android |
-| `android.permission.RECORD_AUDIO` | Dangerous | All | Monitor microphone recording state (runtime prompt) |
-| `android.permission.CAMERA` | Dangerous | All | Monitor camera usage state (runtime prompt) |
+| `android.permission.RECORD_AUDIO` | Dangerous | All | Check microphone access (never records) |
+| `android.permission.CAMERA` | Dangerous | All | Check camera access (never captures) |
 | `android.permission.FOREGROUND_SERVICE` | Normal | 28+ | Run a foreground service |
 | `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | Normal | 34+ | Declare `specialUse` foreground service type |
 
@@ -302,10 +299,10 @@ Every Android API, system service, Jetpack library, Kotlin construct, and testin
 ### 9.1 SensorStatus (sealed class)
 | State | Meaning | Color |
 |-------|---------|-------|
-| `Active` | Sensor is enabled or resource is in use | Green `0xFF4CAF50` |
-| `Inactive` | Sensor is disabled or resource is idle | Gray `0xFF9E9E9E` |
+| `Active` | Sensor is enabled (WiFi/BT) or permission + AppOps both allow access (Mic/Cam) | Green `0xFF4CAF50` |
+| `Inactive` | Placeholder default; never emitted by any sensor flow | Gray `0xFF9E9E9E` |
 | `Denied` | Runtime permission not granted | Red `0xFFF44336` |
-| `Blocked` | Hardware is off (WiFi/BT radio disabled) | Orange `0xFFFF9800` |
+| `Blocked` | Hardware off (WiFi/BT) or privacy toggle blocks access (Mic/Cam) | Orange `0xFFFF9800` |
 | `Unavailable` | Hardware missing, service null, or API level too low | Dark gray `0xFF616161` |
 
 **File:** `data/model/SensorStatus.kt`
@@ -327,7 +324,7 @@ interface SensorRepository {
     fun refresh()
 }
 ```
-- **Implementation:** `SystemSensorRepository` — wraps system services via `callbackFlow`
+- **Implementation:** `SystemSensorRepository` — uses `callbackFlow` with `BroadcastReceiver` (WiFi/BT) or snapshot `emitState()` (Mic/Cam)
 - **refresh():** Increments `refreshTrigger` → `flatMapLatest` restarts all sensor flows
 - **File:** `data/repository/SensorRepository.kt`
 

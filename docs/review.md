@@ -322,7 +322,17 @@ keeping the data layer free of widget dependencies.
 | Gap | Notes |
 |-----|-------|
 | CI doesn't run E2E tests | Documented gap — intentional for cost |
- | ~~`foregroundServiceType` rationale undocumented~~ | ✓ Documented via `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` (PR #41) |
+| `docs/API.md` 1.3/1.4 stale callbacks | AudioManager/CameraManager sections listed removed `AudioRecordingCallback`/`AvailabilityCallback` — ✓ FIXED |
+| `docs/API.md` 2.3 `START_STICKY` | Service return constant said `START_STICKY`, code uses `START_REDELIVER_INTENT` — ✓ FIXED |
+| `docs/API.md` 4.1 `callbackFlow` description | Mentioned "AudioManager callback, CameraManager callback" — ✓ FIXED |
+| `docs/API.md` 9.1 SensorStatus semantics | `Active` said "in use" not "accessible"; `Blocked` omitted Mic/Cam privacy toggle — ✓ FIXED |
+| `docs/DEVELOPMENT.md` stale callbacks | Sensor monitoring table and data flow diagram referenced removed callbacks — ✓ FIXED |
+| `docs/DEVELOPMENT.md` missing polling loop | Foreground polling loop in MainActivity not shown in data flow — ✓ FIXED |
+| `AndroidManifest.xml` FGS subtype | Said "Observes system service callbacks" — Mic/Cam are snapshot-only — ✓ FIXED |
+| `SensorStatus.Inactive` KDoc | Said "WiFi/BT radio off" but Inactive is never emitted — ✓ FIXED |
+| `docs/API.md` 9.3 callbackFlow | Said "wraps system services via callbackFlow" — misleading for snapshot Mic/Cam — ✓ FIXED |
+| `docs/API.md` 5 permission descriptions | Said "recording state" / "usage state" — usage-vs-access confusion — ✓ FIXED |
+| ~~`foregroundServiceType` rationale undocumented~~ | ✓ Documented via `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` (PR #41) |
 
 ---
 

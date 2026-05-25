@@ -79,12 +79,12 @@ done
 
 | Sensor | Mechanism | Permission |
 |--------|-----------|------------|
-| WiFi | `WifiManager` + `BroadcastReceiver` | `ACCESS_WIFI_STATE` (manifest only) |
-| Bluetooth | `BluetoothAdapter` + `BroadcastReceiver` | `BLUETOOTH_CONNECT` (runtime, API 31+) |
-| Microphone | `AudioManager` + `AudioRecordingCallback` | `RECORD_AUDIO` (runtime) |
-| Camera | `CameraManager` + `AvailabilityCallback` | `CAMERA` (runtime) |
+| WiFi | `WifiManager` + `BroadcastReceiver` (real-time via broadcasts) | `ACCESS_WIFI_STATE` (manifest only) |
+| Bluetooth | `BluetoothAdapter` + `BroadcastReceiver` (real-time via broadcasts) | `BLUETOOTH_CONNECT` (runtime, API 31+) |
+| Microphone | AppOps `checkOpNoThrow` (snapshot-only, no callback) | `RECORD_AUDIO` (runtime) |
+| Camera | AppOps `checkOpNoThrow` via `CameraManager.cameraIdList` (snapshot-only, no callback) | `CAMERA` (runtime) |
 
-Each sensor is observable via `callbackFlow` wrapping system callbacks. A `refreshTrigger` + `flatMapLatest` pattern allows permission re-checks when the app returns to foreground.
+WiFi and Bluetooth are real-time via `callbackFlow` + `BroadcastReceiver`. Mic and Camera are snapshot-only — they emit once on subscription and re-emit only via `refreshTrigger` + `flatMapLatest`. No `AudioRecordingCallback` or `AvailabilityCallback` is registered. See [security.md](security.md#n-1-info-cameramic-monitoring-shows-active-based-on-permissionappops-not-actual-hardware-usage) for rationale.
 
 ---
 
@@ -106,7 +106,8 @@ app/src/main/java/com/ezworksafe/
 ### Data flow
 
 ```
-System callbacks (BroadcastReceiver / AudioRecordingCallback / AvailabilityCallback)
+WiFi/BT: system broadcasts → BroadcastReceiver
+Mic/Cam: snapshot (permission + AppOps)
   → callbackFlow
   → flatMapLatest (refreshTrigger)
   → StateFlow (SensorViewModel)
@@ -114,6 +115,8 @@ System callbacks (BroadcastReceiver / AudioRecordingCallback / AvailabilityCallb
   → combine (MonitoringService)
   → WidgetState → RemoteViews push
 ```
+
+Foreground polling loop in `MainActivity` (`repeatOnLifecycle(STARTED)` + `delay(2_000)` + `viewModel.refresh()`) periodically re-queries Mic/Cam while visible. On `ON_RESUME`, an immediate single refresh fires.
 
 ---
 

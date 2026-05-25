@@ -11,6 +11,14 @@ import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.util.formatLastUpdated
 import java.text.DateFormat
 
+/**
+ * Builds [RemoteViews] for the full-size SensorWidget.
+ *
+ * This is the real-time update path (bypasses Glance). Layout is defined in
+ * `res/layout/widget_sensor_status.xml`. The widget is split into a left section
+ * (WiFi, BT) and a right section (Mic, Cam + timestamp), visually separated by
+ * a divider.
+ */
 internal fun buildWidgetRemoteViews(
     packageName: String,
     wifi: SensorStatus, bt: SensorStatus,
