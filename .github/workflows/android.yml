@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload release APK
         if: success() && env.KEYSTORE_B64 != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ezWorkSafe-release
           path: app/build/outputs/apk/release/*.apk
@@ -69,7 +69,7 @@ jobs:
         run: ./gradlew createDebugUnitTestCoverageReport
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: app/build/reports/coverage/**/*
