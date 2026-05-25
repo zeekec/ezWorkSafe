@@ -1,0 +1,49 @@
+# Auto-detect text files and normalize to LF on check-in
+* text=auto
+
+# Gradle wrapper scripts
+gradlew          text eol=lf
+gradlew.bat      text eol=crlf
+
+# Build scripts
+*.gradle.kts     text eol=lf
+*.gradle         text eol=lf
+
+# Source files
+*.kt             text eol=lf
+*.kts            text eol=lf
+*.java           text eol=lf
+*.xml            text eol=lf
+*.properties     text eol=lf
+*.yml            text eol=lf
+*.yaml           text eol=lf
+*.json           text eol=lf
+*.md             text eol=lf
+
+# Shell scripts
+*.sh             text eol=lf
+
+# Windows batch
+*.bat            text eol=crlf
+*.cmd            text eol=crlf
+
+# ProGuard rules
+proguard-rules.pro  text eol=lf
+
+# Binary files — do not touch
+*.png            binary
+*.jpg            binary
+*.jpeg           binary
+*.gif            binary
+*.ico            binary
+*.webp           binary
+*.keystore       binary
+*.jks            binary
+*.db             binary
+*.so             binary
+*.jar            binary
+*.aar            binary
+
+# Git hooks (must stay LF on all platforms)
+.gitattributes   text eol=lf
+.githooks/**     text eol=lf
