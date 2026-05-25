@@ -60,7 +60,7 @@ jobs:
           path: app/build/outputs/apk/release/*.apk
 
       - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
+        if: env.CODECOV_TOKEN != ''
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -75,6 +75,7 @@ jobs:
           path: app/build/reports/coverage/**/*
 
       - name: Upload to Codecov
+        if: env.CODECOV_TOKEN != ''
         uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
