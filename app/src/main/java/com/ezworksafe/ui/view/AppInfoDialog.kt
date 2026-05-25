@@ -87,9 +87,9 @@ fun AppInfoDialog(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Real-time monitoring of WiFi, Bluetooth, " +
-                            "Microphone, and Camera status for workplace " +
-                            "safety and privacy monitoring.",
+                    text = "Real-time visibility into WiFi, Bluetooth, " +
+                            "Microphone, and Camera access status for " +
+                            "workplace safety and privacy.",
                     lineHeight = 20.sp
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -113,8 +113,10 @@ fun AppInfoDialog(
                 title = "How It Works"
             ) {
                 Text(
-                    text = "The app runs a foreground service that " +
-                            "continuously monitors four device sensors.",
+                    text = "A foreground service keeps WiFi and Bluetooth " +
+                            "status updated in real-time, and checks " +
+                            "Microphone and Camera access each time you " +
+                            "open the app.",
                     lineHeight = 20.sp
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -125,9 +127,9 @@ fun AppInfoDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Microphone and Camera status use system " +
-                            "callbacks to detect when another app is " +
-                            "actively using them.",
+                    text = "Microphone and Camera status show whether " +
+                            "those sensors are accessible to this app, based " +
+                            "on permission grants and system privacy toggles.",
                     lineHeight = 20.sp
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -172,24 +174,24 @@ fun AppInfoDialog(
             ) {
                 PermissionRow(
                     permission = "ACCESS_WIFI_STATE",
-                    explanation = "Checks whether WiFi is enabled or " +
-                            "disabled. Auto-granted by the system."
+                    explanation = "Required to display whether WiFi is " +
+                            "enabled. Auto-granted by the system."
                 )
                 PermissionRow(
                     permission = "BLUETOOTH / BLUETOOTH_CONNECT",
-                    explanation = "Checks whether Bluetooth is enabled or " +
-                            "disabled. BLUETOOTH_CONNECT requires runtime " +
+                    explanation = "Required to display whether Bluetooth is " +
+                            "enabled. BLUETOOTH_CONNECT requires runtime " +
                             "permission on Android 12+."
                 )
                 PermissionRow(
                     permission = "RECORD_AUDIO",
-                    explanation = "Detects if any app is currently using " +
-                            "the microphone. Requires runtime permission."
+                    explanation = "Required to verify microphone privacy " +
+                            "toggle status. The app never records audio."
                 )
                 PermissionRow(
                     permission = "CAMERA",
-                    explanation = "Detects if any app is currently using " +
-                            "the camera. Requires runtime permission."
+                    explanation = "Required to verify camera privacy " +
+                            "toggle status. The app never captures images."
                 )
             }
 
