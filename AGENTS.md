@@ -5,6 +5,10 @@ Android app (Native Kotlin, MVVM) that displays real-time status of
 WiFi, Bluetooth, Microphone access, and Camera access for work
 safety/privacy monitoring.
 
+**Getting started:**
+- [README.md](README.md) — project overview, features, screenshots, quick start
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — build commands, architecture, sensor monitoring, testing, widget docs
+
 ## Context7 Usage
 Use Context7 MCP for ALL Android SDK/API lookups — permission APIs,
 system services (WifiManager, BluetoothAdapter, AudioManager,
@@ -41,9 +45,9 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 - Use `Fixes #N` (not `Fixes Issue #N`) in the PR body to auto-close issues on merge
 - GitHub does NOT recognize `Fixes Issue #N` — the word "Issue" breaks keyword detection
 - The commit message does not matter for auto-close, only the PR body
-- Use `gh pr merge --auto --squash` to enable auto-merge once CI/CodeQL pass
+- Verify docs are updated: search `docs/` for references to the old behavior — check `DEVELOPMENT.md`, `review.md`, `security.md`, `API.md`, `PLAN.md`, and any `docs/superpowers/` specs/plans
 - **Before enabling auto-merge**, run E2E tests: `./gradlew connectedDebugAndroidTest` (requires emulator/device)
-- **Before merging**, verify docs are updated: search `docs/` for references to the old behavior — check `review.md`, `security.md`, `API.md`, `PLAN.md`, and any `docs/superpowers/` specs/plans
+- Use `gh pr merge --auto --squash` to enable auto-merge once CI/CodeQL pass
 
 **CI notes:**
 - Workflow requires `permissions: contents: read` for GITHUB_TOKEN
@@ -82,14 +86,14 @@ app/src/main/java/com/ezworksafe/
 ```
 
 **Real-time Pattern:** `callbackFlow` wrapping system callbacks:
-- WiFi: `WifiManager` + `BroadcastReceiver`
-- Bluetooth: `BluetoothAdapter` + `BroadcastReceiver`
-- Mic: `AudioManager` + `AudioRecordingCallback` (API 24+)
-- Camera: `CameraManager` + `AvailabilityCallback`
+- WiFi: `WifiManager` + `BroadcastReceiver` (real-time via broadcasts)
+- Bluetooth: `BluetoothAdapter` + `BroadcastReceiver` (real-time via broadcasts)
+- Mic: `AudioManager` + AppOps check (snapshot-only, no callback)
+- Camera: `CameraManager` + AppOps check (snapshot-only, no callback)
 
 ## Android Gotchas
 - Mic/Camera need **runtime permission** requests, not just manifest
-- **By design**: "Active" means permission granted + AppOps allows hardware use, not that hardware is currently in use. The status indicates whether the sensor *can be accessed*, matching the app's workplace safety monitoring purpose. See security.md N-1.
+- **By design**: "Active" means permission granted + AppOps allows hardware use, not that hardware is currently in use. The status indicates whether the sensor *can be accessed*, matching the app's workplace safety monitoring purpose. See [DEVELOPMENT.md](docs/DEVELOPMENT.md#sensor-monitoring).
 - Background monitoring uses a **foreground service** (`MonitoringService`, `foregroundServiceType="specialUse"`) — the service is started on app launch and runs persistently to push widget updates
 - Camera/mic are foreground-only snapshot (no system callbacks, no polling): `observeMicStatus()` and `observeCameraStatus()` take a single snapshot via `emitState()` on flow creation. When backgrounded, `WhileSubscribed(5_000)` stops collection. State updates only happen on `ON_RESUME` via `refresh()` → `flatMapLatest` re-subscription. No `AvailabilityCallback` or `AudioRecordingCallback` is registered — they were removed to avoid spontaneous state changes.
 - Some `BroadcastReceiver` actions restricted since Android 8+
@@ -103,6 +107,7 @@ app/src/main/java/com/ezworksafe/
   2. RemoteViews push — `openAppIntent` param in `buildWidgetRemoteViews()`
   3. Glance Compose — `.clickable(actionStartActivity<MainActivity>())` in `SensorWidget.kt`
   Each path has an independent click action; the Glance `clickable` only covers the last.
+- **Receiver classes are intentionally duplicated**: `SensorWidgetReceiver` and `CompactWidgetReceiver` have near-identical `onUpdate()` logic. Do not refactor them into a shared base class — they extend `GlanceAppWidgetReceiver` with different `glanceAppWidget` types and may diverge.
 
 ## Plan Execution
 Default: **subagent-driven-development** — fresh subagent per task with two-stage
@@ -129,7 +134,26 @@ See [docs/PLAN.md](docs/PLAN.md) for the full implementation breakdown.
   ```
 
 ## Testing
-- Unit: ViewModel + Repository + Service notification (JUnit + Mockito + Robolectric + `runTest`)
-- E2E: Compose UI + `FakeSensorRepository` (instrumented, `connectedDebugAndroidTest`)
-- Widget: Provider metadata + `WidgetState` label verification (instrumented)
-- Notification: `dumpsys activity services` via `UiAutomation.executeShellCommand` (E2E)
+
+### Test locations
+| Directory | Purpose |
+|-----------|---------|
+| `src/test/` | Unit tests (Robolectric + Mockito + `runTest`) |
+| `src/testShared/` | Shared test doubles (e.g., `FakeSensorRepository`) — consumed by both unit and instrumented tests |
+| `src/androidTest/` | Instrumented/E2E tests (device/emulator), `./gradlew connectedDebugAndroidTest` |
+
+### Test patterns by layer
+| Layer | Pattern | Config |
+|-------|---------|--------|
+| **Repository** (`SystemSensorRepositoryFlowsTest`) | Robolectric + real system services via `shadowOf()` — sets WifiManager state, grants permissions, mocks AppOps | `@Config(sdk = [O_MR1, Q, P])` for API-level variation |
+| **Repository** (`SensorRepositoryTest`) | Plain JUnit with `mock(Context)` — tests `isOpBlocked()` and `FakeSensorRepository` | No Robolectric |
+| **ViewModel** | `FakeSensorRepository` injected via mock `EzWorkSafeApp` | No Robolectric |
+| **Service** | `Robolectric.buildService(MonitoringService::class.java)` — notification contents only; flow observation tested via Repository tests | `@Config(application = EzWorkSafeApp::class)` |
+| **Widget** | WidgetState labels/metadata (unit) + `UiAutomation` for E2E | — |
+| **E2E** | Compose UI assertions + `dumpsys activity services` via `UiAutomation.executeShellCommand` | Requires emulator/device |
+
+### Key gotchas
+- **`WidgetState` is a singleton** — `WidgetStateTest` resets state in `@Before`. Any test interacting with it must do the same or risk flaking from cross-test pollution.
+- **`FakeSensorRepository` lives in `src/testShared/`**, not `src/test/`. It is NOT visible to production code. Add shared test doubles there, not in `src/test/`.
+- **`MonitoringServiceTest` tests notification/RemoteViews construction only** — the `observeSensors` combine flow is covered by `SystemSensorRepositoryFlowsTest`. Do not add service-level flow tests.
+- **`isOpBlocked()` is a package-level function** in `SystemSensorRepository.kt`, not a method on the class. It is tested by `SensorRepositoryTest`.

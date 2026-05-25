@@ -15,6 +15,12 @@ import com.ezworksafe.R
 import com.ezworksafe.service.MonitoringService
 import com.ezworksafe.ui.view.MainActivity
 
+/**
+ * Glance widget receiver for the compact 2x2 dot widget.
+ *
+ * Same startup logic as [SensorWidgetReceiver]: ensures [MonitoringService] is
+ * running and sets the initial XML click handler.
+ */
 class CompactWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = CompactWidget()
 

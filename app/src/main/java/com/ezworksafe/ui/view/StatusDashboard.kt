@@ -41,6 +41,7 @@ import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.ui.viewmodel.SensorViewModel
 
+/** Main dashboard screen showing all four sensor statuses as cards. */
 @Composable
 fun StatusDashboard(viewModel: SensorViewModel) {
     val wifiStatus by viewModel.wifiStatus.collectAsState()

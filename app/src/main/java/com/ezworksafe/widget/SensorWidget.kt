@@ -31,6 +31,15 @@ import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import com.ezworksafe.ui.view.MainActivity
 
+/**
+ * Full-size Glance widget with left/right section layout.
+ *
+ * Left section: WiFi + BT (real-time updates via broadcasts).
+ * Right section: Mic + Cam (state from last foreground refresh).
+ *
+ * **Note:** Glance provides the initial render. Real-time updates bypass Glance
+ * via [MonitoringService.pushWidgetUpdate] using [RemoteViews].
+ */
 private val wifiBtSensors = setOf(SensorType.WIFI, SensorType.BLUETOOTH)
 private val micCamSensors = setOf(SensorType.MICROPHONE, SensorType.CAMERA)
 

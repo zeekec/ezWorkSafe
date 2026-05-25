@@ -15,6 +15,14 @@ import com.ezworksafe.R
 import com.ezworksafe.service.MonitoringService
 import com.ezworksafe.ui.view.MainActivity
 
+/**
+ * Glance widget receiver for the full-size sensor widget.
+ *
+ * **Initial render path:** [onUpdate] starts [MonitoringService] (which handles
+ * real-time updates) then falls through to Glance for the initial layout. The
+ * XML-based click handler is set here via [RemoteViews] as a fallback in case
+ * Glance's Compose clickable doesn't apply immediately.
+ */
 class SensorWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = SensorWidget()
 

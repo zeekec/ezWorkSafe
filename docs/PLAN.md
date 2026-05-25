@@ -82,7 +82,7 @@ app/src/main/res/
 
 `AppOpsManager.checkOpNoThrow()` returns `MODE_IGNORED` for background processes on Android 16 regardless of actual toggle state (server-side enforcement). No client-side workaround exists. `SensorPrivacyManager` is `@SystemApi`. This is why Mic/Cam show stale state in the widget's right section until the user opens the app.
 
-**Sensor status semantics (N-1 by design):** "Active" means permission granted + AppOps allows hardware use, not that hardware is currently in use. The app reports whether sensors *can be accessed*, matching its workplace safety monitoring purpose vs. a usage monitor. See `docs/security.md#n-1-info-cameramic-monitoring-shows-active-based-on-permissionappops-not-actual-hardware-usage`.
+**Sensor status semantics (N-1 by design):** "Active" means permission granted + AppOps allows hardware use, not that hardware is currently in use. The app reports whether sensors *can be accessed*, matching its workplace safety monitoring purpose vs. a usage monitor. See [DEVELOPMENT.md](DEVELOPMENT.md#sensor-monitoring).
 
 ---
 

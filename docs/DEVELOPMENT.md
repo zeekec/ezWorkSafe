@@ -79,12 +79,16 @@ done
 
 | Sensor | Mechanism | Permission |
 |--------|-----------|------------|
-| WiFi | `WifiManager` + `BroadcastReceiver` | `ACCESS_WIFI_STATE` (manifest only) |
-| Bluetooth | `BluetoothAdapter` + `BroadcastReceiver` | `BLUETOOTH_CONNECT` (runtime, API 31+) |
-| Microphone | `AudioManager` + `AudioRecordingCallback` | `RECORD_AUDIO` (runtime) |
-| Camera | `CameraManager` + `AvailabilityCallback` | `CAMERA` (runtime) |
+| WiFi | `WifiManager` + `BroadcastReceiver` (real-time via broadcasts) | `ACCESS_WIFI_STATE` (manifest only) |
+| Bluetooth | `BluetoothAdapter` + `BroadcastReceiver` (real-time via broadcasts) | `BLUETOOTH_CONNECT` (runtime, API 31+) |
+| Microphone | AppOps `checkOpNoThrow` (snapshot-only, no callback) | `RECORD_AUDIO` (runtime) |
+| Camera | AppOps `checkOpNoThrow` via `CameraManager.cameraIdList` (snapshot-only, no callback) | `CAMERA` (runtime) |
 
-Each sensor is observable via `callbackFlow` wrapping system callbacks. A `refreshTrigger` + `flatMapLatest` pattern allows permission re-checks when the app returns to foreground.
+WiFi and Bluetooth are real-time via `callbackFlow` + `BroadcastReceiver`. Mic and Camera are snapshot-only — they emit once on subscription and re-emit only via `refreshTrigger` + `flatMapLatest`. No `AudioRecordingCallback` or `AvailabilityCallback` is registered.
+
+**Rationale:** The app reports whether the hardware *can be accessed*, not whether it's in use. "Active" means permission granted AND AppOps allows access. Mic/Cam check permission + AppOps privacy toggle, then emit `Active` if both allow. No callbacks are registered — they were removed to avoid spontaneous state changes from callback events. When backgrounded, `WhileSubscribed(5_000)` stops collection; state refreshes only on `ON_RESUME` via `refresh()` → `flatMapLatest` re-subscription.
+
+A foreground polling loop in `MainActivity` (`repeatOnLifecycle(STARTED)` + `delay(2_000)` + `viewModel.refresh()`) re-queries Mic/Cam while visible. When the app goes below STARTED, the coroutine cancels immediately — avoiding the Android 16 limitation where `checkOpNoThrow()` returns `MODE_IGNORED` for background processes regardless of the actual toggle state. This is server-side enforced with no client-side workaround.
 
 ---
 
@@ -106,7 +110,8 @@ app/src/main/java/com/ezworksafe/
 ### Data flow
 
 ```
-System callbacks (BroadcastReceiver / AudioRecordingCallback / AvailabilityCallback)
+WiFi/BT: system broadcasts → BroadcastReceiver
+Mic/Cam: snapshot (permission + AppOps)
   → callbackFlow
   → flatMapLatest (refreshTrigger)
   → StateFlow (SensorViewModel)
@@ -114,6 +119,8 @@ System callbacks (BroadcastReceiver / AudioRecordingCallback / AvailabilityCallb
   → combine (MonitoringService)
   → WidgetState → RemoteViews push
 ```
+
+Foreground polling loop in `MainActivity` (`repeatOnLifecycle(STARTED)` + `delay(2_000)` + `viewModel.refresh()`) periodically re-queries Mic/Cam while visible. On `ON_RESUME`, an immediate single refresh fires.
 
 ---
 

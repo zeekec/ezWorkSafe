@@ -27,8 +27,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flatMapLatest
 
+/**
+ * Production sensor repository.
+ *
+ * **Architecture by sensor:**
+ * - **WiFi / Bluetooth**: Real-time via [BroadcastReceiver] + [callbackFlow].
+ * - **Microphone / Camera**: Snapshot-only — emits a single value on subscription.
+ *   No [AudioRecordingCallback] or [AvailabilityCallback] is registered.
+ *   Queries permission + [AppOpsManager.checkOpNoThrow] only.
+ *
+ * **Key invariant:** Sensor status reflects *access* (can the sensor be used?),
+ * not *usage* (is another app currently using it?). See [SensorStatus.Active].
+ */
 class SystemSensorRepository(private val context: Context) : SensorRepository {
 
+    /** Incremented on each [refresh] to trigger re-subscription via [flatMapLatest]. */
     private val refreshTrigger = MutableStateFlow(0)
 
     override fun refresh() {
@@ -47,6 +60,13 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         }
     }
 
+    /**
+     * Observes WiFi radio state via [WifiManager] and [BroadcastReceiver].
+     *
+     * Returns [SensorStatus.Active] when the radio is enabled/enabling,
+     * [SensorStatus.Blocked] when disabled, [SensorStatus.Unavailable] if
+     * the system service is absent.
+     */
     private fun observeWifiStatus(): Flow<SensorStatus> = callbackFlow {
         val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
         if (wifiManager == null) {
@@ -84,6 +104,13 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         awaitClose { context.unregisterReceiver(receiver) }
     }
 
+    /**
+     * Observes Bluetooth radio state via [BluetoothAdapter] and [BroadcastReceiver].
+     *
+     * On API 31+ the [android.Manifest.permission.BLUETOOTH_CONNECT] runtime
+     * permission must be granted before querying the adapter. Returns
+     * [SensorStatus.Denied] if the permission is missing.
+     */
     private fun observeBluetoothStatus(): Flow<SensorStatus> = callbackFlow {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
@@ -137,6 +164,13 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         awaitClose { context.unregisterReceiver(receiver) }
     }
 
+    /**
+     * Checks whether an AppOp is blocked by the system privacy toggle.
+     *
+     * Uses [AppOpsManager.unsafeCheckOpNoThrow] on API 29+ and the deprecated
+     * [AppOpsManager.checkOpNoThrow] on API 19-28. Returns `false` below API 28
+     * where AppOps is not available.
+     */
     @Suppress("DEPRECATION")
     private fun isAppOpBlocked(opStr: String): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false
@@ -153,6 +187,18 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         }
     }
 
+    /**
+     * Snapshot of microphone access.
+     *
+     * Checks [android.Manifest.permission.RECORD_AUDIO] + AppOps privacy toggle.
+     * Does **not** register [android.media.AudioRecordingCallback] — the status
+     * reflects *access*, not active recording by another app. Emits once and
+     * never re-emits until re-subscribed via [refreshTrigger].
+     *
+     * **Known limitation on Android 16:** [AppOpsManager.checkOpNoThrow] returns
+     * [AppOpsManager.MODE_IGNORED] for background processes regardless of the
+     * actual toggle state. Refresh requires app visibility.
+     */
     private fun observeMicStatus(): Flow<SensorStatus> = callbackFlow {
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
         if (audioManager == null) {
@@ -177,6 +223,17 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         awaitClose { }
     }
 
+    /**
+     * Snapshot of camera access.
+     *
+     * Checks [android.Manifest.permission.CAMERA] + AppOps privacy toggle.
+     * Does **not** register [android.hardware.camera2.CameraManager.AvailabilityCallback] —
+     * the status reflects *access*, not camera-in-use by another app. Emits once and
+     * never re-emits until re-subscribed via [refreshTrigger].
+     *
+     * **Known limitation on Android 16:** Same background detection restriction
+     * as [observeMicStatus].
+     */
     private fun observeCameraStatus(): Flow<SensorStatus> = callbackFlow {
         val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
         if (cameraManager == null) {
@@ -213,5 +270,6 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
     }
 }
 
+/** Returns `true` when [opResult] indicates an AppOps block on API 28+. */
 fun isOpBlocked(sdk: Int, opResult: Int): Boolean =
     sdk >= Build.VERSION_CODES.P && opResult == AppOpsManager.MODE_IGNORED
