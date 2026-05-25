@@ -14,6 +14,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     steps:
       - uses: actions/checkout@v6
@@ -28,8 +31,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Decode keystore
-        env:
-          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
         if: env.KEYSTORE_B64 != ''
         run: echo "$KEYSTORE_B64" | base64 -d > release.keystore
 
