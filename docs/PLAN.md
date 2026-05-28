@@ -2,11 +2,15 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a Native Kotlin Android app (MVVM) that displays real-time status of WiFi, Bluetooth, Microphone access, and Camera access for work safety/privacy monitoring.
+**Goal:** Build a Native Kotlin Android app (MVVM) that displays real-time status of WiFi, Bluetooth, Microphone access,
+and Camera access for work safety/privacy monitoring.
 
-**Architecture:** Single-Activity MVVM app with a `SensorRepository` wrapping Android system services via `callbackFlow` for reactive updates, a `SensorViewModel` exposing `StateFlow<SensorStatus>` per sensor, and a Jetpack Compose dashboard UI. Runtime permission requests for MIC and CAMERA. Optional foreground service for background monitoring.
+**Architecture:** Single-Activity MVVM app with a `SensorRepository` wrapping Android system services via `callbackFlow`
+for reactive updates, a `SensorViewModel` exposing `StateFlow<SensorStatus>` per sensor, and a Jetpack Compose dashboard
+UI. Runtime permission requests for MIC and CAMERA. Optional foreground service for background monitoring.
 
-**Tech Stack:** Kotlin, Coroutines + Flow, AndroidX Lifecycle (ViewModel + StateFlow), Jetpack Compose, Jetpack Glance (widget), JUnit + Mockito (testing), Gradle Kotlin DSL.
+**Tech Stack:** Kotlin, Coroutines + Flow, AndroidX Lifecycle (ViewModel + StateFlow), Jetpack Compose, Jetpack Glance
+(widget), JUnit + Mockito (testing), Gradle Kotlin DSL.
 
 ---
 
@@ -80,12 +84,18 @@ app/src/main/res/
 
 ### Known Limitations
 
-`AppOpsManager.checkOpNoThrow()` returns `MODE_IGNORED` for background processes on Android 16 regardless of actual toggle state (server-side enforcement). No client-side workaround exists. `SensorPrivacyManager` is `@SystemApi`. This is why Mic/Cam show stale state in the widget's right section until the user opens the app.
+`AppOpsManager.checkOpNoThrow()` returns `MODE_IGNORED` for background processes on Android 16 regardless of actual
+toggle state (server-side enforcement). No client-side workaround exists. `SensorPrivacyManager` is `@SystemApi`. This
+is why Mic/Cam show stale state in the widget's right section until the user opens the app.
 
-**Sensor status semantics (N-1 by design):** "Active" means permission granted + AppOps allows hardware use, not that hardware is currently in use. The app reports whether sensors *can be accessed*, matching its workplace safety monitoring purpose vs. a usage monitor. See [DEVELOPMENT.md](DEVELOPMENT.md#sensor-monitoring).
+**Sensor status semantics (N-1 by design):** "Active" means permission granted + AppOps allows hardware use, not that
+hardware is currently in use. The app reports whether sensors *can be accessed*, matching its workplace safety
+monitoring purpose vs. a usage monitor. See [DEVELOPMENT.md](DEVELOPMENT.md#sensor-monitoring).
 
 ---
 
 ## Original Plan Tasks
 
-All 12 tasks from the original implementation plan have been fully implemented. Code snippets, SDK versions, and architecture descriptions in the original task sections are outdated (the project evolved significantly beyond the initial plan). See [DEVELOPMENT.md](DEVELOPMENT.md) for current build, architecture, and testing documentation.
+All 12 tasks from the original implementation plan have been fully implemented. Code snippets, SDK versions, and
+architecture descriptions in the original task sections are outdated (the project evolved significantly beyond the
+initial plan). See [DEVELOPMENT.md](DEVELOPMENT.md) for current build, architecture, and testing documentation.

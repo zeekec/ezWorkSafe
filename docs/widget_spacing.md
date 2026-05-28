@@ -1,8 +1,6 @@
 # Widget Vertical Centering Issue
 
-**Last updated:** 2026-05-18
-**Branch:** `fix/widget-alignment`
-**Related files:**
+**Last updated:** 2026-05-18 **Branch:** `fix/widget-alignment` **Related files:**
 - `app/src/main/res/layout/widget_sensor_status.xml` — RemoteViews live-data layout
 - `app/src/main/res/layout/widget_initial_layout.xml` — RemoteViews placeholder layout
 - `app/src/main/java/com/ezworksafe/widget/SensorWidget.kt` — Glance Compose layout
@@ -13,7 +11,8 @@
 
 ## Symptom (original)
 
-Before the fix, the widget content was shifted upward when live sensor data was pushed via RemoteViews. The timestamp overlay overlapped the "Active" status text.
+Before the fix, the widget content was shifted upward when live sensor data was pushed via RemoteViews. The timestamp
+overlay overlapped the "Active" status text.
 
 ---
 
@@ -48,7 +47,9 @@ Stage 3 is the primary visible state (pushed within seconds of opening the app).
 
 ## Root Cause
 
-The old layout used a vertical `LinearLayout` with `sensors_row` at `weight=1` and a separate timestamp row below. The timestamp row stole vertical space from `sensors_row`, shifting all sensor labels above true vertical center by roughly half the timestamp height.
+The old layout used a vertical `LinearLayout` with `sensors_row` at `weight=1` and a separate timestamp row below. The
+timestamp row stole vertical space from `sensors_row`, shifting all sensor labels above true vertical center by roughly
+half the timestamp height.
 
 ---
 
@@ -56,7 +57,8 @@ The old layout used a vertical `LinearLayout` with `sensors_row` at `weight=1` a
 
 ### `widget_sensor_status.xml` (Stage 3 — RemoteViews push)
 
-Restructured from a vertical `LinearLayout` (sensors_row + timestamp bar) to a **horizontal `LinearLayout`** where the timestamp overlays at the bottom of the right section via `layout_gravity`:
+Restructured from a vertical `LinearLayout` (sensors_row + timestamp bar) to a **horizontal `LinearLayout`** where the
+timestamp overlays at the bottom of the right section via `layout_gravity`:
 
 ```
 LinearLayout (root, gravity="center_vertical", padding=8dp)
@@ -82,7 +84,8 @@ Key details:
 
 ### `SensorWidget.kt` (Stage 1 — Glance Compose)
 
-Restructured to use `Box` + `contentAlignment = Alignment.Center` in the right section. The timestamp was removed (not visible in the Glance stage anyway).
+Restructured to use `Box` + `contentAlignment = Alignment.Center` in the right section. The timestamp was removed (not
+visible in the Glance stage anyway).
 
 Key details:
 - Outer `Row` has `verticalAlignment = Alignment.Vertical.CenterVertically`
@@ -92,7 +95,8 @@ Key details:
 
 ### `widget_initial_layout.xml` (Stage 2 — initial XML placeholder)
 
-Unchanged. No timestamp, both sections use `match_parent` height with `gravity="center_vertical"`. Centering is naturally correct because there's no timestamp stealing space.
+Unchanged. No timestamp, both sections use `match_parent` height with `gravity="center_vertical"`. Centering is
+naturally correct because there's no timestamp stealing space.
 
 ---
 
