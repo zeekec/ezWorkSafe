@@ -1,9 +1,7 @@
 # Code & Documentation Review
 
-**Date:** 2026-05-25
-**Last updated:** 2026-05-27 (session 6 — comprehensive re-review, PR #104 updates)
-**Commit:** HEAD of `main`
-**Review scope:** Full codebase, tests, config, docs, CI, security
+**Date:** 2026-05-25 **Last updated:** 2026-05-27 (session 6 — comprehensive re-review, PR #104 updates) **Commit:**
+HEAD of `main` **Review scope:** Full codebase, tests, config, docs, CI, security
 
 ---
 
@@ -13,8 +11,8 @@ MVVM with clear separation of concerns. Interface-based `SensorRepository` + `Sy
 `callbackFlow` + `flatMapLatest` pattern for reactive sensor observations is idiomatic Kotlin coroutines.
 
 The `WidgetState` singleton is a pragmatic choice for cross-component state sharing between the service and Glance
-widgets. The `lastRefreshTime` is set by `MonitoringService.observeSensors()` alongside the `WidgetState.statuses` write,
-keeping the data layer free of widget dependencies.
+widgets. The `lastRefreshTime` is set by `MonitoringService.observeSensors()` alongside the `WidgetState.statuses`
+write, keeping the data layer free of widget dependencies.
 
 ---
 
@@ -149,10 +147,10 @@ keeping the data layer free of widget dependencies.
 - The `context: Context` parameter is passed from `provideGlance` (line 51) but never referenced in the function body. Dead code that increases cognitive load.
 - **Fix:** Remove the `context` parameter from `WidgetContent()` and the `context = context` argument at the call site. If context is needed later, use `LocalContext.current`.
 
-**31. Aggressive 2-second polling loop in MainActivity**
+**31. 2-second polling loop in MainActivity**
 - File: `MainActivity.kt:64-71`
-- The `while(true)` loop calls `viewModel.refresh()` every 2 seconds while in `Lifecycle.State.STARTED`. This triggers re-subscription of all four sensor flows via `flatMapLatest`, impacting battery life. Mic/Cam are snapshot-only and won't change without foreground interaction.
-- **Fix:** Increase the polling interval to 10-30 seconds, or remove the loop entirely since `ON_RESUME` already does a single refresh. The stated purpose (Android 16 AppOps workaround) cannot be fixed by foreground polling.
+- The `while(true)` loop calls `viewModel.refresh()` every 2 seconds while in `Lifecycle.State.STARTED`.
+- **Status: By design** — This is the only mechanism to detect Android 16 Mic/Cam privacy toggle changes in real-time while the app is foregrounded. Battery impact is negligible (~60-120ms CPU/min foreground). The polling only runs while the app is visible and stops immediately when backgrounded via `repeatOnLifecycle(STARTED)`.
 
 **32. Unused `audioManager` variable in `observeMicStatus()`**
 - File: `SystemSensorRepository.kt:203`

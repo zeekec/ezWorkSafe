@@ -1,18 +1,16 @@
 # ezWorkSafe - AGENTS.md
 
 ## Project Overview
-Android app (Native Kotlin, MVVM) that displays real-time status of
-WiFi, Bluetooth, Microphone access, and Camera access for work
-safety/privacy monitoring.
+Android app (Native Kotlin, MVVM) that displays real-time status of WiFi, Bluetooth, Microphone access, and Camera
+access for work safety/privacy monitoring.
 
 **Getting started:**
 - [README.md](README.md) — project overview, features, screenshots, quick start
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — build commands, architecture, sensor monitoring, testing, widget docs
 
 ## Context7 Usage
-Use Context7 MCP for ALL Android SDK/API lookups — permission APIs,
-system services (WifiManager, BluetoothAdapter, AudioManager,
-CameraManager), Flow/LiveData patterns. Training data may be outdated.
+Use Context7 MCP for ALL Android SDK/API lookups — permission APIs, system services (WifiManager, BluetoothAdapter,
+AudioManager, CameraManager), Flow/LiveData patterns. Training data may be outdated.
 
 **Steps:**
 1. `resolve-library-id` with library name (e.g., "Android SDK")
@@ -29,6 +27,7 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 | `./gradlew createDebugUnitTestCoverageReport` | Unit test coverage report (JaCoCo) |
 | `./gradlew installDebug` | Install to device |
 | `./gradlew connectedDebugAndroidTest` | Run E2E tests (device/emulator) |
+| `python3 scripts/wrap-markdown.py` | Word-wrap all markdown docs to 120 characters |
 
 ### Build gotchas
 - **`allWarningsAsErrors = true`** (`app/build.gradle.kts:84`) — Kotlin compilation fails on any warning. Fix warnings before committing.
@@ -119,9 +118,8 @@ app/src/main/java/com/ezworksafe/
 - **Receiver classes are intentionally duplicated**: `SensorWidgetReceiver` and `CompactWidgetReceiver` have near-identical `onUpdate()` logic. Do not refactor them into a shared base class — they extend `GlanceAppWidgetReceiver` with different `glanceAppWidget` types and may diverge.
 
 ## Plan Execution
-Default: **subagent-driven-development** — fresh subagent per task with two-stage
-review (spec compliance → code quality) after each. See implementation plans in
-`docs/superpowers/plans/`.
+Default: **subagent-driven-development** — fresh subagent per task with two-stage review (spec compliance → code
+quality) after each. See implementation plans in `docs/superpowers/plans/`.
 
 ## Implementation Plan
 See [docs/PLAN.md](docs/PLAN.md) for the full implementation breakdown.

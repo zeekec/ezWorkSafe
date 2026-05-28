@@ -1,8 +1,7 @@
 # Security Audit: ezWorkSafe
 
-**Date:** 2026-05-25
-**Scope:** Full codebase audit — permissions, IPC, logging, data handling, crypto, network, build pipeline.
-**Methodology:** Manual source code review. No dynamic analysis or penetration testing performed.
+**Date:** 2026-05-25 **Scope:** Full codebase audit — permissions, IPC, logging, data handling, crypto, network, build
+pipeline. **Methodology:** Manual source code review. No dynamic analysis or penetration testing performed.
 
 ---
 
@@ -66,7 +65,8 @@ Added `-keep class com.ezworksafe.widget.** { *; }` to preserve all widget class
 - `MonitoringService.kt:122-125` — Widget PendingIntent uses `REQUEST_CODE_WIDGET`
 - `MonitoringService.kt:167-170` — Notification Refresh PendingIntent uses `REQUEST_CODE_REFRESH`
 
-Both use `FLAG_IMMUTABLE` and `FLAG_UPDATE_CURRENT`. Distinct request codes prevent the two PendingIntents from being treated as identical by the system.
+Both use `FLAG_IMMUTABLE` and `FLAG_UPDATE_CURRENT`. Distinct request codes prevent the two PendingIntents from being
+treated as identical by the system.
 
 ### M-6: `noteOpNoThrow` records AppOp on API 28 (side effect)
 
@@ -93,7 +93,8 @@ All catch blocks target specific exception types:
 
 `allowBackup="false"` and `fullBackupContent="false"` set in `AndroidManifest.xml:26-27`.
 
-**Note:** On Android 12+, `allowBackup="false"` does NOT prevent cloud backups unless `android:dataExtractionRules` is also specified. Add `android:dataExtractionRules="@xml/data_extraction_rules"` for full coverage.
+**Note:** On Android 12+, `allowBackup="false"` does NOT prevent cloud backups unless `android:dataExtractionRules` is
+also specified. Add `android:dataExtractionRules="@xml/data_extraction_rules"` for full coverage.
 
 ### L-3: Keystore password in plaintext
 
@@ -105,7 +106,8 @@ Pre-commit hook (`.githooks/pre-commit`) blocks `keystore.properties` commits. `
 
 **Status: By design, no change needed.**
 
-`android:widgetCategory="home_screen"` in `widget_info_sensor.xml:8` limits display to home screen (not lock screen). Home screen data exposure is inherent to the app's purpose (workplace safety monitoring).
+`android:widgetCategory="home_screen"` in `widget_info_sensor.xml:8` limits display to home screen (not lock screen).
+Home screen data exposure is inherent to the app's purpose (workplace safety monitoring).
 
 ### L-5: Conditional release signing silently falls back to unsigned
 
@@ -119,7 +121,8 @@ Pre-commit hook (`.githooks/pre-commit`) blocks `keystore.properties` commits. `
 
 **File:** `app/build.gradle.kts:67`
 
-`buildConfig = false` is now set. Version name is read from `PackageManager` in `AppInfoDialog.kt:82` instead of `BuildConfig.VERSION_NAME`.
+`buildConfig = false` is now set. Version name is read from `PackageManager` in `AppInfoDialog.kt:82` instead of
+`BuildConfig.VERSION_NAME`.
 
 ### L-7: `Log.w()` calls survive in release builds
 
@@ -127,7 +130,8 @@ Pre-commit hook (`.githooks/pre-commit`) blocks `keystore.properties` commits. `
 
 **File:** `app/proguard-rules.pro:1-5`
 
-`-assumenosideeffects` now includes `public static int w(...);` in addition to `d(...)`. Both `Log.w()` call sites are now stripped in release builds.
+`-assumenosideeffects` now includes `public static int w(...);` in addition to `d(...)`. Both `Log.w()` call sites are
+now stripped in release builds.
 
 ### L-8: Empty permission rationale callback
 
@@ -135,7 +139,8 @@ Pre-commit hook (`.githooks/pre-commit`) blocks `keystore.properties` commits. `
 
 **File:** `MainActivity.kt:43`
 
-The `ActivityResultContracts.RequestMultiplePermissions()` callback now shows a `Toast` explaining that denied permissions will cause sensor status to be unavailable.
+The `ActivityResultContracts.RequestMultiplePermissions()` callback now shows a `Toast` explaining that denied
+permissions will cause sensor status to be unavailable.
 
 ### L-9: `START_STICKY` on modern Android
 
@@ -149,7 +154,10 @@ The `ActivityResultContracts.RequestMultiplePermissions()` callback now shows a 
 
 **Status: ✓ ACKNOWLEDGED LIMITATION**
 
-If the user revokes `CAMERA` or `RECORD_AUDIO` in Settings while the app is backgrounded, the service's sensor observation continues showing the old state. Detection only occurs when `refresh()` is triggered (app opened or notification "Refresh" tapped). This is documented in AGENTS.md and in-app help dialog. No client-side workaround exists due to Android 16 AppOps server-side enforcement.
+If the user revokes `CAMERA` or `RECORD_AUDIO` in Settings while the app is backgrounded, the service's sensor
+observation continues showing the old state. Detection only occurs when `refresh()` is triggered (app opened or
+notification "Refresh" tapped). This is documented in AGENTS.md and in-app help dialog. No client-side workaround exists
+due to Android 16 AppOps server-side enforcement.
 
 ---
 
@@ -175,7 +183,9 @@ Now version-gated with `PackageInfoFlags` on API 33+ with a fallback for earlier
 
 **Files:** `SystemSensorRepository.kt:93,153`
 
-`context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)` calls are now guarded with `Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU` checks, falling back to the two-parameter `registerReceiver(receiver, filter)` on API 26-32.
+`context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)` calls are now guarded with
+`Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU` checks, falling back to the two-parameter
+`registerReceiver(receiver, filter)` on API 26-32.
 
 ### N-4 (Low): Notification content exposes sensor status on lock screen
 
@@ -183,7 +193,10 @@ Now version-gated with `PackageInfoFlags` on API 33+ with a fallback for earlier
 
 **File:** `MonitoringService.kt:98,173-174`
 
-The persistent foreground notification displays sensor status labels (e.g., "WiFi: Active | BT: Blocked | Mic: Denied | Cam: Active") via both `setContentText` and `BigTextStyle`. This information is visible on the lock screen and accessible to notification listeners. In a workplace safety context, this could leak which sensors the user has disabled.
+The persistent foreground notification displays sensor status labels (e.g., "WiFi: Active | BT: Blocked | Mic: Denied |
+Cam: Active") via both `setContentText` and `BigTextStyle`. This information is visible on the lock screen and
+accessible to notification listeners. In a workplace safety context, this could leak which sensors the user has
+disabled.
 
 **Options:**
 - (a) Use generic notification text ("Tap to view sensor status") and keep detailed status in expanded `BigTextStyle`
@@ -195,7 +208,11 @@ The current notification uses `PRIORITY_LOW` and `setOngoing(true)`.
 
 **File:** `WidgetState.kt:19`
 
-`WidgetState.statuses` is a `@Volatile Map` reference. `MonitoringService.pushWidgetUpdate()` writes a new map from `Dispatchers.Main` while Glance's `provideGlance` reads it. The reference update is atomic (`mapOf` creates a new immutable map) and `@Volatile` ensures visibility, but there is a theoretical race: the Glance thread could read a reference whose entries contain stale `SensorStatus` objects. In practice this is negligible since `SensorStatus` objects are immutable value objects.
+`WidgetState.statuses` is a `@Volatile Map` reference. `MonitoringService.pushWidgetUpdate()` writes a new map from
+`Dispatchers.Main` while Glance's `provideGlance` reads it. The reference update is atomic (`mapOf` creates a new
+immutable map) and `@Volatile` ensures visibility, but there is a theoretical race: the Glance thread could read a
+reference whose entries contain stale `SensorStatus` objects. In practice this is negligible since `SensorStatus`
+objects are immutable value objects.
 
 **Fix (optional):** Replace with `AtomicReference` or `StateFlow` for stronger guarantees.
 
@@ -205,13 +222,16 @@ The current notification uses `PRIORITY_LOW` and `setOngoing(true)`.
 
 **File:** `proguard-rules.pro:9-11`
 
-`-keep class * extends androidx.room.RoomDatabase { <init>(); }` keeps constructors of RoomDatabase subclasses, but Room is not in the dependency tree. This is dead configuration. Lines removed by commit `2a1b10a`.
+`-keep class * extends androidx.room.RoomDatabase { <init>(); }` keeps constructors of RoomDatabase subclasses, but Room
+is not in the dependency tree. This is dead configuration. Lines removed by commit `2a1b10a`.
 
 ### N-7 (Info): Pre-Tiramisu BroadcastReceivers registered without RECEIVER_NOT_EXPORTED
 
 **File:** `SystemSensorRepository.kt:98`
 
-On API < 33, WiFi and Bluetooth BroadcastReceivers are registered without `RECEIVER_NOT_EXPORTED` because the flag does not exist. However, they only handle system-only broadcast actions (`WIFI_STATE_CHANGED_ACTION`, `ACTION_STATE_CHANGED`), which third-party apps cannot send with correct signatures.
+On API < 33, WiFi and Bluetooth BroadcastReceivers are registered without `RECEIVER_NOT_EXPORTED` because the flag does
+not exist. However, they only handle system-only broadcast actions (`WIFI_STATE_CHANGED_ACTION`,
+`ACTION_STATE_CHANGED`), which third-party apps cannot send with correct signatures.
 
 **Status:** No fix needed — platform limitation.
 
@@ -219,7 +239,8 @@ On API < 33, WiFi and Bluetooth BroadcastReceivers are registered without `RECEI
 
 **File:** `AndroidManifest.xml:54`
 
-`SensorWidgetReceiver` and `CompactWidgetReceiver` are both `android:exported="true"` without `android:permission`. Any third-party app could send `APPWIDGET_UPDATE` broadcasts, causing unnecessary processing.
+`SensorWidgetReceiver` and `CompactWidgetReceiver` are both `android:exported="true"` without `android:permission`. Any
+third-party app could send `APPWIDGET_UPDATE` broadcasts, causing unnecessary processing.
 
 **Status:** Standard widget pattern — no fix needed. DoS impact is minimal (quick processing).
 
@@ -227,7 +248,9 @@ On API < 33, WiFi and Bluetooth BroadcastReceivers are registered without `RECEI
 
 **File:** `MonitoringService.kt:56`
 
-`REQUEST_CODE_WIDGET = 0` is used for push-widget-update PendingIntents, while widget receivers use `appWidgetId` as their request code. If the system assigns a widget ID of 0 (extremely unlikely), there would be a collision. Both PendingIntents target `MainActivity` with the same intent structure, so impact is just a PendingIntent update.
+`REQUEST_CODE_WIDGET = 0` is used for push-widget-update PendingIntents, while widget receivers use `appWidgetId` as
+their request code. If the system assigns a widget ID of 0 (extremely unlikely), there would be a collision. Both
+PendingIntents target `MainActivity` with the same intent structure, so impact is just a PendingIntent update.
 
 **Fix (optional):** Use `Int.MAX_VALUE` or `100000` as `REQUEST_CODE_WIDGET` to avoid any potential collision.
 
@@ -235,9 +258,12 @@ On API < 33, WiFi and Bluetooth BroadcastReceivers are registered without `RECEI
 
 **File:** `MainActivity.kt:46`
 
-The Toast says "Camera and microphone permissions were denied" regardless of which permissions were actually denied. On API 31+, `BLUETOOTH_CONNECT` is also requested. If the user denies only Bluetooth but grants camera/mic, the message is misleading.
+The Toast says "Camera and microphone permissions were denied" regardless of which permissions were actually denied. On
+API 31+, `BLUETOOTH_CONNECT` is also requested. If the user denies only Bluetooth but grants camera/mic, the message is
+misleading.
 
-**Fix:** Update the Toast to say "Some permissions were denied. Sensor status may be unavailable." or enumerate denied permissions.
+**Fix:** Update the Toast to say "Some permissions were denied. Sensor status may be unavailable." or enumerate denied
+permissions.
 
 ### N-11 (Info): `@OptIn(ExperimentalCoroutinesApi)` unnecessary
 

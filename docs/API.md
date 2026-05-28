@@ -1,6 +1,7 @@
 # ezWorkSafe — API Reference
 
-Every Android API, system service, Jetpack library, Kotlin construct, and testing framework used in this project, with links to official documentation.
+Every Android API, system service, Jetpack library, Kotlin construct, and testing framework used in this project, with
+links to official documentation.
 
 ---
 

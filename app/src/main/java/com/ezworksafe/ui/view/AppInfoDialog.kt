@@ -167,6 +167,13 @@ fun AppInfoDialog(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
+                    text = "While the app is open, all sensor states refresh " +
+                            "every 2 seconds to detect privacy toggle " +
+                            "changes.",
+                    lineHeight = 20.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
                     text = "Tapping the widget opens the app.",
                     lineHeight = 20.sp
                 )

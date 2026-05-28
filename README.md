@@ -11,16 +11,16 @@
 > ⚠️ **Personal project** — intended as a workplace privacy awareness tool, not a
 > security product.
 
-ezWorkSafe shows you at a glance whether your WiFi, Bluetooth, Microphone, and
-Camera are accessible on your Android device. It's designed for workplace
-privacy — verify that sensors are blocked when they should be, and know when
-your mic or camera could be active.
+ezWorkSafe shows you at a glance whether your WiFi, Bluetooth, Microphone, and Camera are accessible on your Android
+device. It's designed for workplace privacy — verify that sensors are blocked when they should be, and know when your
+mic or camera could be active.
 
 Everything runs on-device. No data ever leaves your phone.
 
 ## Features
 
-- **Real-time status dashboard** — open the app to see all four sensors at once
+- **Real-time status dashboard** — open the app to see all four sensors at once;
+  sensor state refreshes every 2 seconds while the app is open
 - **Home screen widgets** — two sizes: a bar widget with all sensor states and a
   compact 1×1 widget with colored dots
 - **Persistent notification** — a discreet foreground notification keeps the
@@ -35,10 +35,9 @@ Everything runs on-device. No data ever leaves your phone.
 
 ## Widgets
 
-Two home screen widgets show your sensor status without opening the app. The bar
-widget has WiFi and Bluetooth on the left (updating in real time) and
-Microphone and Camera on the right (refreshed when you open the app). The
-compact 1×1 widget shows colored dots for all four sensors.
+Two home screen widgets show your sensor status without opening the app. The bar widget has WiFi and Bluetooth on the
+left (updating in real time) and Microphone and Camera on the right (refreshed when you open the app). The compact 1×1
+widget shows colored dots for all four sensors.
 
 ## Permissions
 
@@ -56,13 +55,13 @@ WiFi status uses `ACCESS_WIFI_STATE`, a normal permission granted at install tim
 ./gradlew installDebug
 ```
 
-Or [download the latest APK](https://github.com/zeekec/ezWorkSafe/actions/workflows/android.yml)
-from the latest CI run (look for the **ezWorkSafe-release** artifact).
+Or [download the latest APK](https://github.com/zeekec/ezWorkSafe/actions/workflows/android.yml) from the latest CI run
+(look for the **ezWorkSafe-release** artifact).
 
 ## For developers
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for build commands, test setup,
-architecture overview, and technical reference.
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for build commands, test setup, architecture overview, and technical
+reference.
 
 ## License
 
