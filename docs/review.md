@@ -259,7 +259,7 @@ keeping the data layer free of widget dependencies.
 |---|----------|-------|--------|
 | 1 | High | `build` step runs lint+test 3x (via `./gradlew build`, then `./gradlew lint`, then `./gradlew test`) | **✓ FIXED (PR #104)** — uses `assembleDebug` instead |
 | 2 | Medium | No CodeQL/sast workflow file | **✓ FIXED (PR #104)** — `codeql.yml` added |
-| 3 | Medium | No E2E tests in CI | **By design** — hobby project, no budget for emulator CI |
+| 3 | Medium | No E2E tests in CI | **✓ FIXED** — weekly scheduled workflow via `.github/workflows/e2e.yml` |
 | 4 | Medium | Secrets written via shell heredoc in CI | **✓ FIXED (PR #104)** — uses direct `echo` into file |
 | 5 | Low | Dependabot only monitors Gradle, not GitHub Actions | **✓ FIXED (PR #104)** — `github-actions` entry added |
 | 6 | Info | Upload release APK before lint/test run | **✓ FIXED (PR #104)** — `if: success()` guard added |
@@ -276,5 +276,5 @@ comprehensive. Key findings this session:
 - **3 Medium code quality:** Unused `context` parameter in `WidgetContent`, aggressive 2-second polling loop in `MainActivity`, unused `audioManager` in `observeMicStatus()`.
 - **10 Low code quality:** Redundant SDK guard, `Inactive` never emitted, redundant Glance modifiers, unsafe cast, WidgetState encapsulation, PFD leak, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested.
 - **9 Documentation accuracy issues** — stale version numbers, test counts, and file listings across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
-- **0 CI issues** — all resolved (PR #104) or acknowledged as by-design (no budget for emulator CI).
+- **0 CI issues** — all resolved (PR #104, `e2e.yml`).
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.

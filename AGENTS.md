@@ -61,6 +61,7 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 - Workflow requires `permissions: contents: read` for GITHUB_TOKEN
 - Both "Decode keystore" and "Create keystore.properties" steps guarded by `if: env.KEYSTORE_B64 != ''`
 - Release builds fail on PRs from forks unless keystore secrets are available
+- **Weekly E2E workflow** (`.github/workflows/e2e.yml`) — runs `connectedDebugAndroidTest` every Monday 12:00 UTC on a KVM-accelerated emulator. Also triggerable manually via `workflow_dispatch`.
 
 ## Current SDK Versions & Tools
 | Config | Value |

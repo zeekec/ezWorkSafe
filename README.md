@@ -1,6 +1,7 @@
 # ezWorkSafe
 
 [![Build](https://img.shields.io/github/actions/workflow/status/zeekec/ezWorkSafe/android.yml?branch=main&logo=github)](https://github.com/zeekec/ezWorkSafe/actions)
+[![E2E Tests](https://github.com/zeekec/ezWorkSafe/actions/workflows/e2e.yml/badge.svg)](https://github.com/zeekec/ezWorkSafe/actions/workflows/e2e.yml)
 [![Download APK](https://img.shields.io/badge/Download-APK-blue?logo=android)](https://github.com/zeekec/ezWorkSafe/actions/workflows/android.yml)
 [![codecov](https://codecov.io/gh/zeekec/ezWorkSafe/branch/main/graph/badge.svg)](https://codecov.io/gh/zeekec/ezWorkSafe)
 [![License](https://img.shields.io/github/license/zeekec/ezWorkSafe)](https://github.com/zeekec/ezWorkSafe/blob/main/LICENSE)
