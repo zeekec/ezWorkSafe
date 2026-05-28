@@ -57,6 +57,8 @@ done
 
 22 tests across dashboard Compose UI, widget provider metadata, notification verification via `dumpsys`, and themes.
 
+A scheduled CI workflow (`.github/workflows/e2e.yml`) runs these tests weekly (Monday 12:00 UTC) on a KVM-accelerated emulator. Manual trigger also available via the Actions tab.
+
 ---
 
 ## Tech Stack
