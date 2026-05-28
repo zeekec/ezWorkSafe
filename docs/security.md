@@ -201,11 +201,11 @@ The current notification uses `PRIORITY_LOW` and `setOngoing(true)`.
 
 ### N-6 (Info): Room ProGuard keep rule without Room dependency
 
+**Status: ✓ FIXED** (PR #104)
+
 **File:** `proguard-rules.pro:9-11`
 
-`-keep class * extends androidx.room.RoomDatabase { <init>(); }` keeps constructors of RoomDatabase subclasses, but Room is not in the dependency tree. This is dead configuration.
-
-**Fix:** Remove lines 9-11 from `proguard-rules.pro`.
+`-keep class * extends androidx.room.RoomDatabase { <init>(); }` keeps constructors of RoomDatabase subclasses, but Room is not in the dependency tree. This is dead configuration. Lines removed by commit `2a1b10a`.
 
 ### N-7 (Info): Pre-Tiramisu BroadcastReceivers registered without RECEIVER_NOT_EXPORTED
 
@@ -277,7 +277,6 @@ The Toast says "Camera and microphone permissions were denied" regardless of whi
 |----------|-------|
 | Low      | N-4: Consider generic notification text to reduce lock-screen exposure |
 | Low      | N-5: Optional hardening of WidgetState with AtomicReference |
-| Info     | N-6: Remove dead Room ProGuard rule |
 | Info     | N-9: Consider increasing REQUEST_CODE_WIDGET to avoid theoretical collision |
 | Info     | N-10: Fix permission denial toast message to be accurate |
 | Info     | N-11: Remove unnecessary `@OptIn(ExperimentalCoroutinesApi)` |

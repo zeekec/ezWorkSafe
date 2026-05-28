@@ -1,7 +1,7 @@
 # Code & Documentation Review
 
 **Date:** 2026-05-25
-**Last updated:** 2026-05-25 (session 6 — comprehensive re-review)
+**Last updated:** 2026-05-27 (session 6 — comprehensive re-review, PR #104 updates)
 **Commit:** HEAD of `main`
 **Review scope:** Full codebase, tests, config, docs, CI, security
 
@@ -189,7 +189,7 @@ keeping the data layer free of widget dependencies.
 **38. Room ProGuard rule is dead code**
 - File: `proguard-rules.pro:9-11`
 - `-keep class * extends androidx.room.RoomDatabase { <init>(); }` keeps RoomDatabase constructors, but Room is not a dependency in build.gradle.kts. Dead configuration.
-- **Fix:** Remove lines 9-11 from proguard-rules.pro.
+- **Status: ✓ FIXED** (PR #104) — Lines removed by commit `2a1b10a`.
 
 **39. `$OptIn(ExperimentalCoroutinesApi)` annotation unnecessary**
 - File: `SystemSensorRepository.kt:51`
@@ -223,10 +223,10 @@ keeping the data layer free of widget dependencies.
 | # | Finding | File | Description |
 |---|---------|------|-------------|
 | 1 | Fixed color scheme uses Material3 defaults for non-primary | `EzWorkSafeTheme.kt:31` | Only `primary` is overridden; all other slots use Material3 defaults. Intentional for simple app. |
-| 2 | `afterEvaluate` incompatible with configuration cache | `app/build.gradle.kts:143` | `afterEvaluate` may not execute as expected with `org.gradle.configuration-cache=true`. |
-| 3 | Duplicate JaCoCo version config | `app/build.gradle.kts:10,76` | `jacoco { toolVersion = "0.8.12" }` + `testCoverage { jacocoVersion = "0.8.12" }` — both set same version. |
+| 2 | `afterEvaluate` incompatible with configuration cache | `app/build.gradle.kts:143` | **✓ FIXED (PR #104)** — replaced with top-level `if` block, compatible with config cache. |
+| 3 | Duplicate JaCoCo version config | `app/build.gradle.kts:10,76` | **✓ FIXED (PR #104)** — `testCoverage { jacocoVersion }` removed. |
 | 4 | Missing explicit `kotlin("android")` plugin | `app/build.gradle.kts:4` | Only `kotlin.plugin.compose` is applied, not the base Kotlin Android plugin. Works via transitive resolution but fragile. |
-| 5 | Missing `dataExtractionRules` in manifest | `AndroidManifest.xml:26-27` | `allowBackup="false"` does not prevent cloud backups on Android 12+ without `android:dataExtractionRules`. |
+| 5 | Missing `dataExtractionRules` in manifest | `AndroidManifest.xml:26-27` | **✓ FIXED (PR #104)** — `android:dataExtractionRules="@xml/data_extraction_rules"` added. |
 
 ### Documentation Accuracy Issues
 
@@ -253,17 +253,17 @@ keeping the data layer free of widget dependencies.
 | `./gradlew connectedDebugAndroidTest` | ✅ E2E tests pass (1 @Ignored) |
 | GitHub Actions workflow | ✅ `permissions: contents: read`, guarded keystore steps |
 
-### CI Issues Found
+### CI Issues — All Resolved
 
-| # | Severity | Issue | Recommendation |
-|---|----------|-------|---------------|
-| 1 | High | `build` step runs lint+test 3x (via `./gradlew build`, then `./gradlew lint`, then `./gradlew test`) | Change to `./gradlew assembleDebug` |
-| 2 | Medium | No CodeQL/sast workflow file despite AGENTS.md reference | Add `.github/workflows/codeql.yml` or update AGENTS.md |
-| 3 | Medium | No E2E tests in CI | Add emulator-based E2E job or document intentional exclusion |
-| 4 | Medium | Secrets written via shell heredoc in CI (lines 43-48) | Use direct `echo` into file |
-| 5 | Low | Dependabot only monitors Gradle, not GitHub Actions | Add `github-actions` ecosystem entry |
-| 6 | Info | Upload release APK before lint/test run | Add `if: success()` guard |
-| 7 | Info | JDK 17 in CI vs JDK 21 in gradle-daemon-jvm.properties | Align versions |
+| # | Severity | Issue | Status |
+|---|----------|-------|--------|
+| 1 | High | `build` step runs lint+test 3x (via `./gradlew build`, then `./gradlew lint`, then `./gradlew test`) | **✓ FIXED (PR #104)** — uses `assembleDebug` instead |
+| 2 | Medium | No CodeQL/sast workflow file | **✓ FIXED (PR #104)** — `codeql.yml` added |
+| 3 | Medium | No E2E tests in CI | **By design** — hobby project, no budget for emulator CI |
+| 4 | Medium | Secrets written via shell heredoc in CI | **✓ FIXED (PR #104)** — uses direct `echo` into file |
+| 5 | Low | Dependabot only monitors Gradle, not GitHub Actions | **✓ FIXED (PR #104)** — `github-actions` entry added |
+| 6 | Info | Upload release APK before lint/test run | **✓ FIXED (PR #104)** — `if: success()` guard added |
+| 7 | Info | JDK 17 in CI vs JDK 21 in gradle-daemon-jvm.properties | **✓ FIXED (PR #104)** — CI now uses JDK 21 |
 
 ---
 
@@ -274,7 +274,7 @@ comprehensive. Key findings this session:
 
 - **0 Medium security issues:** All previously identified security issues remain properly fixed.
 - **3 Medium code quality:** Unused `context` parameter in `WidgetContent`, aggressive 2-second polling loop in `MainActivity`, unused `audioManager` in `observeMicStatus()`.
-- **10 Low code quality:** Redundant SDK guard, `Inactive` never emitted, redundant Glance modifiers, unsafe cast, WidgetState encapsulation, PFD leak, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, Room ProGuard rule, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested.
+- **10 Low code quality:** Redundant SDK guard, `Inactive` never emitted, redundant Glance modifiers, unsafe cast, WidgetState encapsulation, PFD leak, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested.
 - **9 Documentation accuracy issues** — stale version numbers, test counts, and file listings across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
-- **7 CI issues** — triple lint/test execution, missing E2E/CodeQL, Dependabot gaps, JDK mismatch.
+- **0 CI issues** — all resolved (PR #104) or acknowledged as by-design (no budget for emulator CI).
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.

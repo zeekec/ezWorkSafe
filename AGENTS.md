@@ -30,6 +30,14 @@ CameraManager), Flow/LiveData patterns. Training data may be outdated.
 | `./gradlew installDebug` | Install to device |
 | `./gradlew connectedDebugAndroidTest` | Run E2E tests (device/emulator) |
 
+### Build gotchas
+- **`allWarningsAsErrors = true`** (`app/build.gradle.kts:84`) — Kotlin compilation fails on any warning. Fix warnings before committing.
+- **WorkManager transitive dep override** (`app/build.gradle.kts:121`) — Glance pulls WorkManager 2.7.1, which lacks `WorkDatabase_Impl` at runtime. Pinned to 2.11.2 explicitly. Do not remove or downgrade.
+- **Configuration cache** enabled (`gradle.properties:6`) — clear with `./gradlew --no-configuration-cache` if cache causes issues.
+- **JaCoCo + Robolectric** (`app/build.gradle.kts:15-19`) — `isIncludeNoClassesLocation = true` with `jdk.internal.*` exclusion required for Robolectric sandbox. Do not remove.
+- **`src/testShared/` wiring** (`app/build.gradle.kts:88-92`) — added to both unit and androidTest KotlinCompile tasks via `source(fileTree(...))`. Shared test doubles (e.g., `FakeSensorRepository`) are visible to both suites.
+- **Codecov ignores** (`codecov.yml`) — `MainActivity` and `AppInfoDialog` are excluded from coverage.
+
 ## Emulator Commands
 | Command | Purpose |
 |---------|---------|
@@ -145,7 +153,7 @@ See [docs/PLAN.md](docs/PLAN.md) for the full implementation breakdown.
 ### Test patterns by layer
 | Layer | Pattern | Config |
 |-------|---------|--------|
-| **Repository** (`SystemSensorRepositoryFlowsTest`) | Robolectric + real system services via `shadowOf()` — sets WifiManager state, grants permissions, mocks AppOps | `@Config(sdk = [O_MR1, Q, P])` for API-level variation |
+| **Repository** (`SystemSensorRepositoryFlowsTest` + `AppOpsBlockedTest` + `AppOpsBlockedApi28Test`) | Robolectric + real system services via `shadowOf()` — sets WifiManager state, grants permissions, mocks AppOps | `@Config` per class: `[O_MR1]`, `[Q]`, `[P]` for API-level variation |
 | **Repository** (`SensorRepositoryTest`) | Plain JUnit with `mock(Context)` — tests `isOpBlocked()` and `FakeSensorRepository` | No Robolectric |
 | **ViewModel** | `FakeSensorRepository` injected via mock `EzWorkSafeApp` | No Robolectric |
 | **Service** | `Robolectric.buildService(MonitoringService::class.java)` — notification contents only; flow observation tested via Repository tests | `@Config(application = EzWorkSafeApp::class)` |
