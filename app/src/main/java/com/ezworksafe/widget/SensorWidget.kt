@@ -48,13 +48,13 @@ class SensorWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val statuses = WidgetState.statuses
         provideContent {
-            WidgetContent(statuses = statuses, context = context)
+            WidgetContent(statuses = statuses)
         }
     }
 }
 
 @Composable
-private fun WidgetContent(statuses: Map<SensorType, SensorStatus>, context: Context) {
+private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
