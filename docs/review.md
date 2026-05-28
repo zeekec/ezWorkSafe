@@ -146,6 +146,7 @@ write, keeping the data layer free of widget dependencies.
 - File: `SensorWidget.kt:57`
 - The `context: Context` parameter is passed from `provideGlance` (line 51) but never referenced in the function body. Dead code that increases cognitive load.
 - **Fix:** Remove the `context` parameter from `WidgetContent()` and the `context = context` argument at the call site. If context is needed later, use `LocalContext.current`.
+- **Status: Fixed in PR #118.**
 
 **31. 2-second polling loop in MainActivity**
 - File: `MainActivity.kt:64-71`
@@ -271,7 +272,7 @@ The project is in strong shape. The architecture is clean, security posture is s
 comprehensive. Key findings this session:
 
 - **0 Medium security issues:** All previously identified security issues remain properly fixed.
-- **3 Medium code quality:** Unused `context` parameter in `WidgetContent`, aggressive 2-second polling loop in `MainActivity`, unused `audioManager` in `observeMicStatus()`.
+- **2 Medium code quality:** Aggressive 2-second polling loop in `MainActivity` (by design), unused `audioManager` in `observeMicStatus()`.
 - **10 Low code quality:** Redundant SDK guard, `Inactive` never emitted, redundant Glance modifiers, unsafe cast, WidgetState encapsulation, PFD leak, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested.
 - **9 Documentation accuracy issues** — stale version numbers, test counts, and file listings across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
 - **0 CI issues** — all resolved (PR #104, `e2e.yml`).
