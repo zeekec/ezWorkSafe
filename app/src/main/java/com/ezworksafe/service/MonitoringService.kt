@@ -53,6 +53,7 @@ class MonitoringService : Service() {
     companion object {
         const val CHANNEL_ID = "ezworksafe_monitoring"
         const val NOTIFICATION_ID = 1
+        private const val TAG = "MonitoringService"
         private const val REQUEST_CODE_WIDGET = 0
         private const val REQUEST_CODE_REFRESH = 1
     }
@@ -79,7 +80,11 @@ class MonitoringService : Service() {
 
     /** Combines all four sensor flows and pushes updates to widget + notification. */
     private fun observeSensors() {
-        val repository: SensorRepository = (application as EzWorkSafeApp).sensorRepository
+        val repository: SensorRepository = (application as? EzWorkSafeApp)?.sensorRepository
+            ?: run {
+                Log.w(TAG, "Application is not EzWorkSafeApp; sensor monitoring disabled")
+                return
+            }
         serviceScope.launch {
             combine(
                 repository.observeSensor(SensorType.WIFI).catch { emit(SensorStatus.Unavailable) },
@@ -114,7 +119,7 @@ class MonitoringService : Service() {
         mic: SensorStatus, cam: SensorStatus
     ) {
         val appWidgetManager = AppWidgetManager.getInstance(this)
-        Log.d("MonitoringService", "pushWidgetUpdate: wifi=$wifi, bt=$bt, mic=$mic, cam=$cam")
+        Log.d(TAG, "pushWidgetUpdate: wifi=$wifi, bt=$bt, mic=$mic, cam=$cam")
 
         val openIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP

@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.ezworksafe.EzWorkSafeApp
 import com.ezworksafe.widget.buildWidgetRemoteViews
@@ -16,15 +17,22 @@ import com.ezworksafe.ui.view.MainActivity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLog
 import java.text.DateFormat
 
 @RunWith(RobolectricTestRunner::class)
 class MonitoringServiceTest {
+
+    @Before
+    fun setUp() {
+        ShadowLog.reset()
+    }
 
     private val ctx: Context = ApplicationProvider.getApplicationContext()
     private val pkg: String = ctx.packageName
@@ -144,5 +152,18 @@ class MonitoringServiceTest {
 
         val bigText = notification.extras?.getString(android.app.Notification.EXTRA_TEXT)
         assertNotNull("Notification should have BigText content", bigText)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O_MR1])
+    fun `service does not crash when Application is not EzWorkSafeApp`() {
+        val service = Robolectric.buildService(MonitoringService::class.java).create().get()
+
+        val warningLogs = ShadowLog.getLogs().filter {
+            it.tag == "MonitoringService" &&
+                it.msg == "Application is not EzWorkSafeApp; sensor monitoring disabled" &&
+                it.type == Log.WARN
+        }
+        assertTrue("Expected warning log about Application not being EzWorkSafeApp", warningLogs.isNotEmpty())
     }
 }
