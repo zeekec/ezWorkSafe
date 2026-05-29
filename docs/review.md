@@ -93,7 +93,7 @@ write, keeping the data layer free of widget dependencies.
 - `.width(1.dp)` followed by `.size(1.dp, 30.dp)` — the `.width()` is overridden by `.size()`. Same pattern at lines 94-96 and 118-120.
 - **Fix:** Remove the redundant `.width()` calls.
 
-**21. Unsafe cast in MonitoringService**
+**21. Unsafe cast in MonitoringService** **Status: ✓ FIXED.**
 - File: `MonitoringService.kt:82`
 - `(application as EzWorkSafeApp)` will throw `ClassCastException` if the Application is not `EzWorkSafeApp`. Works in production (manifest guarantees it) but fragile in Robolectric tests with custom Application classes.
 - **Fix:** Use `(application as? EzWorkSafeApp)?.sensorRepository` with a fallback.
@@ -108,7 +108,7 @@ write, keeping the data layer free of widget dependencies.
 - Both receivers have identical `onUpdate` logic differing only in the layout resource used. AGENTS.md explicitly documents this as intentional non-refactoring.
 - **Status:** By design per AGENTS.md.
 
-**24. PFD leak in notification E2E**
+**24. PFD leak in notification E2E** **Status: ✓ FIXED.**
 - File: `MonitoringServiceNotificationE2eTest.kt:39-45`
 - `ParcelFileDescriptor` may leak if `FileInputStream` constructor throws before `pfd.close()` is reached.
 - **Fix:** Wrap the entire block in `pfd.use { pfd -> ... }`.
@@ -274,7 +274,7 @@ comprehensive. Key findings this session:
 
 - **0 Medium security issues:** All previously identified security issues remain properly fixed.
 - **1 Medium code quality:** Aggressive 2-second polling loop in `MainActivity` (by design). Issue #32 (`audioManager` variable) fixed.
-- **9 Low code quality:** redundant Glance modifiers, unsafe cast, WidgetState encapsulation, PFD leak, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested. Issues #18 (SDK guard) and #19 (`Inactive`) fixed.
+- **9 Low code quality:** redundant Glance modifiers, WidgetState encapsulation, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested. Issues #18 (SDK guard), #19 (`Inactive`), #21 (unsafe cast), and #24 (PFD leak) fixed.
 - **9 Documentation accuracy issues** — stale version numbers, test counts, and file listings across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
 - **0 CI issues** — all resolved (PR #104, `e2e.yml`).
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.
