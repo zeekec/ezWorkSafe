@@ -1,6 +1,6 @@
 # Code & Documentation Review
 
-**Date:** 2026-05-25 **Last updated:** 2026-05-27 (session 6 — comprehensive re-review, PR #104 updates) **Commit:**
+**Date:** 2026-05-25 **Last updated:** 2026-05-29 (session 7 — test coverage gap fixes) **Commit:**
 HEAD of `main` **Review scope:** Full codebase, tests, config, docs, CI, security
 
 ---
@@ -48,7 +48,7 @@ write, keeping the data layer free of widget dependencies.
 - AppInfoDialog with expandable sections for About, How It Works, Permissions
 
 ### Testing
-- Unit tests: 53 tests across ViewModel, Repository (System + Fake), WidgetState, FormatUtils, PermissionHelper, MonitoringService, widget receivers, Robolectric flow integration
+- Unit tests: 57 tests across ViewModel, Repository (System + Fake), SensorStatus, WidgetState, FormatUtils, PermissionHelper, MonitoringService, widget receivers, Robolectric flow integration
 - E2E tests: 32 tests across dashboard (sensor states), widget metadata, notification via `dumpsys`, theme, compact widget, quick settings toggle — 1 @Ignored
 - `FakeSensorRepository` shared between unit and E2E tests via `testShared` source set
 - `SystemSensorRepositoryFlowsTest.kt` uses Robolectric for real system-service integration
@@ -133,10 +133,10 @@ write, keeping the data layer free of widget dependencies.
 - Test named `widgetState_can_be_updated_and_widget_renders` only checks `WidgetState.statuses` label strings. No RemoteViews layout inflation or rendering verification occurs.
 - **Fix:** Rename test to match what it actually tests, or add RemoteViews inflation assertions.
 
-**29. buildWidgetRemoteViews assertions are shallow**
+**29. buildWidgetRemoteViews assertions are shallow** **Status: ✓ FIXED.**
 - File: `MonitoringServiceTest.kt:33-99`
 - Four tests only assert `assertNotNull(views)` on buildWidgetRemoteViews output. No RemoteViews content (text values, colors, click handlers) is verified.
-- **Fix:** Add RemoteViews content assertions via `ShadowRemoteViews`.
+- **Fix:** Added `views.layoutId` and reflective action-count assertions via `getActionCount()` (ShadowRemoteViews unavailable in Robolectric 4.16.1). Layout inflation not supported by this Robolectric version.
 
 ### New This Session (2026-05-25)
 
@@ -198,25 +198,25 @@ write, keeping the data layer free of widget dependencies.
 
 ### New Test Quality Issues
 
-**40. SensorViewModelTest missing behavioral coverage**
+**40. SensorViewModelTest missing behavioral coverage** **Status: ✓ FIXED.**
 - File: `SensorViewModelTest.kt`
 - Only tests initial state values and `sensorTypes`. Does not test that `refresh()` propagates to the repository or that state flows change when `FakeSensorRepository` emits new values.
-- **Fix:** Add tests for `vm.refresh()` invocation and state flow changes on repo emission.
+- **Fix:** Added `refresh calls repository refresh` (Mockito verify) and `status flow updates when repository emits` (FakeSensorRepository + StateFlow collector). Requires `Dispatchers.setMain` + `runTest`.
 
-**41. Widget receiver tests only verify non-null RemoteViews**
+**41. Widget receiver tests only verify non-null RemoteViews** **Status: ✓ FIXED.**
 - Files: `SensorWidgetReceiverTest.kt`, `CompactWidgetReceiverTest.kt`
 - Both test classes only verify `updateAppWidget` was called with non-null RemoteViews. No layout resource, click PendingIntent, or view property checks.
-- **Fix:** Use `ShadowRemoteViews` to verify layout ID and click handlers.
+- **Fix:** Added `views.layoutId` assertions (`widget_initial_layout` / `widget_compact_initial`). ShadowRemoteViews unavailable in Robolectric 4.16.1 so click handler verification was not added.
 
 **42. `lastRefreshTime` test is tautological** **Status: ✓ FIXED.**
 - File: `WidgetStateTest.kt:50-54`
 - Sets `WidgetState.lastRefreshTime = time` then asserts `> 0` instead of asserting equality with `time`.
 - **Fix:** Replace `assertTrue(WidgetState.lastRefreshTime > 0)` with `assertEquals(time, WidgetState.lastRefreshTime)`.
 
-**43. `areRuntimePermissionsGranted()` never tested**
+**43. `areRuntimePermissionsGranted()` never tested** **Status: ✓ FIXED.**
 - File: `PermissionHelperTest.kt`
 - Tests validate `getRequiredRuntimePermissions()` but never test `areRuntimePermissionsGranted()`, which has real Android permission-checking behavior.
-- **Fix:** Add a Robolectric-based test with `shadowOf().grantPermissions()`.
+- **Fix:** Added Robolectric-based tests with `shadowOf().grantPermissions()` for all-granted and deny scenarios.
 
 ### Info
 
@@ -249,7 +249,7 @@ write, keeping the data layer free of widget dependencies.
 |-------|--------|
 | `./gradlew build` | ✅ Passes |
 | `./gradlew lint` | ✅ Clean (no warnings) |
-| `./gradlew test` | ✅ All 53 unit tests pass |
+| `./gradlew test` | ✅ All 57 unit tests pass |
 | `./gradlew connectedDebugAndroidTest` | ✅ E2E tests pass (1 @Ignored) |
 | GitHub Actions workflow | ✅ `permissions: contents: read`, guarded keystore steps |
 
@@ -274,7 +274,7 @@ comprehensive. Key findings this session:
 
 - **0 Medium security issues:** All previously identified security issues remain properly fixed.
 - **1 Medium code quality:** Aggressive 2-second polling loop in `MainActivity` (by design). Issue #32 (`audioManager` variable) fixed.
-- **9 Low code quality:** redundant Glance modifiers, WidgetState encapsulation, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, `areRuntimePermissionsGranted()` untested. Issues #18 (SDK guard), #19 (`Inactive`), #21 (unsafe cast), #24 (PFD leak), #25 (ambiguous matchers), #26 (WidgetState E2E reset), #27 (tautological refresh test), #28 (misleading test name), and #42 (tautological lastRefreshTime) fixed.
+- **9 Low code quality:** redundant Glance modifiers, WidgetState encapsulation, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style. Issues #18 (SDK guard), #19 (`Inactive`), #21 (unsafe cast), #24 (PFD leak), #25 (ambiguous matchers), #26 (WidgetState E2E reset), #27 (tautological refresh test), #28 (misleading test name), #29 (shallow RemoteViews assertions), #40 (ViewModel test gaps), #41 (receiver test gaps), #42 (tautological lastRefreshTime), and #43 (untested `areRuntimePermissionsGranted()`) fixed.
 - **9 Documentation accuracy issues** — stale version numbers, test counts, and file listings across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
 - **0 CI issues** — all resolved (PR #104, `e2e.yml`).
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.

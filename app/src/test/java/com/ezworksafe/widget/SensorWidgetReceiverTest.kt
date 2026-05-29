@@ -8,7 +8,10 @@ import android.content.Context
 import android.os.Build
 import android.widget.RemoteViews
 import androidx.test.core.app.ApplicationProvider
+import com.ezworksafe.R
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
@@ -35,7 +38,10 @@ class SensorWidgetReceiverTest {
 
         val captor: KArgumentCaptor<RemoteViews> = argumentCaptor()
         verify(appWidgetManager).updateAppWidget(org.mockito.Mockito.eq(42), captor.capture())
-        assertNotNull("RemoteViews should not be null", captor.firstValue)
+        val views = captor.firstValue
+        assertNotNull("RemoteViews should not be null", views)
+        assertEquals("RemoteViews layout should be widget_initial_layout",
+            R.layout.widget_initial_layout, views.layoutId)
     }
 
     @Test
@@ -48,6 +54,9 @@ class SensorWidgetReceiverTest {
 
         val captor: KArgumentCaptor<RemoteViews> = argumentCaptor()
         verify(appWidgetManager, times(3)).updateAppWidget(org.mockito.Mockito.anyInt(), captor.capture())
-        assertNotNull("RemoteViews should not be null", captor.firstValue)
+        val views = captor.firstValue
+        assertNotNull("RemoteViews should not be null", views)
+        assertEquals("RemoteViews layout should be widget_initial_layout",
+            R.layout.widget_initial_layout, views.layoutId)
     }
 }
