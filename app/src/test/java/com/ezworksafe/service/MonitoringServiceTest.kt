@@ -34,7 +34,7 @@ class MonitoringServiceTest {
         val views = buildWidgetRemoteViews(
             packageName = pkg,
             wifi = SensorStatus.Active,
-            bt = SensorStatus.Inactive,
+            bt = SensorStatus.Unavailable,
             mic = SensorStatus.Denied,
             cam = SensorStatus.Unavailable,
             lastRefreshTime = 0L,
@@ -46,7 +46,7 @@ class MonitoringServiceTest {
     @Test
     fun `buildWidgetRemoteViews handles all state combinations`() {
         val states = listOf(
-            SensorStatus.Active, SensorStatus.Inactive,
+            SensorStatus.Active, SensorStatus.Unavailable,
             SensorStatus.Denied, SensorStatus.Blocked, SensorStatus.Unavailable
         )
         for (state in states) {
@@ -73,7 +73,7 @@ class MonitoringServiceTest {
         val views = buildWidgetRemoteViews(
             packageName = pkg,
             wifi = SensorStatus.Active,
-            bt = SensorStatus.Inactive,
+            bt = SensorStatus.Unavailable,
             mic = SensorStatus.Denied,
             cam = SensorStatus.Unavailable,
             lastRefreshTime = 0L,
@@ -88,7 +88,7 @@ class MonitoringServiceTest {
         val views = buildWidgetRemoteViews(
             packageName = pkg,
             wifi = SensorStatus.Active,
-            bt = SensorStatus.Inactive,
+            bt = SensorStatus.Unavailable,
             mic = SensorStatus.Denied,
             cam = SensorStatus.Unavailable,
             lastRefreshTime = 0L,
@@ -140,7 +140,7 @@ class MonitoringServiceTest {
     @Config(application = EzWorkSafeApp::class, sdk = [Build.VERSION_CODES.O_MR1])
     fun `service notification has BigTextStyle with summary text`() {
         val service = Robolectric.buildService(MonitoringService::class.java).create().get()
-        val notification = service.createNotification("WiFi: Active | BT: Inactive | Mic: Denied | Cam: Unavailable")
+        val notification = service.createNotification("WiFi: Active | BT: Unavailable | Mic: Denied | Cam: Unavailable")
 
         val bigText = notification.extras?.getString(android.app.Notification.EXTRA_TEXT)
         assertNotNull("Notification should have BigText content", bigText)

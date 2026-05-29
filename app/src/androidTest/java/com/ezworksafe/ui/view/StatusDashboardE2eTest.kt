@@ -58,7 +58,7 @@ class StatusDashboardE2eTest {
 
     @Before
     fun setUp() {
-        SensorType.entries.forEach { fakeRepo.setStatus(it, SensorStatus.Inactive) }
+        SensorType.entries.forEach { fakeRepo.setStatus(it, SensorStatus.Unavailable) }
     }
 
     private fun waitForAssertion(timeoutMs: Long = 5_000, assertion: () -> Unit) {

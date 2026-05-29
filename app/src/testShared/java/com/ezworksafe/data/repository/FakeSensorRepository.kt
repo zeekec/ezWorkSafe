@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class FakeSensorRepository : SensorRepository {
 
     private val statuses = SensorType.entries.associateWith {
-        MutableStateFlow<SensorStatus>(SensorStatus.Inactive)
+        MutableStateFlow<SensorStatus>(SensorStatus.Unavailable)
     }.toMutableMap()
 
     override fun observeSensor(type: SensorType): Flow<SensorStatus> {

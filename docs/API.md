@@ -291,7 +291,6 @@ links to official documentation.
 | State | Meaning | Color |
 |-------|---------|-------|
 | `Active` | Sensor is enabled (WiFi/BT) or permission + AppOps both allow access (Mic/Cam) | Green `0xFF4CAF50` |
-| `Inactive` | Placeholder default; never emitted by any sensor flow | Gray `0xFF9E9E9E` |
 | `Denied` | Runtime permission not granted | Red `0xFFF44336` |
 | `Blocked` | Hardware off (WiFi/BT) or privacy toggle blocks access (Mic/Cam) | Orange `0xFFFF9800` |
 | `Unavailable` | Hardware missing, service null, or API level too low | Dark gray `0xFF616161` |
@@ -337,7 +336,7 @@ interface SensorRepository {
 | Resource | File | Purpose |
 |----------|------|---------|
 | `Theme.EzWorkSafe` | `res/values/themes.xml` | Base theme extending `Theme.Material.Light.NoActionBar` |
-| Status colors | `data/model/SensorStatus.kt` | Color tokens baked into sealed class (`Active`, `Inactive`, `Denied`, `Unavailable`) |
+| Status colors | `data/model/SensorStatus.kt` | Color tokens baked into sealed class (`Active`, `Denied`, `Blocked`, `Unavailable`) |
 | Dynamic color | `EzWorkSafeTheme.kt` | Android 12+ dynamic color via `dynamicLightColorScheme` / `dynamicDarkColorScheme` |
 | `MaterialTheme` | `EzWorkSafeTheme.kt` | Compose Material3 theme wrapper |
 | **Compose Docs** | https://developer.android.com/jetpack/compose/theming | |

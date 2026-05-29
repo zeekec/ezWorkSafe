@@ -64,8 +64,8 @@ class SensorRepositoryTest {
         fake.setStatus(SensorType.MICROPHONE, SensorStatus.Denied)
 
         assertEquals(SensorStatus.Active, fake.observeSensor(SensorType.WIFI).first())
-        assertEquals(SensorStatus.Inactive, fake.observeSensor(SensorType.BLUETOOTH).first())
+        assertEquals(SensorStatus.Unavailable, fake.observeSensor(SensorType.BLUETOOTH).first())
         assertEquals(SensorStatus.Denied, fake.observeSensor(SensorType.MICROPHONE).first())
-        assertEquals(SensorStatus.Inactive, fake.observeSensor(SensorType.CAMERA).first())
+        assertEquals(SensorStatus.Unavailable, fake.observeSensor(SensorType.CAMERA).first())
     }
 }
