@@ -40,8 +40,8 @@ internal fun buildWidgetRemoteViews(
     views.setInt(R.id.widget_root, "setBackgroundColor", widgetBgDark)
     views.setInt(R.id.left_section, "setBackgroundColor", widgetBgDark)
     views.setInt(R.id.right_section, "setBackgroundColor", widgetBgRight)
-    for ((type, status) in statuses) {
-        val (dotId, statusId) = cellMap[type] ?: continue
+    statuses.forEach { (type, status) ->
+        val (dotId, statusId) = cellMap[type] ?: return@forEach
         views.setInt(dotId, "setBackgroundColor", status.color)
         views.setTextColor(statusId, status.color)
         views.setTextViewText(statusId, status.label)

@@ -230,7 +230,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
         val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
         if (cameraManager == null) {
             trySend(SensorStatus.Unavailable)
-            close()
+            awaitClose { }
             return@callbackFlow
         }
 
