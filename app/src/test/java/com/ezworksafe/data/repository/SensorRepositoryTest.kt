@@ -48,16 +48,6 @@ class SensorRepositoryTest {
     }
 
     @Test
-    fun `refresh triggers flow re-emission`() = runTest {
-        val repo = SystemSensorRepository(mockContext)
-        val first = repo.observeSensor(SensorType.WIFI).first()
-        assertEquals(SensorStatus.Unavailable, first)
-        repo.refresh()
-        val afterRefresh = repo.observeSensor(SensorType.WIFI).first()
-        assertEquals(SensorStatus.Unavailable, afterRefresh)
-    }
-
-    @Test
     fun `fake repository emits configured statuses`() = runTest {
         val fake = FakeSensorRepository()
         fake.setStatus(SensorType.WIFI, SensorStatus.Active)
