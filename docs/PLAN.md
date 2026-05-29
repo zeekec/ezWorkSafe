@@ -25,7 +25,7 @@ The following were implemented beyond the original plan:
 | **Compact widget** | 1×1 Glance widget (`CompactWidget.kt`, `CompactWidgetReceiver.kt`) with colored dots and labels, no status text. |
 | **Foreground service enhancement** | `MonitoringService` now hosts a `combine` collector that aggregates all 4 sensor flows, pushes to `WidgetState`, and updates the notification text in real time. |
 | **SensorRepository refactor** | Changed from class to `interface` + `SystemSensorRepository` implementation, with `refreshTrigger` + `flatMapLatest` for permission re-checks on resume. |
-| **`SensorStatus.Blocked` state** | Added for WiFI/BT hardware-off status (distinct from Inactive). Color: orange `0xFFFF9800`. |
+| **`SensorStatus.Blocked` state** | Added for WiFI/BT hardware-off status (distinct from the prior Inactive status, since removed). Color: orange `0xFFFF9800`. |
 | **App icon** | Custom adaptive icon (shield + eye) with PNG fallbacks. |
 | **Dark mode** | Material You dynamic colors on API 31+, green-seeded fallback. |
 | **Notification "Refresh" action** | Notification includes a button that opens MainActivity → triggers `refreshSensorFlows()`. |
