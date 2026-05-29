@@ -48,7 +48,7 @@ write, keeping the data layer free of widget dependencies.
 - AppInfoDialog with expandable sections for About, How It Works, Permissions
 
 ### Testing
-- Unit tests: 56 tests across ViewModel, Repository (System + Fake), WidgetState, FormatUtils, PermissionHelper, MonitoringService, widget receivers, Robolectric flow integration
+- Unit tests: 55 tests across ViewModel, Repository (System + Fake), WidgetState, FormatUtils, PermissionHelper, MonitoringService, widget receivers, Robolectric flow integration
 - E2E tests: 32 tests across dashboard (sensor states), widget metadata, notification via `dumpsys`, theme, compact widget, quick settings toggle — 1 @Ignored
 - `FakeSensorRepository` shared between unit and E2E tests via `testShared` source set
 - `SystemSensorRepositoryFlowsTest.kt` uses Robolectric for real system-service integration
@@ -154,9 +154,10 @@ write, keeping the data layer free of widget dependencies.
 - **Status: By design** — This is the only mechanism to detect Android 16 Mic/Cam privacy toggle changes in real-time while the app is foregrounded. Battery impact is negligible (~60-120ms CPU/min foreground). The polling only runs while the app is visible and stops immediately when backgrounded via `repeatOnLifecycle(STARTED)`.
 
 **32. Unused `audioManager` variable in `observeMicStatus()`**
-- File: `SystemSensorRepository.kt:203`
-- The `audioManager` variable is assigned via `context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager`, null-checked, but never referenced again after the null-check block. The service lookup is only used as a null-probe.
-- **Fix:** Replace with `val hasAudioService = context.getSystemService(Context.AUDIO_SERVICE) != null` or remove the AudioManager lookup entirely.
+- File: `SystemSensorRepository.kt:203` **Status: ✓ FIXED.**
+- The `audioManager` variable was assigned via `context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager`, null-checked, but never referenced again after the null-check block. The service lookup was only used as a null-probe.
+- **Fix:** Removed both the `audioManager` variable and the null-check block. Permission + AppOps check is sufficient — `AudioManager` is guaranteed available on all Android devices. Unused import also removed.
+- **Status: ✓ FIXED.**
 
 #### Low
 
@@ -235,7 +236,7 @@ write, keeping the data layer free of widget dependencies.
 | 2 | `API.md:277` | `mockito-core:5.7.0`, `mockito-kotlin:5.1.0` | `mockito-core:5.23.0`, `mockito-kotlin:6.3.0` |
 | 3 | `API.md:162` | `androidx.test.ext:junit:1.2.1`, `androidx.test:rules:1.6.1` | `androidx.test.ext:junit:1.3.0`, `androidx.test:rules:1.7.0` |
 | 4 | `README.md:8` | Kotlin badge `2.2` | `2.3.21` |
-| 5 | `DEVELOPMENT.md:41` | 52 unit tests | 56 unit tests |
+| 5 | `DEVELOPMENT.md:41` | 52 unit tests | 55 unit tests |
 | 6 | `DEVELOPMENT.md:58` | 22 E2E tests | 32 E2E tests (QuickSettingsToggleE2eTest added) |
 | 7 | `PLAN.md:56-68` | Omits `QuickSettingsToggleE2eTest.kt` | Should include it in file listing |
 | 8 | `security.md:242` | Stale file line counts | Files have grown ~10-30 lines since last audit |
@@ -248,7 +249,7 @@ write, keeping the data layer free of widget dependencies.
 |-------|--------|
 | `./gradlew build` | ✅ Passes |
 | `./gradlew lint` | ✅ Clean (no warnings) |
-| `./gradlew test` | ✅ All 56 unit tests pass |
+| `./gradlew test` | ✅ All 55 unit tests pass |
 | `./gradlew connectedDebugAndroidTest` | ✅ E2E tests pass (1 @Ignored) |
 | GitHub Actions workflow | ✅ `permissions: contents: read`, guarded keystore steps |
 
@@ -272,7 +273,7 @@ The project is in strong shape. The architecture is clean, security posture is s
 comprehensive. Key findings this session:
 
 - **0 Medium security issues:** All previously identified security issues remain properly fixed.
-- **2 Medium code quality:** Aggressive 2-second polling loop in `MainActivity` (by design), unused `audioManager` in `observeMicStatus()`.
+- **1 Medium code quality:** Aggressive 2-second polling loop in `MainActivity` (by design). Issue #32 (`audioManager` variable) fixed.
 - **10 Low code quality:** Redundant SDK guard, `Inactive` never emitted, redundant Glance modifiers, unsafe cast, WidgetState encapsulation, PFD leak, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested.
 - **9 Documentation accuracy issues** — stale version numbers, test counts, and file listings across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
 - **0 CI issues** — all resolved (PR #104, `e2e.yml`).
