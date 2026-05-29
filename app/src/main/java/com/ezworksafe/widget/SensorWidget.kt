@@ -82,7 +82,6 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
                     if (index < wifiBtList.lastIndex) {
                         Box(
                             modifier = GlanceModifier
-                                .width(1.dp)
                                 .size(1.dp, 30.dp)
                                 .background(ColorProvider(widgetBorderColor))
                         ) { }
@@ -92,7 +91,6 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
 
             Box(
                 modifier = GlanceModifier
-                    .width(2.dp)
                     .size(2.dp, 40.dp)
                     .background(ColorProvider(widgetAccentColor))
             ) { }
@@ -116,10 +114,9 @@ private fun WidgetContent(statuses: Map<SensorType, SensorStatus>) {
                         if (index < micCamList.lastIndex) {
                             Box(
                                 modifier = GlanceModifier
-                                    .width(1.dp)
-                                    .size(1.dp, 30.dp)
+                            .size(1.dp, 30.dp)
                                 .background(ColorProvider(widgetBorderColor))
-                            ) { }
+                        ) { }
                         }
                     }
                 }
