@@ -18,7 +18,7 @@ import com.ezworksafe.data.model.SensorType
 object WidgetState {
     @Volatile
     var statuses: Map<SensorType, SensorStatus> = SensorType.entries.associateWith {
-        SensorStatus.Inactive
+        SensorStatus.Unavailable
     }
     @Volatile
     var lastRefreshTime: Long = 0L

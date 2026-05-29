@@ -16,16 +16,16 @@ class WidgetStateTest {
     fun setUp() {
         WidgetState.lastRefreshTime = 0L
         WidgetState.statuses = SensorType.entries.associateWith {
-            SensorStatus.Inactive
+            SensorStatus.Unavailable
         }
     }
 
     @Test
-    fun `default statuses are Inactive for all four sensors`() {
+    fun `default statuses are Unavailable for all four sensors`() {
         val statuses = WidgetState.statuses
         assertEquals(4, statuses.size)
         SensorType.entries.forEach { type ->
-            assertEquals(SensorStatus.Inactive, statuses[type])
+            assertEquals(SensorStatus.Unavailable, statuses[type])
         }
     }
 

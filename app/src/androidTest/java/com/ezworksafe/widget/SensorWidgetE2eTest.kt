@@ -110,7 +110,7 @@ class SensorWidgetE2eTest {
         val views = buildWidgetRemoteViews(
             packageName = context.packageName,
             wifi = SensorStatus.Active,
-            bt = SensorStatus.Inactive,
+            bt = SensorStatus.Unavailable,
             mic = SensorStatus.Denied,
             cam = SensorStatus.Unavailable,
             lastRefreshTime = 0L,

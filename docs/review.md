@@ -78,15 +78,15 @@ write, keeping the data layer free of widget dependencies.
 
 ### Low (previously identified, still open)
 
-**18. Redundant SDK guard in `isOpBlocked()`**  **Status: ✓ FIXED.**
+**18. Redundant SDK guard in `isOpBlocked()`** **Status: ✓ FIXED.**
 - File: `SystemSensorRepository.kt:266-267`
 - `isOpBlocked(sdk, opResult)` checked `sdk >= Build.VERSION_CODES.P`, but the only production caller `isAppOpBlocked()` already returns `false` for SDK < P. The SDK check was redundant for all in-app call paths.
 - **Fix:** Removed the `sdk: Int` parameter and the SDK comparison. `isOpBlocked(opResult)` now simply checks `opResult == AppOpsManager.MODE_IGNORED`.
 
-**19. `SensorStatus.Inactive` never emitted by any flow**
+**19. `SensorStatus.Inactive` never emitted by any flow** **Status: ✓ FIXED.**
 - File: `SensorStatus.kt:27`
-- `Inactive` is defined as a valid status but never produced by any sensor flow. It appears only as the default initial value in `WidgetState.kt:21`.
-- **Fix:** Either remove `Inactive` and use another default (e.g., `Unavailable`), or document as placeholder-only.
+- `Inactive` was defined as a valid status but never produced by any sensor flow. It appeared only as a default placeholder in `WidgetState.kt:21` and `FakeSensorRepository.kt:14`.
+- **Fix:** Removed the `Inactive` variant entirely. All placeholders now use `Unavailable`, consistent with `SensorViewModel`'s initial state convention.
 
 **20. Redundant Glance modifier chaining**
 - File: `SensorWidget.kt:84-86, 94-96, 118-120`
@@ -274,7 +274,7 @@ comprehensive. Key findings this session:
 
 - **0 Medium security issues:** All previously identified security issues remain properly fixed.
 - **1 Medium code quality:** Aggressive 2-second polling loop in `MainActivity` (by design). Issue #32 (`audioManager` variable) fixed.
-- **9 Low code quality:** `Inactive` never emitted, redundant Glance modifiers, unsafe cast, WidgetState encapsulation, PFD leak, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested. Issue #18 (redundant SDK guard) fixed.
+- **9 Low code quality:** redundant Glance modifiers, unsafe cast, WidgetState encapsulation, PFD leak, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested. Issues #18 (SDK guard) and #19 (`Inactive`) fixed.
 - **9 Documentation accuracy issues** — stale version numbers, test counts, and file listings across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
 - **0 CI issues** — all resolved (PR #104, `e2e.yml`).
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.

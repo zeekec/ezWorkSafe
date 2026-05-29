@@ -14,11 +14,6 @@ class SensorStatusTest {
         assertEquals(0xFF4CAF50.toInt(), SensorStatus.Active.color)
     }
 
-    @Test
-    fun `inactive displays gray label`() {
-        assertEquals("Inactive", SensorStatus.Inactive.label)
-        assertEquals(0xFF9E9E9E.toInt(), SensorStatus.Inactive.color)
-    }
 
     @Test
     fun `denied displays red label`() {
