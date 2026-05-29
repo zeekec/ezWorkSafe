@@ -180,7 +180,7 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
             } else {
                 appOps.checkOpNoThrow(opStr, Process.myUid(), context.packageName)
             }
-            isOpBlocked(Build.VERSION.SDK_INT, result)
+            isOpBlocked(result)
         } catch (_: SecurityException) {
             false
         }
@@ -262,6 +262,6 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
     }
 }
 
-/** Returns `true` when [opResult] indicates an AppOps block on API 28+. */
-fun isOpBlocked(sdk: Int, opResult: Int): Boolean =
-    sdk >= Build.VERSION_CODES.P && opResult == AppOpsManager.MODE_IGNORED
+/** Returns `true` when [opResult] indicates an AppOps block. */
+fun isOpBlocked(opResult: Int): Boolean =
+    opResult == AppOpsManager.MODE_IGNORED

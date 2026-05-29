@@ -48,11 +48,11 @@ write, keeping the data layer free of widget dependencies.
 - AppInfoDialog with expandable sections for About, How It Works, Permissions
 
 ### Testing
-- Unit tests: 55 tests across ViewModel, Repository (System + Fake), WidgetState, FormatUtils, PermissionHelper, MonitoringService, widget receivers, Robolectric flow integration
+- Unit tests: 53 tests across ViewModel, Repository (System + Fake), WidgetState, FormatUtils, PermissionHelper, MonitoringService, widget receivers, Robolectric flow integration
 - E2E tests: 32 tests across dashboard (sensor states), widget metadata, notification via `dumpsys`, theme, compact widget, quick settings toggle — 1 @Ignored
 - `FakeSensorRepository` shared between unit and E2E tests via `testShared` source set
 - `SystemSensorRepositoryFlowsTest.kt` uses Robolectric for real system-service integration
-- `SensorRepositoryTest.kt` tests `isOpBlocked()` pure function exhaustively (5 test methods)
+- `SensorRepositoryTest.kt` tests `isOpBlocked()` pure function exhaustively (3 test methods)
 - E2E notification verification via `dumpsys activity services`
 
 ### Security & compliance
@@ -78,10 +78,10 @@ write, keeping the data layer free of widget dependencies.
 
 ### Low (previously identified, still open)
 
-**18. Redundant SDK guard in `isOpBlocked()`**
-- File: `SystemSensorRepository.kt:274-275`
-- `isOpBlocked(sdk, opResult)` checks `sdk >= Build.VERSION_CODES.P`, but the only production caller `isAppOpBlocked()` (line 175) already returns `false` for SDK < P. The SDK check is redundant for all in-app call paths.
-- **Fix:** Remove the SDK check from `isOpBlocked()`.
+**18. Redundant SDK guard in `isOpBlocked()`**  **Status: ✓ FIXED.**
+- File: `SystemSensorRepository.kt:266-267`
+- `isOpBlocked(sdk, opResult)` checked `sdk >= Build.VERSION_CODES.P`, but the only production caller `isAppOpBlocked()` already returns `false` for SDK < P. The SDK check was redundant for all in-app call paths.
+- **Fix:** Removed the `sdk: Int` parameter and the SDK comparison. `isOpBlocked(opResult)` now simply checks `opResult == AppOpsManager.MODE_IGNORED`.
 
 **19. `SensorStatus.Inactive` never emitted by any flow**
 - File: `SensorStatus.kt:27`
@@ -236,7 +236,7 @@ write, keeping the data layer free of widget dependencies.
 | 2 | `API.md:277` | `mockito-core:5.7.0`, `mockito-kotlin:5.1.0` | `mockito-core:5.23.0`, `mockito-kotlin:6.3.0` |
 | 3 | `API.md:162` | `androidx.test.ext:junit:1.2.1`, `androidx.test:rules:1.6.1` | `androidx.test.ext:junit:1.3.0`, `androidx.test:rules:1.7.0` |
 | 4 | `README.md:8` | Kotlin badge `2.2` | `2.3.21` |
-| 5 | `DEVELOPMENT.md:41` | 52 unit tests | 55 unit tests |
+| 5 | `DEVELOPMENT.md:41` | 52 unit tests | 53 unit tests |
 | 6 | `DEVELOPMENT.md:58` | 22 E2E tests | 32 E2E tests (QuickSettingsToggleE2eTest added) |
 | 7 | `PLAN.md:56-68` | Omits `QuickSettingsToggleE2eTest.kt` | Should include it in file listing |
 | 8 | `security.md:242` | Stale file line counts | Files have grown ~10-30 lines since last audit |
@@ -249,7 +249,7 @@ write, keeping the data layer free of widget dependencies.
 |-------|--------|
 | `./gradlew build` | ✅ Passes |
 | `./gradlew lint` | ✅ Clean (no warnings) |
-| `./gradlew test` | ✅ All 55 unit tests pass |
+| `./gradlew test` | ✅ All 53 unit tests pass |
 | `./gradlew connectedDebugAndroidTest` | ✅ E2E tests pass (1 @Ignored) |
 | GitHub Actions workflow | ✅ `permissions: contents: read`, guarded keystore steps |
 
@@ -274,7 +274,7 @@ comprehensive. Key findings this session:
 
 - **0 Medium security issues:** All previously identified security issues remain properly fixed.
 - **1 Medium code quality:** Aggressive 2-second polling loop in `MainActivity` (by design). Issue #32 (`audioManager` variable) fixed.
-- **10 Low code quality:** Redundant SDK guard, `Inactive` never emitted, redundant Glance modifiers, unsafe cast, WidgetState encapsulation, PFD leak, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested.
+- **9 Low code quality:** `Inactive` never emitted, redundant Glance modifiers, unsafe cast, WidgetState encapsulation, PFD leak, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested. Issue #18 (redundant SDK guard) fixed.
 - **9 Documentation accuracy issues** — stale version numbers, test counts, and file listings across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
 - **0 CI issues** — all resolved (PR #104, `e2e.yml`).
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.

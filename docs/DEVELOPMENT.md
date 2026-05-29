@@ -38,7 +38,7 @@ Report at `app/build/reports/coverage/test/debug/index.html`.
 ./gradlew test
 ```
 
-55 tests across:
+53 tests across:
 - ViewModel + Repository + Service notification (JUnit, Mockito, Robolectric, `runTest`)
 - Widget state, format utils, permission helper
 
