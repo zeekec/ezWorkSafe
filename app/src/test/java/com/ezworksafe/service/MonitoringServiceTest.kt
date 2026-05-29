@@ -9,8 +9,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import android.widget.RemoteViews
 import androidx.test.core.app.ApplicationProvider
 import com.ezworksafe.EzWorkSafeApp
+import com.ezworksafe.R
 import com.ezworksafe.widget.buildWidgetRemoteViews
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.ui.view.MainActivity
@@ -37,6 +39,18 @@ class MonitoringServiceTest {
     private val ctx: Context = ApplicationProvider.getApplicationContext()
     private val pkg: String = ctx.packageName
 
+    @Suppress("UNCHECKED_CAST")
+    private fun getActionCount(views: RemoteViews): Int {
+        return try {
+            val actionsField = RemoteViews::class.java.getDeclaredField("mActions")
+            actionsField.isAccessible = true
+            val actions = actionsField.get(views) as? ArrayList<*>
+            actions?.size ?: 0
+        } catch (_: Exception) {
+            -1
+        }
+    }
+
     @Test
     fun `buildWidgetRemoteViews constructs successfully`() {
         val views = buildWidgetRemoteViews(
@@ -49,6 +63,9 @@ class MonitoringServiceTest {
             timeFormat = DateFormat.getTimeInstance()
         )
         assertNotNull(views)
+        assertEquals(R.layout.widget_sensor_status, views.layoutId)
+        assertTrue("RemoteViews should have layout and view property actions",
+            getActionCount(views) >= 15)
     }
 
     @Test
@@ -66,6 +83,9 @@ class MonitoringServiceTest {
                 timeFormat = DateFormat.getTimeInstance()
             )
             assertNotNull(views)
+            assertEquals(R.layout.widget_sensor_status, views.layoutId)
+            assertTrue("RemoteViews should have layout and view property actions",
+                getActionCount(views) >= 15)
         }
     }
 
@@ -89,6 +109,9 @@ class MonitoringServiceTest {
             openAppIntent = pendingIntent
         )
         assertNotNull(views)
+        assertEquals(R.layout.widget_sensor_status, views.layoutId)
+        assertTrue("RemoteViews with PendingIntent should have extra action",
+            getActionCount(views) >= 16)
     }
 
     @Test
@@ -104,6 +127,9 @@ class MonitoringServiceTest {
             openAppIntent = null
         )
         assertNotNull(views)
+        assertEquals(R.layout.widget_sensor_status, views.layoutId)
+        assertTrue("RemoteViews without PendingIntent should have base actions",
+            getActionCount(views) >= 15)
     }
 
     @Test
