@@ -44,7 +44,7 @@ class PermissionRefreshE2eTest {
 
         InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
             "pm revoke com.ezworksafe android.permission.CAMERA"
-        ).close()
+        ).use { }
 
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.STARTED)
         composeRule.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)

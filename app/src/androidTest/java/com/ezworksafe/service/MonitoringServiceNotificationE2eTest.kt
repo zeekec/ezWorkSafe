@@ -4,7 +4,6 @@
 package com.ezworksafe.service
 
 import android.Manifest
-import android.os.ParcelFileDescriptor
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
@@ -36,14 +35,14 @@ class MonitoringServiceNotificationE2eTest {
         composeRule.waitForIdle()
 
         composeRule.waitUntil(10_000) {
-            val pfd = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
+            InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
                 "dumpsys activity services com.ezworksafe/.service.MonitoringService"
-            )
-            val text = FileInputStream(pfd.fileDescriptor).use { fis ->
-                BufferedReader(InputStreamReader(fis)).readText()
+            ).use { pfd ->
+                val text = FileInputStream(pfd.fileDescriptor).use { fis ->
+                    BufferedReader(InputStreamReader(fis)).readText()
+                }
+                text.contains("isForeground=true") && text.contains("foregroundId=1")
             }
-            pfd.close()
-            text.contains("isForeground=true") && text.contains("foregroundId=1")
         }
     }
 }

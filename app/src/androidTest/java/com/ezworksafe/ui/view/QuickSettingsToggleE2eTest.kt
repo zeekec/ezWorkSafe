@@ -156,6 +156,6 @@ class QuickSettingsToggleE2eTest {
         InstrumentationRegistry.getInstrumentation()
             .uiAutomation
             .executeShellCommand(command)
-            .close()
+            .use { }
     }
 }
