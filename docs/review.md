@@ -113,22 +113,22 @@ write, keeping the data layer free of widget dependencies.
 - `ParcelFileDescriptor` may leak if `FileInputStream` constructor throws before `pfd.close()` is reached.
 - **Fix:** Wrap the entire block in `pfd.use { pfd -> ... }`.
 
-**25. Ambiguous matchers in StatusDashboardE2eTest**
+**25. Ambiguous matchers in StatusDashboardE2eTest** **Status: ✓ FIXED.**
 - File: `StatusDashboardE2eTest.kt:88,101`
 - `onNodeWithText("Active")` matches ANY composable with text "Active". If two sensors show "Active" simultaneously, this crashes with `AmbiguousViewMatcherException`.
 - **Fix:** Use `hasAnySibling(hasText("SensorName"))` for disambiguation, as done in the mic/cam tests.
 
-**26. WidgetState singleton not reset between E2E classes**
+**26. WidgetState singleton not reset between E2E classes** **Status: ✓ FIXED.**
 - File: `SensorWidgetE2eTest.kt`
 - No `@Before` reset of `WidgetState`. Since E2E tests share a process, `WidgetState` state leaks across test classes.
 - **Fix:** Add `@Before` reset (or use `@BeforeClass` teardown).
 
-**27. Tautological refresh-reemission test**
+**27. Tautological refresh-reemission test** **Status: ✓ FIXED.**
 - File: `SensorRepositoryTest.kt:63-71`
 - `refresh triggers flow re-emission` uses a null-service mock context, so both `first` and `afterRefresh` return `Unavailable`. The test name claims re-emission is verified, but the assertion is tautological.
 - **Fix:** Use `SystemSensorRepositoryFlowsTest.kt:148-159` (which actually changes state) instead; remove the tautological test.
 
-**28. Widget rendering test misleading**
+**28. Widget rendering test misleading** **Status: ✓ FIXED.**
 - File: `SensorWidgetE2eTest.kt:68-80`
 - Test named `widgetState_can_be_updated_and_widget_renders` only checks `WidgetState.statuses` label strings. No RemoteViews layout inflation or rendering verification occurs.
 - **Fix:** Rename test to match what it actually tests, or add RemoteViews inflation assertions.
@@ -208,7 +208,7 @@ write, keeping the data layer free of widget dependencies.
 - Both test classes only verify `updateAppWidget` was called with non-null RemoteViews. No layout resource, click PendingIntent, or view property checks.
 - **Fix:** Use `ShadowRemoteViews` to verify layout ID and click handlers.
 
-**42. `lastRefreshTime` test is tautological**
+**42. `lastRefreshTime` test is tautological** **Status: ✓ FIXED.**
 - File: `WidgetStateTest.kt:50-54`
 - Sets `WidgetState.lastRefreshTime = time` then asserts `> 0` instead of asserting equality with `time`.
 - **Fix:** Replace `assertTrue(WidgetState.lastRefreshTime > 0)` with `assertEquals(time, WidgetState.lastRefreshTime)`.
@@ -274,7 +274,7 @@ comprehensive. Key findings this session:
 
 - **0 Medium security issues:** All previously identified security issues remain properly fixed.
 - **1 Medium code quality:** Aggressive 2-second polling loop in `MainActivity` (by design). Issue #32 (`audioManager` variable) fixed.
-- **9 Low code quality:** redundant Glance modifiers, WidgetState encapsulation, ambiguous test matchers, WidgetState not reset in E2E, tautological refresh test, misleading widget-rendering test, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, tautological `lastRefreshTime` test, `areRuntimePermissionsGranted()` untested. Issues #18 (SDK guard), #19 (`Inactive`), #21 (unsafe cast), and #24 (PFD leak) fixed.
+- **9 Low code quality:** redundant Glance modifiers, WidgetState encapsulation, shallow RemoteViews assertions, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style, ViewModel test gaps, receiver test gaps, `areRuntimePermissionsGranted()` untested. Issues #18 (SDK guard), #19 (`Inactive`), #21 (unsafe cast), #24 (PFD leak), #25 (ambiguous matchers), #26 (WidgetState E2E reset), #27 (tautological refresh test), #28 (misleading test name), and #42 (tautological lastRefreshTime) fixed.
 - **9 Documentation accuracy issues** — stale version numbers, test counts, and file listings across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
 - **0 CI issues** — all resolved (PR #104, `e2e.yml`).
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.

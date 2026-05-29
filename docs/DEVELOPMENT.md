@@ -38,7 +38,7 @@ Report at `app/build/reports/coverage/test/debug/index.html`.
 ./gradlew test
 ```
 
-53 tests across:
+52 tests across:
 - ViewModel + Repository + Service notification (JUnit, Mockito, Robolectric, `runTest`)
 - Widget state, format utils, permission helper
 
@@ -55,7 +55,7 @@ done
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
-22 tests across dashboard Compose UI, widget provider metadata, notification verification via `dumpsys`, and themes.
+32 tests across dashboard Compose UI, widget provider metadata, notification verification via `dumpsys`, quick settings toggle, permission refresh, and themes.
 
 A scheduled CI workflow (`.github/workflows/e2e.yml`) runs these tests weekly (Monday 12:00 UTC) on a KVM-accelerated
 emulator. Manual trigger also available via the Actions tab.

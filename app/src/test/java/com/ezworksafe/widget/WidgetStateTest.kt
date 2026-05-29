@@ -6,7 +6,6 @@ package com.ezworksafe.widget
 import com.ezworksafe.data.model.SensorStatus
 import com.ezworksafe.data.model.SensorType
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -50,6 +49,6 @@ class WidgetStateTest {
     fun `lastRefreshTime can be updated`() {
         val time = System.currentTimeMillis()
         WidgetState.lastRefreshTime = time
-        assertTrue(WidgetState.lastRefreshTime > 0)
+        assertEquals(time, WidgetState.lastRefreshTime)
     }
 }

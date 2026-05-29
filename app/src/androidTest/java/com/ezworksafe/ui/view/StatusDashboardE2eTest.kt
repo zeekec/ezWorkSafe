@@ -85,7 +85,7 @@ class StatusDashboardE2eTest {
     fun wifi_toggles_between_active_and_blocked() {
         fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Active)
         waitForAssertion {
-            composeRule.onNodeWithText("Active").assertIsDisplayed()
+            composeRule.onNode(hasText("Active") and hasAnySibling(hasText("WiFi"))).assertIsDisplayed()
         }
 
         fakeRepo.setStatus(SensorType.WIFI, SensorStatus.Blocked)
@@ -98,7 +98,7 @@ class StatusDashboardE2eTest {
     fun bluetooth_active_updates_ui() {
         fakeRepo.setStatus(SensorType.BLUETOOTH, SensorStatus.Active)
         waitForAssertion {
-            composeRule.onNodeWithText("Active").assertIsDisplayed()
+            composeRule.onNode(hasText("Active") and hasAnySibling(hasText("Bluetooth"))).assertIsDisplayed()
         }
     }
 
