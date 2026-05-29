@@ -30,6 +30,10 @@ class SensorWidgetE2eTest {
 
     @Before
     fun setUp() {
+        // Reset WidgetState to prevent cross-test pollution (E2E tests share a process)
+        WidgetState.lastRefreshTime = 0L
+        WidgetState.statuses = SensorType.entries.associateWith { SensorStatus.Unavailable }
+
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         appWidgetManager = AppWidgetManager.getInstance(context)
         widgetComponentName = ComponentName(context, SensorWidgetReceiver::class.java)
@@ -65,7 +69,7 @@ class SensorWidgetE2eTest {
     }
 
     @Test
-    fun widgetState_can_be_updated_and_widget_renders() {
+    fun widgetState_labels_can_be_updated() {
         WidgetState.statuses = mapOf(
             SensorType.WIFI to SensorStatus.Active,
             SensorType.BLUETOOTH to SensorStatus.Blocked,
