@@ -29,17 +29,7 @@ links to official documentation.
 | **Purpose** | Query Bluetooth enabled/disabled state and subscribe to state change broadcasts |
 | **Docs** | https://developer.android.com/reference/android/bluetooth/BluetoothAdapter |
 
-### 1.3 AudioManager
-| | |
-|---|---|
-| **Package** | `android.media.AudioManager` |
-| **Acquired via** | `context.getSystemService(Context.AUDIO_SERVICE)` |
-| **Methods used** | (instance reference only — used as non-null check before AppOps query) |
-| **Used in** | `SystemSensorRepository.kt` |
-| **Purpose** | Verify the system service exists, then check microphone access via AppOps (permission + privacy toggle). No `AudioRecordingCallback` is registered — access is snapshot-only. |
-| **Docs** | https://developer.android.com/reference/android/media/AudioManager |
-
-### 1.4 CameraManager
+### 1.3 CameraManager
 | | |
 |---|---|
 | **Package** | `android.hardware.camera2.CameraManager` |

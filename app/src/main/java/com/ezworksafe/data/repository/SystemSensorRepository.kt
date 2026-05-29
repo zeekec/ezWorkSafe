@@ -13,7 +13,6 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraManager
-import android.media.AudioManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Process
@@ -200,13 +199,6 @@ class SystemSensorRepository(private val context: Context) : SensorRepository {
      * actual toggle state. Refresh requires app visibility.
      */
     private fun observeMicStatus(): Flow<SensorStatus> = callbackFlow {
-        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-        if (audioManager == null) {
-            trySend(SensorStatus.Unavailable)
-            close()
-            return@callbackFlow
-        }
-
         fun emitState() {
             if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 trySend(SensorStatus.Denied)

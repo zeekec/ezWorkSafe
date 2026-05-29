@@ -96,7 +96,7 @@ app/src/main/java/com/ezworksafe/
 **Real-time Pattern:** `callbackFlow` wrapping system callbacks:
 - WiFi: `WifiManager` + `BroadcastReceiver` (real-time via broadcasts)
 - Bluetooth: `BluetoothAdapter` + `BroadcastReceiver` (real-time via broadcasts)
-- Mic: `AudioManager` + AppOps check (snapshot-only, no callback)
+- Mic: AppOps check (snapshot-only, no callback)
 - Camera: `CameraManager` + AppOps check (snapshot-only, no callback)
 
 ## Android Gotchas

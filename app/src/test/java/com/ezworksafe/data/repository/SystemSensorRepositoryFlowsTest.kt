@@ -115,13 +115,6 @@ class SystemSensorRepositoryFlowsTest {
     }
 
     @Test
-    fun `mic unavailable when audio manager returns null`() = runTest {
-        val repo = SystemSensorRepository(mockContextForNullService())
-        val status = repo.observeSensor(SensorType.MICROPHONE).first()
-        assertEquals(SensorStatus.Unavailable, status)
-    }
-
-    @Test
     fun `camera active when permission granted and app ops allowed`() = runTest {
         grantCameraPermission()
         setupCamera()
