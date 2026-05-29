@@ -63,6 +63,7 @@ app/src/androidTest/
     ├── ui/view/
     │   ├── StatusDashboardE2eTest.kt
     │   ├── PermissionRefreshE2eTest.kt   # @Ignored (API 36 shell restriction)
+    │   ├── QuickSettingsToggleE2eTest.kt
     │   └── EzWorkSafeThemeTest.kt
     ├── data/repository/
     │   └── FakeSensorRepository.kt

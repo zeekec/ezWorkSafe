@@ -150,7 +150,7 @@ links to official documentation.
 | **Purpose** | Instrumented UI testing for Compose screens |
 | **Docs** | https://developer.android.com/jetpack/compose/testing |
 
-### 3.7 AndroidX Test (`androidx.test.ext:junit:1.2.1`, `androidx.test:rules:1.6.1`)
+### 3.7 AndroidX Test (`androidx.test.ext:junit:1.3.0`, `androidx.test:rules:1.7.0`)
 | APIs used | `GrantPermissionRule`, `AndroidJUnit4` runner, `@SmallTest` |
 |-----------|------------------------------------------------------------|
 | **Used in** | `StatusDashboardE2eTest.kt`, `PermissionRefreshE2eTest.kt`, `EzWorkSafeThemeTest.kt` |
@@ -240,7 +240,7 @@ links to official documentation.
 | Plugin | Version | Purpose |
 |--------|---------|---------|
 | `com.android.application` | 9.2.1 | Android app build (AGP — Android Gradle Plugin) |
-| `org.jetbrains.kotlin.plugin.compose` | 2.2.10 | Kotlin Compose compiler plugin (replaces `composeOptions { kotlinCompilerExtensionVersion }`) |
+| `org.jetbrains.kotlin.plugin.compose` | 2.3.21 | Kotlin Compose compiler plugin (replaces `composeOptions { kotlinCompilerExtensionVersion }`) |
 
 | Config | Value |
 |--------|-------|
@@ -265,7 +265,7 @@ links to official documentation.
 | **Purpose** | Unit test framework — test structure, assertions, rules |
 | **Docs** | https://junit.org/junit4/ |
 
-### 8.2 Mockito (`mockito-core:5.7.0`, `mockito-kotlin:5.1.0`)
+### 8.2 Mockito (`mockito-core:5.23.0`, `mockito-kotlin:6.3.0`)
 | APIs used | `mock()`, `doReturn`, `on { }` (Mockito Kotlin DSL) |
 |-----------|------------------------------------------------------|
 | **Used in** | `SensorViewModelTest.kt`, `SensorRepositoryTest.kt` |

@@ -171,10 +171,10 @@ write, keeping the data layer free of widget dependencies.
 - Uses traditional `for` loop with `continue` statement instead of idiomatic Kotlin `.forEach {}`. Functional style is used throughout the rest of the codebase.
 - **Fix:** Replace with `statuses.forEach { (type, status) -> ... }` using `return@forEach` for skip.
 
-**35. Unused import in MonitoringServiceNotificationE2eTest**
+**35. Unused import in MonitoringServiceNotificationE2eTest** **Status: ✓ FIXED.**
 - File: `MonitoringServiceNotificationE2eTest.kt:7`
 - `import android.os.ParcelFileDescriptor` is unused — the type is inferred from the return type of `executeShellCommand()`.
-- **Fix:** Remove the unused import.
+- **Fix:** Removed the unused import.
 
 **36. Indentation inconsistency in Glance modifier chain**
 - File: `SensorWidget.kt:121`
@@ -191,8 +191,8 @@ write, keeping the data layer free of widget dependencies.
 - `-keep class * extends androidx.room.RoomDatabase { <init>(); }` keeps RoomDatabase constructors, but Room is not a dependency in build.gradle.kts. Dead configuration.
 - **Status: ✓ FIXED** (PR #104) — Lines removed by commit `2a1b10a`.
 
-**39. `$OptIn(ExperimentalCoroutinesApi)` annotation unnecessary**
-- File: `SystemSensorRepository.kt:51`
+**39. `@OptIn(ExperimentalCoroutinesApi)` annotation unnecessary**
+- File: `SystemSensorRepository.kt:50`
 - `flatMapLatest` has been stable since kotlinx-coroutines 1.6.0. The annotation is visual noise.
 - **Fix:** Remove the `@OptIn` annotation and the `ExperimentalCoroutinesApi` import.
 
@@ -228,18 +228,18 @@ write, keeping the data layer free of widget dependencies.
 | 4 | Missing explicit `kotlin("android")` plugin | `app/build.gradle.kts:4` | Only `kotlin.plugin.compose` is applied, not the base Kotlin Android plugin. Works via transitive resolution but fragile. |
 | 5 | Missing `dataExtractionRules` in manifest | `AndroidManifest.xml:26-27` | **✓ FIXED (PR #104)** — `android:dataExtractionRules="@xml/data_extraction_rules"` added. |
 
-### Documentation Accuracy Issues
+### Documentation Accuracy Issues — All Resolved
 
-| # | Doc | What it says | What it should say |
-|---|-----|-------------|-------------------|
-| 1 | `API.md:252` | Kotlin Compose plugin `2.2.10` | `2.3.21` |
-| 2 | `API.md:277` | `mockito-core:5.7.0`, `mockito-kotlin:5.1.0` | `mockito-core:5.23.0`, `mockito-kotlin:6.3.0` |
-| 3 | `API.md:162` | `androidx.test.ext:junit:1.2.1`, `androidx.test:rules:1.6.1` | `androidx.test.ext:junit:1.3.0`, `androidx.test:rules:1.7.0` |
-| 4 | `README.md:8` | Kotlin badge `2.2` | `2.3.21` |
-| 5 | `DEVELOPMENT.md:41` | 52 unit tests | 53 unit tests |
-| 6 | `DEVELOPMENT.md:58` | 22 E2E tests | 32 E2E tests (QuickSettingsToggleE2eTest added) |
-| 7 | `PLAN.md:56-68` | Omits `QuickSettingsToggleE2eTest.kt` | Should include it in file listing |
-| 8 | `security.md:242` | Stale file line counts | Files have grown ~10-30 lines since last audit |
+| # | Doc | What it said | What it now says | Status |
+|---|-----|-------------|-----------------|--------|
+| 1 | `API.md:243` | Kotlin Compose plugin `2.2.10` | `2.3.21` | ✓ FIXED |
+| 2 | `API.md:268` | `mockito-core:5.7.0`, `mockito-kotlin:5.1.0` | `mockito-core:5.23.0`, `mockito-kotlin:6.3.0` | ✓ FIXED |
+| 3 | `API.md:153` | `androidx.test.ext:junit:1.2.1`, `androidx.test:rules:1.6.1` | `androidx.test.ext:junit:1.3.0`, `androidx.test:rules:1.7.0` | ✓ FIXED |
+| 4 | `README.md:9` | Kotlin badge `2.2` | `2.3.21` | ✓ FIXED |
+| 5 | `DEVELOPMENT.md:41` | 52 unit tests | 57 unit tests | ✓ FIXED |
+| 6 | `DEVELOPMENT.md:58` | 22 E2E tests | 32 E2E tests | ✓ FIXED |
+| 7 | `PLAN.md:56-68` | Omitted `QuickSettingsToggleE2eTest.kt` | Included in file listing | ✓ FIXED |
+| 8 | `security.md:242` | Stale file line counts | All counts refreshed | ✓ FIXED |
 
 ---
 
@@ -274,7 +274,7 @@ comprehensive. Key findings this session:
 
 - **0 Medium security issues:** All previously identified security issues remain properly fixed.
 - **1 Medium code quality:** Aggressive 2-second polling loop in `MainActivity` (by design). Issue #32 (`audioManager` variable) fixed.
-- **9 Low code quality:** redundant Glance modifiers, WidgetState encapsulation, unused import, indentation, hardcoded strings, unnecessary `@OptIn`, inconsistent flow termination, `for`/`continue` style. Issues #18 (SDK guard), #19 (`Inactive`), #21 (unsafe cast), #24 (PFD leak), #25 (ambiguous matchers), #26 (WidgetState E2E reset), #27 (tautological refresh test), #28 (misleading test name), #29 (shallow RemoteViews assertions), #40 (ViewModel test gaps), #41 (receiver test gaps), #42 (tautological lastRefreshTime), and #43 (untested `areRuntimePermissionsGranted()`) fixed.
-- **9 Documentation accuracy issues** — stale version numbers, test counts, and file listings across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
+- **7 Low code quality open:** redundant Glance modifiers, WidgetState encapsulation, inconsistent flow termination, `for`/`continue` style, indentation, hardcoded strings, unnecessary `@OptIn`. Issues #18 (SDK guard), #19 (`Inactive`), #21 (unsafe cast), #24 (PFD leak), #25 (ambiguous matchers), #26 (WidgetState E2E reset), #27 (tautological refresh test), #28 (misleading test name), #29 (shallow RemoteViews assertions), #35 (unused import), #40 (ViewModel test gaps), #41 (receiver test gaps), #42 (tautological lastRefreshTime), and #43 (untested `areRuntimePermissionsGranted()`) fixed.
+- **0 Documentation accuracy issues** — all stale version numbers, test counts, and file listings fixed across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
 - **0 CI issues** — all resolved (PR #104, `e2e.yml`).
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.
