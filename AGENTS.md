@@ -65,7 +65,7 @@ AudioManager, CameraManager), Flow/LiveData patterns. Training data may be outda
 ## Current SDK Versions & Tools
 | Config | Value |
 |--------|-------|
-| `compileSdk` | 36 |
+| `compileSdk` | 37 |
 | `minSdk` | 26 |
 | `targetSdk` | 35 |
 | AGP | 9.2.1 |

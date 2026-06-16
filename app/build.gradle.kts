@@ -34,7 +34,7 @@ if (keystoreProperties == null) {
 
 android {
     namespace = "com.ezworksafe"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.ezworksafe"
