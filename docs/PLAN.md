@@ -37,7 +37,7 @@ The following were implemented beyond the original plan:
 
 | Config | Value |
 |--------|-------|
-| `compileSdk` | 36 |
+| `compileSdk` | 37 |
 | `minSdk` | 26 |
 | `targetSdk` | 35 |
 

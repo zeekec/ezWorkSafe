@@ -244,7 +244,7 @@ links to official documentation.
 
 | Config | Value |
 |--------|-------|
-| `compileSdk` | 36 |
+| `compileSdk` | 37 |
 | `minSdk` | 26 |
 | `targetSdk` | 35 |
 | `namespace` / `applicationId` | `com.ezworksafe` |
