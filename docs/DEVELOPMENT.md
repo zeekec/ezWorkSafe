@@ -73,7 +73,7 @@ emulator. Manual trigger also available via the Actions tab.
 | Build | Gradle 9.5.1 + AGP 9.2.1 |
 | Min SDK | 26 |
 | Target SDK | 35 |
-| Compile SDK | 36 |
+| Compile SDK | 37 |
 | Kotlin | 2.3.21 |
 
 ---
