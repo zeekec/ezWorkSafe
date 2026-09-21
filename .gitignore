@@ -6,6 +6,7 @@ build/
 .kotlin/
 .idea/
 .agents/
+.codegraph/
 
 # opencode agent configuration
 .opencode/
