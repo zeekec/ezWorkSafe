@@ -67,6 +67,7 @@ but Android 17's instrumentation serializes the `@Ignore`'d `PermissionRefreshE2
 - Both "Decode keystore" and "Create keystore.properties" steps guarded by `if: env.KEYSTORE_B64 != ''`
 - Release builds fail on PRs from forks unless keystore secrets are available
 - **Weekly E2E workflow** (`.github/workflows/e2e.yml`) — runs `connectedDebugAndroidTest` every Monday 12:00 UTC on a KVM-accelerated emulator. Also triggerable manually via `workflow_dispatch`.
+- **CodeQL code scanning** (`.github/workflows/codeql.yml`) — `java-kotlin` analysis with a manual `./gradlew assembleDebug test` build (avoids keystore-gated release tasks, so it runs on fork PRs too). `init` pins `tools:` to `codeql-bundle-v2.27.1` because the runner default (2.27.0) caps Kotlin at `< 2.4.20` while bundle v2.27.1 ships Java/Kotlin library 9.3.1 (adds Kotlin 2.4.20). Drop the `tools` pin once the runner default catches up. Requires `security-events: write`.
 
 ## Current SDK Versions & Tools
 | Config | Value |
