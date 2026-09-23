@@ -1,0 +1,9 @@
+# Semgrep scan exclusions.
+# Build/output dirs are also gitignored, so this is belt-and-suspenders.
+build/
+.gradle/
+.kotlin/
+.idea/
+
+# Tooling scratch files
+.semgrep-tmp/

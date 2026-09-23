@@ -314,6 +314,19 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
   produce the same artifact. No fix applied. If CI dashboards ever key on XML failures, replace the class-level
   `@Ignore` with a runtime `Assume.assumeTrue(false, ...)` skip.
 
+**51. (Info) Add Semgrep as third SAST layer**
+- CodeQL (re-added in #49/#160) covers data-flow/global analysis; Semgrep adds source-based SAST (tree-sitter parser,
+  no Kotlin-version lag). `p/android` pack does not exist (HTTP 404) — used `p/kotlin` + `p/java` + `p/owasp-top-ten`
+  instead (~560 rules). The `semgrep/semgrep-action` wrapper is deprecated; the native path is the pinned
+  `semgrep/semgrep` container + `github/codeql-action/upload-sarif`.
+- **✓ DONE (PR #161)** — `.github/workflows/semgrep.yml` + `.semgrepignore` added. Token-free (`semgrep scan`,
+  `--metrics=off`, no `SEMGREP_APP_TOKEN`), no `--error` (findings surface in the Security tab as category `semgrep`
+  without failing CI), `if: github.actor != 'dependabot[bot]'`. First scan: 560 rules → 1 benign result
+  (`java.android.security.exported_activity.exported_activity` on the `MainActivity` launcher export), left visible.
+  Secret-scanning posture verified: `secret_scanning` + push protection + Dependabot security updates already enabled;
+  enabling non-provider patterns + validity checks was **attempted via API but gated** (org/Advanced-Security level, not
+  settable per-repo for a personal public repo).
+
 ### Toolchain re-verified (2026-09-22)
 
 | Component | Version | Notes |
@@ -348,6 +361,7 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
 | 5 | Low | Dependabot only monitors Gradle, not GitHub Actions | **✓ FIXED (PR #104)** — `github-actions` entry added |
 | 6 | Info | Upload release APK before lint/test run | **✓ FIXED (PR #104)** — `if: success()` guard added |
 | 7 | Info | JDK 17 in CI vs JDK 21 in gradle-daemon-jvm.properties | **✓ FIXED (PR #104)** — CI now uses JDK 21 |
+| 8 | Low | Single SAST layer (CodeQL) only | **✓ FIXED (PR #161)** — Semgrep added (source-based, no Kotlin-version lag). See finding 51 |
 
 ---
 
@@ -358,7 +372,8 @@ comprehensive. Session 8 (2026-09-22) verified that the previous open items #20/
 (PR #126) and confirmed the remaining open items plus new findings:
 
 - **0 Medium security issues.** #44 (`targetSdk` → 36) was **resolved in PR #158** (verified on Android 17 emulator);
-  #49 (CodeQL/SAST gap) was **resolved in PR #160** (re-added with Kotlin 2.4.20 support).
+  #49 (CodeQL/SAST gap) was **resolved in PR #160** (re-added with Kotlin 2.4.20 support); #51 (additional SAST layer)
+  was **resolved in PR #161** (Semgrep added, findings surface in the Security tab, CI stays green).
 - **1 Medium code quality:** aggressive 2s polling loop in `MainActivity` (by design, with efficiency gap #45).
 - **Open (Low/Info):** #22 `WidgetState` encapsulation, #36 Glance indentation, #37 hardcoded strings, #39 unnecessary
   `@OptIn`; new #45 (polling/write churn), #46 (Glance previews unused), #48 (positive confirmation of centralized
