@@ -1,7 +1,8 @@
 # Security Audit: ezWorkSafe
 
-**Date:** 2026-05-25 **Scope:** Full codebase audit — permissions, IPC, logging, data handling, crypto, network, build
-pipeline. **Methodology:** Manual source code review. No dynamic analysis or penetration testing performed.
+**Date:** 2026-05-25 **Last updated:** 2026-09-22 (re-audit after dependency bumps) **Scope:** Full codebase audit —
+permissions, IPC, logging, data handling, crypto, network, build pipeline. **Methodology:** Manual source code review.
+No dynamic analysis or penetration testing performed.
 
 ---
 
@@ -11,9 +12,9 @@ pipeline. **Methodology:** Manual source code review. No dynamic analysis or pen
 |------------|-------|-----------|
 | Critical   | 0     | — |
 | High       | 0     | — |
-| Medium     | 0     | — |
-| Low        | 2     | N-4 notification content disclosure, N-5 WidgetState weak concurrency |
-| Informational | 16  | N-1 through N-11 (new + existing info findings); build/CI hardening items |
+| Medium     | 1     | M-7 target SDK 35 → 36 for Android 16 (recommendation) |
+| Low        | 3     | N-4 notification content disclosure, N-5 WidgetState weak concurrency, L-11 polling/widget write churn |
+| Informational | 17  | N-1 through N-16 (new + existing info findings); build/CI hardening items |
 
 All security issues identified during this audit have been resolved or documented as by-design.
 
@@ -94,7 +95,8 @@ All catch blocks target specific exception types:
 `allowBackup="false"` and `fullBackupContent="false"` set in `AndroidManifest.xml:26-27`.
 
 **Note:** On Android 12+, `allowBackup="false"` does NOT prevent cloud backups unless `android:dataExtractionRules` is
-also specified. Add `android:dataExtractionRules="@xml/data_extraction_rules"` for full coverage.
+also specified. **✓ RESOLVED (2026-09-22)** — `android:dataExtractionRules="@xml/data_extraction_rules"` is set and the
+rules file excludes root/cloud-backup and root/device-transfer (see N-15).
 
 ### L-3: Keystore password in plaintext
 
@@ -275,6 +277,67 @@ permissions.
 
 ---
 
+## Re-audit 2026-09-22 — Status of prior findings + new items
+
+Re-verified against current code after PRs #146-#155 (AGP 9.4.1, Gradle 9.7.1, Kotlin 2.4.20, Glance 1.2.0, JaCoCo
+0.8.15). Prior findings M-1..M-6, L-1..L-9, N-1..N-3, N-6, N-7, N-8 remain resolved/by-design as documented above.
+`targetSdk = 35` and `tools:targetApi="36"` in the manifest; E2E emulator is Android 16 (API 36).
+
+### M-7 (Medium): target SDK 35 not yet bumped for Android 16
+
+**Status: Open — recommendation.**
+
+**File:** `app/build.gradle.kts:42`
+
+`targetSdk = 35` with `compileSdk = 37`. On Android 16 devices the app runs in legacy-target mode. Bumping `targetSdk`
+to 36 opts into Android 16 behavior changes — including the AppOps/Mic-Cam background enforcement this app documents as
+a limitation — and is required for future Play Store policy compliance. The app already handles edge-to-edge
+(`enableEdgeToEdge` + `safeDrawingPadding`), which is the main visual risk of the bump. Re-run unit/E2E tests and
+device-verify the Mic/Cam background behavior after the bump.
+
+### L-11 (Low): Foreground polling re-triggers all flows and re-writes widgets unconditionally
+
+**Status: Open — efficiency/energy.**
+
+**Files:** `MainActivity.kt:64-70`, `SystemSensorRepository.kt:44-59`, `MonitoringService.kt:88-107`
+
+The 2s polling loop calls `viewModel.refresh()` → `refreshTrigger++`, so `flatMapLatest` cancels/restarts **all four**
+sensor flows (WiFi/BT broadcast receiver churn) and the service pushes RemoteViews to both widgets plus a notification
+rebuild every 2 seconds regardless of whether state changed. Only Mic/Cam are stale in the background (L-10/N-1).
+Recommend a mic/cam-only refresh trigger and/or a change-guard in `pushWidgetUpdate` that skips identical status maps to
+reduce wake-ups, widget writes, and notification churn.
+
+### N-12 (Info): Glance 1.2.0 preview APIs unused
+
+Glance 1.2.0 adds `GlanceAppWidget.providePreview`, `GlanceAppWidgetManager.setWidgetPreview`, and
+`MultiProcessGlanceAppWidget`; none are used. Optional UX enhancement for the widget picker. Also note `minSdk` for
+Glance 1.2.0 is 23 (app minSdk is 26) — no conflict.
+
+### N-13 (Info): Custom `RemoteViews` layout bypasses Glance — verified current
+
+`MonitoringService.pushWidgetUpdate()` still drives the direct `widget_sensor_status.xml` RemoteViews path and the
+compact widget's `widget_compact_initial.xml` dots. Confirmed working after the Glance 1.2.0 bump (E2E
+`SensorWidgetE2eTest`
++ `CompactWidgetE2eTest` pass on Android 16 emulator).
+
+### N-14 (Info): Status held in-memory only — no persistence boundary added
+
+Re-verified: no SharedPreferences, files, DB, network, ContentProviders, or bound services. All state lives in
+`WidgetState`/`StateFlow`; backup disabled via `allowBackup="false"` + `dataExtractionRules` (excludes everything).
+Attack surface unchanged from the original audit.
+
+### N-15 (Info): Android 12+ `dataExtractionRules` confirmed present
+
+**Status: ✓ CLOSED** (was L-2 note) — `android:dataExtractionRules="@xml/data_extraction_rules"` is set and the rules
+file excludes `root` for both cloud-backup and device-transfer.
+
+### N-16 (Info): Dependabot alerts re-checked
+
+Both previously-dismissed Bouncy Castle alerts (`bcprov-jdk18on`, build-time transitive via `settings.gradle.kts`) were
+re-examined — no new open alerts as of 2026-09-22.
+
+---
+
 ## Attack Surface Summary
 
 | Vector | Present? | Notes |
@@ -301,6 +364,8 @@ permissions.
 
 | Priority | Issue |
 |----------|-------|
+| Medium   | M-7: Bump `targetSdk` to 36 for Android 16 (opt-in behavior, AppOps background enforcement, Play compliance) |
+| Low      | L-11: Add change-guard to `pushWidgetUpdate` and/or mic/cam-only refresh to stop 2s widget/notification write churn |
 | Low      | N-4: Consider generic notification text to reduce lock-screen exposure |
 | Low      | N-5: Optional hardening of WidgetState with AtomicReference |
 | Info     | N-9: Consider increasing REQUEST_CODE_WIDGET to avoid theoretical collision |
