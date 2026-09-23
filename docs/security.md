@@ -362,10 +362,12 @@ exit code governs `connectedDebugAndroidTest` success, so no build impact.
 Semgrep (source-based, tree-sitter parser) was added as a third static-analysis layer (Android Lint → CodeQL → Semgrep).
 Runs `p/kotlin` + `p/java` + `p/owasp-top-ten` (~560 rules). Token-free (`semgrep scan`, `--metrics=off`, no account), no
 `--error` so findings appear in the Security → Code scanning tab (category `semgrep`) without failing CI. First scan
-produced exactly one result: `java.android.security.exported_activity.exported_activity` on the `MainActivity` launcher
-export (`AndroidManifest.xml:34`) — a benign/expected match (launcher activities must be exported), intentionally left
-visible so the rule stays active repo-wide. Unlike CodeQL, Semgrep has no Kotlin-version lag. The container image tag is
-pinned and must be bumped manually (Dependabot does not track it).
+produced 22 findings, all in CI config or by-design components: 19 `github-actions-mutable-action-tag` on workflow
+`@vX` action tags (kept mutable so Dependabot tracks them), 2 `dependabot-missing-cooldown` (config suggestion), and 1
+`java.android.security.exported_activity.exported_activity` on the `MainActivity` launcher export
+(`AndroidManifest.xml:34`) — a benign/expected match (launcher activities must be exported). All intentionally left
+visible (do not suppress) so the rules stay active repo-wide. Unlike CodeQL, Semgrep has no Kotlin-version lag. The
+container image tag is pinned and must be bumped manually (Dependabot does not track it).
 
 ---
 
