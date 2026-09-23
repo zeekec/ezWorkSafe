@@ -30,15 +30,16 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6.3.0
 
-      # Pinned to a specific CodeQL bundle: the runner default currently caps at Kotlin < 2.4.20,
-      # while bundle v2.27.1 ships the Java/Kotlin library 9.3.1 that adds Kotlin 2.4.20 support.
+      # Runner-default CodeQL (currently 2.27.0) caps Kotlin at < 2.4.20; bundle v2.27.1
+      # (Java/Kotlin library 9.3.1) adds Kotlin 2.4.20. Drop this pin once the default catches up.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@codeql-bundle-v2.27.1
+        uses: github/codeql-action/init@v4
         with:
           languages: java-kotlin
+          tools: https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.1/codeql-bundle-linux64.tar.gz
 
       - name: Build
         run: ./gradlew assembleDebug test
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@codeql-bundle-v2.27.1
+        uses: github/codeql-action/analyze@v4
