@@ -324,7 +324,8 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
   without failing CI), `if: github.actor != 'dependabot[bot]'`. First scan: 560 rules → 22 findings, all expected:
   19 `github-actions-mutable-action-tag` on workflow `@vX` action tags (kept mutable so Dependabot tracks them), 2
   `dependabot-missing-cooldown`, and 1 `exported_activity` on the `MainActivity` launcher export (must be exported).
-  Left visible; CI stays green.
+  All 22 **dismissed via the code-scanning API** (09-2026, per-type reasons; rules remain active, new drift resurfaces).
+  CI stays green.
   Secret-scanning posture verified: `secret_scanning` + push protection + Dependabot security updates already enabled;
   enabling non-provider patterns + validity checks was **attempted via API but gated** (org/Advanced-Security level, not
   settable per-repo for a personal public repo).
