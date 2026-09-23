@@ -269,6 +269,9 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
   targetSdk 35 preserves legacy behavior, so the app never opts into Android 16 changes (predictive back, AppOps
   background enforcement, etc.). Recommend bumping `targetSdk` to 36, then re-running unit + E2E tests — especially the
   Mic/Cam background AppOps behavior the app documents as an Android 16 limitation, which target-level can change.
+- **✓ FIXED (PR #158)** — `targetSdk = 36`; verified on Pixel_8_Pro_Android_17 (Android 17/API 37): lint + 57 unit
+  tests pass, E2E green (31/0/1), installed APK reports targetSdk 36. No code changes needed beyond the value (see PR
+  #158 impact table: no predictive-back surface, no orientation/resize locks, no NDK, edge-to-edge already handled).
 
 **45. (Low) 2s polling restarts all four sensor flows and re-pushes widgets unconditionally**
 - Files: `MainActivity.kt:64-70`, `SystemSensorRepository.kt:44-59`, `MonitoringService.kt:88-107`
@@ -347,8 +350,8 @@ The project is in strong shape. The architecture is clean, security posture is s
 comprehensive. Session 8 (2026-09-22) verified that the previous open items #20/#33/#34 were fixed by the style cleanup
 (PR #126) and confirmed the remaining open items plus new findings:
 
-- **0 Medium security issues.** Two Medium items: #44 (`targetSdk` 35 → 36 for Android 16) and #49 (CodeQL/SAST
-  removed from CI pending Kotlin 2.4.x support — tracking item).
+- **0 Medium security issues.** One Medium remains as a tracking item: #49 (CodeQL/SAST removed from CI pending
+  Kotlin 2.4.x support). #44 (`targetSdk` → 36) was **resolved in PR #158** (verified on Android 17 emulator).
 - **1 Medium code quality:** aggressive 2s polling loop in `MainActivity` (by design, with efficiency gap #45).
 - **Open (Low/Info):** #22 `WidgetState` encapsulation, #36 Glance indentation, #37 hardcoded strings, #39 unnecessary
   `@OptIn`; new #45 (polling/write churn), #46 (Glance previews unused), #47 (stale AGENTS.md versions), #48
