@@ -295,9 +295,14 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
   (`Color(status.color)`) and RemoteViews (`status.color`), so no divergence risk. Keeping as positive confirmation.
 
 **49. (Medium—tracking) CodeQL/SAST removed from CI (`0356d1e`)**
-- CodeQL was added in PR #104 but removed because CodeQL had not yet added Kotlin 2.4.0 support. `.github/workflows/`
-  now contains only `android.yml` and `e2e.yml`. Re-add CodeQL (or another SAST) when Kotlin 2.4.x analysis is
-  supported; otherwise static analysis rests entirely on Android Lint.
+- CodeQL was added in PR #104 but removed because CodeQL had not yet added Kotlin 2.4.0 support (PR #112 had also
+  accidentally gutted the init/autobuild/analyze steps, so it was already a no-op). `.github/workflows/` now contains
+  `android.yml`, `e2e.yml`, and `codeql.yml`.
+- **✓ FIXED (PR #160)** — `codeql.yml` re-added. CodeQL's Java/Kotlin library **9.3.1** (bundle v2.27.1) added Kotlin
+  2.4.20 support; `init` pins `tools:` to `codeql-bundle-v2.27.1` because the runner default (2.27.0) still caps at
+  Kotlin `< 2.4.20` (drop the pin once the default catches up). Manual build (`./gradlew assembleDebug test`) avoids
+  keystore-dependent release tasks so analysis also runs on fork PRs. Validated on the PR: CodeQL 2.27.1 database
+  created, Kotlin 2.4.20 extracted, SARIF uploaded, **0 alerts**.
 
 **50. (Info) Android 17 emulator — `@Ignore`'d class reported as empty `null` failure in JUnit XML**
 - On the `Pixel_8_Pro_Android_17` AVD (Android 17 / API 37, `system-images;android-37.0;google_apis_playstore_ps16k`),
@@ -337,7 +342,7 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
 | # | Severity | Issue | Status |
 |---|----------|-------|--------|
 | 1 | High | `build` step runs lint+test 3x (via `./gradlew build`, then `./gradlew lint`, then `./gradlew test`) | **✓ FIXED (PR #104)** — uses `assembleDebug` instead |
-| 2 | Medium | No CodeQL/sast workflow file | **REMOVED (reopened)** — added in PR #104, then removed in `0356d1e` (CodeQL did not yet support Kotlin 2.4.0). No SAST in CI as of 2026-09-22; revisit when GitHub CodeQL adds Kotlin 2.4.x support or use a third-party SAST action (see finding 49) |
+| 2 | Medium | No CodeQL/sast workflow file | **✓ FIXED (PR #160)** — re-added via `.github/workflows/codeql.yml`; Kotlin 2.4.20 now supported (Java/Kotlin lib 9.3.1 in bundle v2.27.1, tools-pinned). Validated on the PR (see finding 49) |
 | 3 | Medium | No E2E tests in CI | **✓ FIXED** — weekly scheduled workflow via `.github/workflows/e2e.yml` |
 | 4 | Medium | Secrets written via shell heredoc in CI | **✓ FIXED (PR #104)** — uses direct `echo` into file |
 | 5 | Low | Dependabot only monitors Gradle, not GitHub Actions | **✓ FIXED (PR #104)** — `github-actions` entry added |
@@ -352,8 +357,8 @@ The project is in strong shape. The architecture is clean, security posture is s
 comprehensive. Session 8 (2026-09-22) verified that the previous open items #20/#33/#34 were fixed by the style cleanup
 (PR #126) and confirmed the remaining open items plus new findings:
 
-- **0 Medium security issues.** One Medium remains as a tracking item: #49 (CodeQL/SAST removed from CI pending
-  Kotlin 2.4.x support). #44 (`targetSdk` → 36) was **resolved in PR #158** (verified on Android 17 emulator).
+- **0 Medium security issues.** #44 (`targetSdk` → 36) was **resolved in PR #158** (verified on Android 17 emulator);
+  #49 (CodeQL/SAST gap) was **resolved in PR #160** (re-added with Kotlin 2.4.20 support).
 - **1 Medium code quality:** aggressive 2s polling loop in `MainActivity` (by design, with efficiency gap #45).
 - **Open (Low/Info):** #22 `WidgetState` encapsulation, #36 Glance indentation, #37 hardcoded strings, #39 unnecessary
   `@OptIn`; new #45 (polling/write churn), #46 (Glance previews unused), #48 (positive confirmation of centralized
