@@ -370,6 +370,19 @@ the code-scanning API** (09-2026) with per-type reasons; dismissal does NOT supp
 surfaces as alerts. Unlike CodeQL, Semgrep has no Kotlin-version lag. The container image tag is pinned and must be
 bumped manually (Dependabot does not track it).
 
+### N-19 (Info): GitHub Dependency Review added as pre-merge dependency gate
+
+**Status: ✓ ADDED (PR #163).**
+
+**File:** `.github/workflows/dependency-review.yml`
+
+Dependabot only alerts after a vulnerable dependency has landed on `main`. GitHub Dependency Review
+(`actions/dependency-review-action@v4`) diffs the dependency change in each PR — via the dependency graph fed by the
+Automatic Dependency Submission (Gradle) check — and blocks merges that *introduce* a vulnerable/GHSA'd
+(`fail-on-severity: moderate`) or denied-license dependency before they are merged. Registered as a **required status
+check** in the ProtectBranches ruleset (its first required status check). `comment-summary-in-pr: always` posts a
+dependency-change summary to each PR. Requires `pull-requests: write` for the summary comment.
+
 ---
 
 ## Attack Surface Summary
