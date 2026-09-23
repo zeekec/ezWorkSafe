@@ -8,7 +8,7 @@ plugins {
 }
 
 jacoco {
-    toolVersion = "0.8.12"
+    toolVersion = "0.8.15"
 }
 
 // JaCoCo must include classes loaded without CodeSource (Robolectric sandbox)
@@ -114,8 +114,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     // Glance (home screen widget)
-    implementation("androidx.glance:glance-appwidget:1.1.1")
-    implementation("androidx.glance:glance-material3:1.1.1")
+    implementation("androidx.glance:glance-appwidget:1.2.0")
+    implementation("androidx.glance:glance-material3:1.2.0")
 
     // WorkManager (overrides Glance's transitive 2.7.1 which lacks WorkDatabase_Impl)
     implementation("androidx.work:work-runtime:2.11.2")
