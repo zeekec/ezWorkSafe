@@ -1,8 +1,8 @@
 # Security Audit: ezWorkSafe
 
-**Date:** 2026-05-25 **Last updated:** 2026-09-22 (re-audit after dependency bumps) **Scope:** Full codebase audit —
-permissions, IPC, logging, data handling, crypto, network, build pipeline. **Methodology:** Manual source code review.
-No dynamic analysis or penetration testing performed.
+**Date:** 2026-05-25 **Last updated:** 2026-09-23 (added Semgrep SAST layer) **Scope:** Full codebase audit — permissions,
+IPC, logging, data handling, crypto, network, build pipeline. **Methodology:** Manual source code review plus automated
+SAST (Android Lint, CodeQL, Semgrep). No dynamic analysis or penetration testing performed.
 
 ---
 
@@ -352,6 +352,22 @@ says `31 tests, 0 failed, 1 ignored` and the exit code is 0. The Android 17 inst
 body), inflating the XML `failures` count to 1. This is unrelated to the app — the intentionally-ignored test never
 executes (its `pm revoke` would kill the instrumentation process, which is exactly why it is `@Ignore`d). The runner
 exit code governs `connectedDebugAndroidTest` success, so no build impact.
+
+### N-18 (Info): Semgrep added as third SAST layer
+
+**Status: ✓ ADDED (PR #161).**
+
+**Files:** `.github/workflows/semgrep.yml`, `.semgrepignore`
+
+Semgrep (source-based, tree-sitter parser) was added as a third static-analysis layer (Android Lint → CodeQL → Semgrep).
+Runs `p/kotlin` + `p/java` + `p/owasp-top-ten` (~560 rules). Token-free (`semgrep scan`, `--metrics=off`, no account), no
+`--error` so findings appear in the Security → Code scanning tab (category `semgrep`) without failing CI. First scan
+produced 22 findings, all in CI config or by-design components: 19 `github-actions-mutable-action-tag` on workflow
+`@vX` action tags (kept mutable so Dependabot tracks them), 2 `dependabot-missing-cooldown` (config suggestion), and 1
+`java.android.security.exported_activity.exported_activity` on the `MainActivity` launcher export
+(`AndroidManifest.xml:34`) — a benign/expected match (launcher activities must be exported). All intentionally left
+visible (do not suppress) so the rules stay active repo-wide. Unlike CodeQL, Semgrep has no Kotlin-version lag. The
+container image tag is pinned and must be bumped manually (Dependabot does not track it).
 
 ---
 
