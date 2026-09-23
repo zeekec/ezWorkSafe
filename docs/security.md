@@ -14,7 +14,7 @@ No dynamic analysis or penetration testing performed.
 | High       | 0     | — |
 | Medium     | 1     | M-7 target SDK 35 → 36 for Android 16 (recommendation) |
 | Low        | 3     | N-4 notification content disclosure, N-5 WidgetState weak concurrency, L-11 polling/widget write churn |
-| Informational | 17  | N-1 through N-16 (new + existing info findings); build/CI hardening items |
+| Informational | 18  | N-1 through N-17 (new + existing info findings); build/CI hardening items |
 
 All security issues identified during this audit have been resolved or documented as by-design.
 
@@ -335,6 +335,17 @@ file excludes `root` for both cloud-backup and device-transfer.
 
 Both previously-dismissed Bouncy Castle alerts (`bcprov-jdk18on`, build-time transitive via `settings.gradle.kts`) were
 re-examined — no new open alerts as of 2026-09-22.
+
+### N-17 (Info): Android 17 emulator reports `@Ignore`'d class as empty `null` JUnit failure
+
+**Status: By design — cosmetic, no impact.**
+
+On the `Pixel_8_Pro_Android_17` AVD (Android 17 / API 37), `connectedDebugAndroidTest` is **green**: the runner logcat
+says `31 tests, 0 failed, 1 ignored` and the exit code is 0. The Android 17 instrumentation serializes the class-level
+`@Ignore` on `PermissionRefreshE2eTest` into the JUnit XML as `<testcase name="null"><failure/></testcase>` (empty
+body), inflating the XML `failures` count to 1. This is unrelated to the app — the intentionally-ignored test never
+executes (its `pm revoke` would kill the instrumentation process, which is exactly why it is `@Ignore`d). The runner
+exit code governs `connectedDebugAndroidTest` success, so no build impact.
 
 ---
 

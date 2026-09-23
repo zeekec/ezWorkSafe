@@ -41,9 +41,15 @@ AudioManager, CameraManager), Flow/LiveData patterns. Training data may be outda
 | Command | Purpose |
 |---------|---------|
 | `android emulator list` | List available AVDs |
-| `android emulator start Pixel_8_Pro` | Start emulator (AVD: Pixel_8_Pro) |
-| `android emulator start --cold Pixel_8_Pro` | Cold boot (no snapshot) |
-| `android emulator stop Pixel_8_Pro` | Stop emulator |
+| `just emulator-start` | Start default AVD (**Pixel_8_Pro_Android_17**, Android 17/API 37 — matches the physical Pixel 8 Pro) |
+| `just emulator-start Pixel_8_Pro` | Start a different AVD by name |
+| `android emulator start --cold Pixel_8_Pro_Android_17` | Cold boot (no snapshot) |
+| `just emulator-stop` | Stop default AVD |
+
+Newest target AVD is `Pixel_8_Pro_Android_17` (`system-images;android-37.0;google_apis_playstore_ps16k;x86_64`, 16 KB
+pages, Play Store). Note: `connectedDebugAndroidTest` is green on it (runner reports `31 tests, 0 failed, 1 ignored`),
+but Android 17's instrumentation serializes the `@Ignore`'d `PermissionRefreshE2eTest` into the JUnit XML as an empty
+`name="null"` failure (cosmetic — exit code still 0). See `docs/review.md` finding 50.
 
 > `main` branch has repository rulesets requiring all changes through PRs (no direct pushes).
 

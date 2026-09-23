@@ -294,6 +294,16 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
   now contains only `android.yml` and `e2e.yml`. Re-add CodeQL (or another SAST) when Kotlin 2.4.x analysis is
   supported; otherwise static analysis rests entirely on Android Lint.
 
+**50. (Info) Android 17 emulator — `@Ignore`'d class reported as empty `null` failure in JUnit XML**
+- On the `Pixel_8_Pro_Android_17` AVD (Android 17 / API 37, `system-images;android-37.0;google_apis_playstore_ps16k`),
+  the instrumentation runner correctly ignores the class-level `@Ignore` on `PermissionRefreshE2eTest`
+  (`logcat` TestRunner: `31 tests, 0 failed, 1 ignored`; exit code 0; `BUILD SUCCESSFUL`) **but** serializes the
+  ignored class into the JUnit XML as `<testcase name="null"><failure/></testcase>` (empty body, `time≈0.001`).
+- The XML `failures` count is 1 even though no test code ran (the forbidden `pm revoke` never executes). AGP scores the
+  run from the runner exit code, so `connectedDebugAndroidTest` stays green. Cosmetic-only; isolated runs of the class
+  produce the same artifact. No fix applied. If CI dashboards ever key on XML failures, replace the class-level
+  `@Ignore` with a runtime `Assume.assumeTrue(false, ...)` skip.
+
 ### Toolchain re-verified (2026-09-22)
 
 | Component | Version | Notes |
@@ -342,6 +352,6 @@ comprehensive. Session 8 (2026-09-22) verified that the previous open items #20/
 - **1 Medium code quality:** aggressive 2s polling loop in `MainActivity` (by design, with efficiency gap #45).
 - **Open (Low/Info):** #22 `WidgetState` encapsulation, #36 Glance indentation, #37 hardcoded strings, #39 unnecessary
   `@OptIn`; new #45 (polling/write churn), #46 (Glance previews unused), #47 (stale AGENTS.md versions), #48
-  (positive confirmation of centralized colors).
+  (positive confirmation of centralized colors), #50 (Android 17 XML `@Ignore` reporting quirk, cosmetic).
 - **Testing:** still 57 unit tests, 32 E2E tests (1 @Ignored). `lint`, `test`, `connectedDebugAndroidTest` all pass.
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.
