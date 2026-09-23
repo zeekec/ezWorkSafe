@@ -330,6 +330,15 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
   enabling non-provider patterns + validity checks was **attempted via API but gated** (org/Advanced-Security level, not
   settable per-repo for a personal public repo).
 
+**52. (Info) Add GitHub Dependency Review as a pre-merge dependency gate**
+- Dependabot alerts only after code lands on `main`; nothing prevented a PR from *introducing* a vulnerable or
+  denied-license dependency. GitHub's `actions/dependency-review-action` diffs the dependency change in each PR
+  (consuming the dependency graph fed by the Automatic Dependency Submission check) and can block the merge.
+- **✓ DONE (PR #163)** — `.github/workflows/dependency-review.yml` added: `fail-on-severity: moderate`, `license-check:
+  true`, `comment-summary-in-pr: always`, `pull-requests: write` for the summary comment. Registered as a **required
+  status check** (`Dependency Review`) in the ProtectBranches ruleset — the first required status check there (the
+  ruleset previously enforced PR/code-owner/CodeQL rules only). Passed on the PR (deps clean).
+
 ### Toolchain re-verified (2026-09-22)
 
 | Component | Version | Notes |
@@ -365,6 +374,7 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
 | 6 | Info | Upload release APK before lint/test run | **✓ FIXED (PR #104)** — `if: success()` guard added |
 | 7 | Info | JDK 17 in CI vs JDK 21 in gradle-daemon-jvm.properties | **✓ FIXED (PR #104)** — CI now uses JDK 21 |
 | 8 | Low | Single SAST layer (CodeQL) only | **✓ FIXED (PR #161)** — Semgrep added (source-based, no Kotlin-version lag). See finding 51 |
+| 9 | Low | No pre-merge dependency gate (Dependabot alerts only post-merge) | **✓ FIXED (PR #163)** — GitHub Dependency Review added (`@v4`, `fail-on-severity: moderate`, `license-check: true`). See finding 52 |
 
 ---
 
@@ -376,7 +386,8 @@ comprehensive. Session 8 (2026-09-22) verified that the previous open items #20/
 
 - **0 Medium security issues.** #44 (`targetSdk` → 36) was **resolved in PR #158** (verified on Android 17 emulator);
   #49 (CodeQL/SAST gap) was **resolved in PR #160** (re-added with Kotlin 2.4.20 support); #51 (additional SAST layer)
-  was **resolved in PR #161** (Semgrep added, findings surface in the Security tab, CI stays green).
+  was **resolved in PR #161** (Semgrep added, findings surface in the Security tab, CI stays green); #52 (pre-merge
+  dependency gate) was **resolved in PR #163** (GitHub Dependency Review, first required status check in ruleset).
 - **1 Medium code quality:** aggressive 2s polling loop in `MainActivity` (by design, with efficiency gap #45).
 - **Open (Low/Info):** #22 `WidgetState` encapsulation, #36 Glance indentation, #37 hardcoded strings, #39 unnecessary
   `@OptIn`; new #45 (polling/write churn), #46 (Glance previews unused), #48 (positive confirmation of centralized
