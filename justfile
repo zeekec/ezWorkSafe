@@ -32,10 +32,10 @@ install-release:
 uninstall:
     adb uninstall com.ezworksafe
 
-# Start the Pixel_8_Pro emulator
-emulator-start:
-    android emulator start Pixel_8_Pro
+# Start an emulator (default: Pixel_8_Pro_Android_17; pass a name to override)
+emulator-start name="Pixel_8_Pro_Android_17":
+    android emulator start "{{name}}"
 
-# Stop the Pixel_8_Pro emulator
-emulator-stop:
-    android emulator stop Pixel_8_Pro
+# Stop an emulator (default: Pixel_8_Pro_Android_17; pass a name to override)
+emulator-stop name="Pixel_8_Pro_Android_17":
+    android emulator stop "{{name}}"
