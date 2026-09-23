@@ -39,7 +39,7 @@ The following were implemented beyond the original plan:
 |--------|-------|
 | `compileSdk` | 37 |
 | `minSdk` | 26 |
-| `targetSdk` | 35 |
+| `targetSdk` | 36 |
 
 ### Key File Additions Not in Original Structure
 
