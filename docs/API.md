@@ -239,14 +239,14 @@ links to official documentation.
 
 | Plugin | Version | Purpose |
 |--------|---------|---------|
-| `com.android.application` | 9.2.1 | Android app build (AGP — Android Gradle Plugin) |
-| `org.jetbrains.kotlin.plugin.compose` | 2.3.21 | Kotlin Compose compiler plugin (replaces `composeOptions { kotlinCompilerExtensionVersion }`) |
+| `com.android.application` | 9.4.1 | Android app build (AGP — Android Gradle Plugin) |
+| `org.jetbrains.kotlin.plugin.compose` | 2.4.20 | Kotlin Compose compiler plugin (replaces `composeOptions { kotlinCompilerExtensionVersion }`) |
 
 | Config | Value |
 |--------|-------|
 | `compileSdk` | 37 |
 | `minSdk` | 26 |
-| `targetSdk` | 35 |
+| `targetSdk` | 36 |
 | `namespace` / `applicationId` | `com.ezworksafe` |
 | Java compatibility | `VERSION_17` |
 

@@ -73,9 +73,9 @@ but Android 17's instrumentation serializes the `@Ignore`'d `PermissionRefreshE2
 |--------|-------|
 | `compileSdk` | 37 |
 | `minSdk` | 26 |
-| `targetSdk` | 35 |
-| AGP | 9.2.1 |
-| Gradle wrapper | 9.5.1 |
+| `targetSdk` | 36 |
+| AGP | 9.4.1 |
+| Gradle wrapper | 9.7.1 |
 
 ## Required Permissions
 - `ACCESS_WIFI_STATE` — WiFi status

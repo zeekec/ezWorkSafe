@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/zeekec/ezWorkSafe/branch/main/graph/badge.svg)](https://codecov.io/gh/zeekec/ezWorkSafe)
 [![License](https://img.shields.io/badge/license-Apache%202.0-brightgreen)](https://github.com/zeekec/ezWorkSafe/blob/main/LICENSE)
 [![Min SDK](https://img.shields.io/badge/minSDK-26-brightgreen)](https://developer.android.com/guide/topics/manifest/uses-sdk-element)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.4.0-7A1FA2?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.4.20-7A1FA2?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 
 > ⚠️ **Personal project** — intended as a workplace privacy awareness tool, not a
 > security product.

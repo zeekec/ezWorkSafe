@@ -286,7 +286,9 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
   `MultiProcessGlanceAppWidget`, none of which are used. Optional enhancement; previews improve widget picker UX.
 
 **47. (Info) AGENTS.md toolchain table is stale**
-- AGENTS.md lists AGP 9.2.1 and Gradle 9.5.1; the project is on AGP 9.4.1 and Gradle 9.7.1. Doc accuracy issue only.
+- **✓ FIXED (PR #159)** — `AGENTS.md`, `docs/API.md`, `docs/DEVELOPMENT.md`, `docs/PLAN.md`, and the README Kotlin badge
+  now match the actual toolchain: `targetSdk 36`, AGP 9.4.1, Gradle 9.7.1, Kotlin 2.4.20. Was: AGP 9.2.1 / Gradle
+  9.5.1 / targetSdk 35 / Kotlin 2.3.21. Doc accuracy issue only.
 
 **48. (Info) `widgetSpacing` fix — `SensorStatus` color duplication**
 - No change; colors correctly centralized in `SensorStatus` (`ACTIVE_COLOR` etc.) and reused by both Compose
@@ -354,7 +356,8 @@ comprehensive. Session 8 (2026-09-22) verified that the previous open items #20/
   Kotlin 2.4.x support). #44 (`targetSdk` → 36) was **resolved in PR #158** (verified on Android 17 emulator).
 - **1 Medium code quality:** aggressive 2s polling loop in `MainActivity` (by design, with efficiency gap #45).
 - **Open (Low/Info):** #22 `WidgetState` encapsulation, #36 Glance indentation, #37 hardcoded strings, #39 unnecessary
-  `@OptIn`; new #45 (polling/write churn), #46 (Glance previews unused), #47 (stale AGENTS.md versions), #48
-  (positive confirmation of centralized colors), #50 (Android 17 XML `@Ignore` reporting quirk, cosmetic).
+  `@OptIn`; new #45 (polling/write churn), #46 (Glance previews unused), #48 (positive confirmation of centralized
+  colors), #50 (Android 17 XML `@Ignore` reporting quirk, cosmetic). #47 (stale AGENTS.md toolchain table) was
+  **resolved in PR #159**.
 - **Testing:** still 57 unit tests, 32 E2E tests (1 @Ignored). `lint`, `test`, `connectedDebugAndroidTest` all pass.
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.
