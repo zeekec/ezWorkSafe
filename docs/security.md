@@ -380,8 +380,9 @@ Dependabot only alerts after a vulnerable dependency has landed on `main`. GitHu
 (`actions/dependency-review-action@v4`) diffs the dependency change in each PR — via the dependency graph fed by the
 Automatic Dependency Submission (Gradle) check — and blocks merges that *introduce* a vulnerable/GHSA'd
 (`fail-on-severity: moderate`) or denied-license dependency before they are merged. Registered as a **required status
-check** in the ProtectBranches ruleset (its first required status check). `comment-summary-in-pr: always` posts a
-dependency-change summary to each PR. Requires `pull-requests: write` for the summary comment.
+check** (context `dependency-review`) in the ProtectBranches ruleset (its first required status check, with strict up-to-date
+enforcement). `comment-summary-in-pr: always` posts a dependency-change summary to each PR. Requires `pull-requests:
+write` for the summary comment.
 
 ---
 

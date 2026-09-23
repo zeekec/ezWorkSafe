@@ -336,8 +336,8 @@ test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
   (consuming the dependency graph fed by the Automatic Dependency Submission check) and can block the merge.
 - **✓ DONE (PR #163)** — `.github/workflows/dependency-review.yml` added: `fail-on-severity: moderate`, `license-check:
   true`, `comment-summary-in-pr: always`, `pull-requests: write` for the summary comment. Registered as a **required
-  status check** (`Dependency Review`) in the ProtectBranches ruleset — the first required status check there (the
-  ruleset previously enforced PR/code-owner/CodeQL rules only). Passed on the PR (deps clean).
+  status check** (context `dependency-review`) in the ProtectBranches ruleset — the first required status check there
+  (the ruleset previously enforced PR/code-owner/CodeQL rules only). Passed on the PR (deps clean).
 
 ### Toolchain re-verified (2026-09-22)
 
