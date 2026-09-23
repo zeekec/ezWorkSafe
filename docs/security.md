@@ -365,9 +365,10 @@ Runs `p/kotlin` + `p/java` + `p/owasp-top-ten` (~560 rules). Token-free (`semgre
 produced 22 findings, all in CI config or by-design components: 19 `github-actions-mutable-action-tag` on workflow
 `@vX` action tags (kept mutable so Dependabot tracks them), 2 `dependabot-missing-cooldown` (config suggestion), and 1
 `java.android.security.exported_activity.exported_activity` on the `MainActivity` launcher export
-(`AndroidManifest.xml:34`) — a benign/expected match (launcher activities must be exported). All intentionally left
-visible (do not suppress) so the rules stay active repo-wide. Unlike CodeQL, Semgrep has no Kotlin-version lag. The
-container image tag is pinned and must be bumped manually (Dependabot does not track it).
+(`AndroidManifest.xml:34`) — a benign/expected match (launcher activities must be exported). All 22 were **dismissed via
+the code-scanning API** (09-2026) with per-type reasons; dismissal does NOT suppress the rules, so new drift still
+surfaces as alerts. Unlike CodeQL, Semgrep has no Kotlin-version lag. The container image tag is pinned and must be
+bumped manually (Dependabot does not track it).
 
 ---
 
