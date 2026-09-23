@@ -12,7 +12,7 @@ No dynamic analysis or penetration testing performed.
 |------------|-------|-----------|
 | Critical   | 0     | — |
 | High       | 0     | — |
-| Medium     | 1     | M-7 target SDK 35 → 36 for Android 16 (recommendation) |
+| Medium     | 0     | — (M-7 targetSdk 36 bump **resolved** in PR #158) |
 | Low        | 3     | N-4 notification content disclosure, N-5 WidgetState weak concurrency, L-11 polling/widget write churn |
 | Informational | 18  | N-1 through N-17 (new + existing info findings); build/CI hardening items |
 
@@ -279,13 +279,13 @@ permissions.
 
 ## Re-audit 2026-09-22 — Status of prior findings + new items
 
-Re-verified against current code after PRs #146-#155 (AGP 9.4.1, Gradle 9.7.1, Kotlin 2.4.20, Glance 1.2.0, JaCoCo
+Re-verified against current code after PRs #146-#155/#158 (AGP 9.4.1, Gradle 9.7.1, Kotlin 2.4.20, Glance 1.2.0, JaCoCo
 0.8.15). Prior findings M-1..M-6, L-1..L-9, N-1..N-3, N-6, N-7, N-8 remain resolved/by-design as documented above.
-`targetSdk = 35` and `tools:targetApi="36"` in the manifest; E2E emulator is Android 16 (API 36).
+`targetSdk = 36` (bumped in PR #158) and `tools:targetApi="36"` in the manifest; E2E emulator is Android 17.
 
 ### M-7 (Medium): target SDK 35 not yet bumped for Android 16
 
-**Status: Open — recommendation.**
+**Status: ✓ RESOLVED (PR #158, 2026-09-22).**
 
 **File:** `app/build.gradle.kts:42`
 
@@ -294,6 +294,12 @@ to 36 opts into Android 16 behavior changes — including the AppOps/Mic-Cam bac
 a limitation — and is required for future Play Store policy compliance. The app already handles edge-to-edge
 (`enableEdgeToEdge` + `safeDrawingPadding`), which is the main visual risk of the bump. Re-run unit/E2E tests and
 device-verify the Mic/Cam background behavior after the bump.
+
+**Resolution verification (Pixel_8_Pro_Android_17, Android 17/API 37):** `targetSdk` bumped to 36; `./gradlew lint test`
+clean; `connectedDebugAndroidTest` green (31 tests, 0 failed, 1 ignored, exit 0); installed APK reports `targetSdk=36
+minSdk=26`. No predictive-back surface (`onBackPressed`/`BackHandler`/`KEYCODE_BACK` absent), no orientation/resize
+locks, no NDK. Mic/Cam privacy-toggle flow device-verified via `QuickSettingsToggleE2eTest` (8 tests: blocked/restore
+via QS toggle + polling).
 
 ### L-11 (Low): Foreground polling re-triggers all flows and re-writes widgets unconditionally
 
@@ -375,7 +381,7 @@ exit code governs `connectedDebugAndroidTest` success, so no build impact.
 
 | Priority | Issue |
 |----------|-------|
-| Medium   | M-7: Bump `targetSdk` to 36 for Android 16 (opt-in behavior, AppOps background enforcement, Play compliance) |
+| Medium   | ~~M-7: Bump `targetSdk` to 36~~ **RESOLVED (PR #158)** — see M-7 section for verification |
 | Low      | L-11: Add change-guard to `pushWidgetUpdate` and/or mic/cam-only refresh to stop 2s widget/notification write churn |
 | Low      | N-4: Consider generic notification text to reduce lock-screen exposure |
 | Low      | N-5: Optional hardening of WidgetState with AtomicReference |
