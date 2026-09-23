@@ -1,7 +1,7 @@
 # Code & Documentation Review
 
-**Date:** 2026-05-25 **Last updated:** 2026-05-29 (session 7 — test coverage gap fixes) **Commit:**
-HEAD of `main` **Review scope:** Full codebase, tests, config, docs, CI, security
+**Date:** 2026-05-25 **Last updated:** 2026-09-22 (session 8 — re-review of dependency bump + existing findings)
+**Commit:** HEAD of `main` **Review scope:** Full codebase, tests, config, docs, CI, security
 
 ---
 
@@ -225,7 +225,7 @@ write, keeping the data layer free of widget dependencies.
 | 1 | Fixed color scheme uses Material3 defaults for non-primary | `EzWorkSafeTheme.kt:31` | Only `primary` is overridden; all other slots use Material3 defaults. Intentional for simple app. |
 | 2 | `afterEvaluate` incompatible with configuration cache | `app/build.gradle.kts:143` | **✓ FIXED (PR #104)** — replaced with top-level `if` block, compatible with config cache. |
 | 3 | Duplicate JaCoCo version config | `app/build.gradle.kts:10,76` | **✓ FIXED (PR #104)** — `testCoverage { jacocoVersion }` removed. |
-| 4 | Missing explicit `kotlin("android")` plugin | `app/build.gradle.kts:4` | Only `kotlin.plugin.compose` is applied, not the base Kotlin Android plugin. Works via transitive resolution but fragile. |
+| 4 | Missing explicit `kotlin("android")` plugin | `app/build.gradle.kts:4` | **Resolved by AGP 9** — the Android Gradle plugin embeds Kotlin; no base KGP plugin needed. |
 | 5 | Missing `dataExtractionRules` in manifest | `AndroidManifest.xml:26-27` | **✓ FIXED (PR #104)** — `android:dataExtractionRules="@xml/data_extraction_rules"` added. |
 
 ### Documentation Accuracy Issues — All Resolved
@@ -240,6 +240,70 @@ write, keeping the data layer free of widget dependencies.
 | 6 | `DEVELOPMENT.md:58` | 22 E2E tests | 32 E2E tests | ✓ FIXED |
 | 7 | `PLAN.md:56-68` | Omitted `QuickSettingsToggleE2eTest.kt` | Included in file listing | ✓ FIXED |
 | 8 | `security.md:242` | Stale file line counts | All counts refreshed | ✓ FIXED |
+
+---
+
+## Session 8 — Re-review (2026-09-22)
+
+Scope: verify the previously open findings against current code (post PRs #118-#126, #146-#155); review the Glance 1.2.0
+/ JaCoCo 0.8.15 / AGP 9.4.1 toolchain. Verified by reading all `app/src/main` sources and re-running `./gradlew lint
+test` plus `connectedDebugAndroidTest` (Pixel_8_Pro, Android 16).
+
+### Previously open findings — status re-verified
+
+| # | Finding | Status now |
+|---|---------|-----------|
+| 20 | Redundant `.width(1.dp)` before `.size(1.dp, 30.dp)` in `SensorWidget.kt` | **✓ FIXED (PR #126)** — removed |
+| 33 | Mic/Cam flows closed via `close()` skipping cleanup | **✓ FIXED (PR #126)** — all paths now `awaitClose { }` |
+| 34 | `for`/`continue` loop in `BuildWidgetRemoteViews.kt` | **✓ FIXED (PR #126)** — now `.forEach` + `return@forEach` |
+| 22 | `WidgetState` singleton has no encapsulation | **STILL OPEN** — public `@Volatile var`s unchanged |
+| 36 | Indentation inconsistency in Glance modifier chain | **STILL OPEN** — `SensorWidget.kt:117` `.size(1.dp, 30.dp)` under-indented vs `.background` |
+| 37 | All user-facing strings hardcoded | **STILL OPEN** — spans `AppInfoDialog`, `StatusDashboard`, `MonitoringService` ("Starting...", "Refresh", status text), `MainActivity` toast, icon `contentDescription`s (`strings.xml` only has `app_name`) |
+| 39 | Unnecessary `@OptIn(ExperimentalCoroutinesApi)` | **STILL OPEN** — `SystemSensorRepository.kt:22,50`; `flatMapLatest` stable since coroutines 1.6.0 |
+
+### New findings
+
+**44. (Medium) `targetSdk` lags the current Android release**
+- File: `app/build.gradle.kts:42`
+- `targetSdk = 35` with `compileSdk = 37`; the E2E emulator runs Android 16 (API 36). Running on Android 16 with
+  targetSdk 35 preserves legacy behavior, so the app never opts into Android 16 changes (predictive back, AppOps
+  background enforcement, etc.). Recommend bumping `targetSdk` to 36, then re-running unit + E2E tests — especially the
+  Mic/Cam background AppOps behavior the app documents as an Android 16 limitation, which target-level can change.
+
+**45. (Low) 2s polling restarts all four sensor flows and re-pushes widgets unconditionally**
+- Files: `MainActivity.kt:64-70`, `SystemSensorRepository.kt:44-59`, `MonitoringService.kt:88-107`
+- The foreground polling loop calls `viewModel.refresh()` → `refreshTrigger++` → `flatMapLatest` cancels and recreates
+  **all four** flows, unregistering/re-registering the WiFi/BT broadcast receivers every 2s. `MonitoringService` then
+  writes RemoteViews to both widgets and rebuilds the notification even when nothing changed. Only Mic/Cam need
+  re-querying. Suggested fixes: a separate mic/cam-only refresh trigger, and/or a change-guard in `pushWidgetUpdate`
+  that skips identical status maps.
+
+**46. (Info) Glance 1.2.0 preview APIs unused**
+- Glance 1.2.0 ships `GlanceAppWidget.providePreview`, `GlanceAppWidgetManager.setWidgetPreview`, and
+  `MultiProcessGlanceAppWidget`, none of which are used. Optional enhancement; previews improve widget picker UX.
+
+**47. (Info) AGENTS.md toolchain table is stale**
+- AGENTS.md lists AGP 9.2.1 and Gradle 9.5.1; the project is on AGP 9.4.1 and Gradle 9.7.1. Doc accuracy issue only.
+
+**48. (Info) `widgetSpacing` fix — `SensorStatus` color duplication**
+- No change; colors correctly centralized in `SensorStatus` (`ACTIVE_COLOR` etc.) and reused by both Compose
+  (`Color(status.color)`) and RemoteViews (`status.color`), so no divergence risk. Keeping as positive confirmation.
+
+**49. (Medium—tracking) CodeQL/SAST removed from CI (`0356d1e`)**
+- CodeQL was added in PR #104 but removed because CodeQL had not yet added Kotlin 2.4.0 support. `.github/workflows/`
+  now contains only `android.yml` and `e2e.yml`. Re-add CodeQL (or another SAST) when Kotlin 2.4.x analysis is
+  supported; otherwise static analysis rests entirely on Android Lint.
+
+### Toolchain re-verified (2026-09-22)
+
+| Component | Version | Notes |
+|-----------|---------|-------|
+| AGP | 9.4.1 | Requires Gradle ≥ 9.6 (have 9.7.1); max API 37 ✓ |
+| Gradle wrapper | 9.7.1 | Current stable |
+| Kotlin / compose plugin | 2.4.20 | Current stable |
+| Glance | 1.2.0 | Bumped in PR #155; minSdk 23 ≤ 26 ✓; E2E passes |
+| JaCoCo tool | 0.8.15 | Bumped in PR #155; unit tests + coverage clean |
+| All other deps | latest stable | Verified against Google Maven / Maven Central |
 
 ---
 
@@ -258,7 +322,7 @@ write, keeping the data layer free of widget dependencies.
 | # | Severity | Issue | Status |
 |---|----------|-------|--------|
 | 1 | High | `build` step runs lint+test 3x (via `./gradlew build`, then `./gradlew lint`, then `./gradlew test`) | **✓ FIXED (PR #104)** — uses `assembleDebug` instead |
-| 2 | Medium | No CodeQL/sast workflow file | **✓ FIXED (PR #104)** — `codeql.yml` added |
+| 2 | Medium | No CodeQL/sast workflow file | **REMOVED (reopened)** — added in PR #104, then removed in `0356d1e` (CodeQL did not yet support Kotlin 2.4.0). No SAST in CI as of 2026-09-22; revisit when GitHub CodeQL adds Kotlin 2.4.x support or use a third-party SAST action (see finding 49) |
 | 3 | Medium | No E2E tests in CI | **✓ FIXED** — weekly scheduled workflow via `.github/workflows/e2e.yml` |
 | 4 | Medium | Secrets written via shell heredoc in CI | **✓ FIXED (PR #104)** — uses direct `echo` into file |
 | 5 | Low | Dependabot only monitors Gradle, not GitHub Actions | **✓ FIXED (PR #104)** — `github-actions` entry added |
@@ -270,11 +334,14 @@ write, keeping the data layer free of widget dependencies.
 ## Summary
 
 The project is in strong shape. The architecture is clean, security posture is sound, and documentation is
-comprehensive. Key findings this session:
+comprehensive. Session 8 (2026-09-22) verified that the previous open items #20/#33/#34 were fixed by the style cleanup
+(PR #126) and confirmed the remaining open items plus new findings:
 
-- **0 Medium security issues:** All previously identified security issues remain properly fixed.
-- **1 Medium code quality:** Aggressive 2-second polling loop in `MainActivity` (by design). Issue #32 (`audioManager` variable) fixed.
-- **7 Low code quality open:** redundant Glance modifiers, WidgetState encapsulation, inconsistent flow termination, `for`/`continue` style, indentation, hardcoded strings, unnecessary `@OptIn`. Issues #18 (SDK guard), #19 (`Inactive`), #21 (unsafe cast), #24 (PFD leak), #25 (ambiguous matchers), #26 (WidgetState E2E reset), #27 (tautological refresh test), #28 (misleading test name), #29 (shallow RemoteViews assertions), #35 (unused import), #40 (ViewModel test gaps), #41 (receiver test gaps), #42 (tautological lastRefreshTime), and #43 (untested `areRuntimePermissionsGranted()`) fixed.
-- **0 Documentation accuracy issues** — all stale version numbers, test counts, and file listings fixed across `API.md`, `README.md`, `DEVELOPMENT.md`, `PLAN.md`, and `security.md`.
-- **0 CI issues** — all resolved (PR #104, `e2e.yml`).
+- **0 Medium security issues.** Two Medium items: #44 (`targetSdk` 35 → 36 for Android 16) and #49 (CodeQL/SAST
+  removed from CI pending Kotlin 2.4.x support — tracking item).
+- **1 Medium code quality:** aggressive 2s polling loop in `MainActivity` (by design, with efficiency gap #45).
+- **Open (Low/Info):** #22 `WidgetState` encapsulation, #36 Glance indentation, #37 hardcoded strings, #39 unnecessary
+  `@OptIn`; new #45 (polling/write churn), #46 (Glance previews unused), #47 (stale AGENTS.md versions), #48
+  (positive confirmation of centralized colors).
+- **Testing:** still 57 unit tests, 32 E2E tests (1 @Ignored). `lint`, `test`, `connectedDebugAndroidTest` all pass.
 - **All findings from previous review sessions remain resolved.** No regressions in previously fixed areas.
