@@ -10,15 +10,16 @@
 
 ### Release build
 
-Create `keystore.properties` from the template:
+`./gradlew assembleRelease` produces a signed APK at `app/build/outputs/apk/release/` (unsigned if `keystore.properties`
+is absent). Locally the APK version comes from `VERSION_NAME`/`VERSION_CODE` in `gradle.properties`.
 
-```bash
-cp keystore.properties.template keystore.properties
-# edit keystore.properties with your signing config
-./gradlew assembleRelease
-```
+Automated releases are **tag-driven** (see `.github/workflows/release.yml`):
 
-The signed APK is at `app/build/outputs/apk/release/`.
+1. Push a semver tag prefixed with `v` matching the release, e.g. `git tag v0.2.0 && git push origin v0.2.0`.
+2. CI runs lint + unit tests, builds the signed APK (version stamped from the tag, so it always matches),
+   and creates a GitHub Release with auto-generated notes and the APK attached.
+
+The latest build is downloadable from https://github.com/zeekec/ezWorkSafe/releases/latest.
 
 ### Code coverage
 
@@ -55,7 +56,8 @@ done
 ./gradlew :app:connectedDebugAndroidTest
 ```
 
-32 tests across dashboard Compose UI, widget provider metadata, notification verification via `dumpsys`, quick settings toggle, permission refresh, and themes.
+32 tests across dashboard Compose UI, widget provider metadata, notification verification via `dumpsys`, quick settings
+toggle, permission refresh, and themes.
 
 A scheduled CI workflow (`.github/workflows/e2e.yml`) runs these tests weekly (Monday 12:00 UTC) on a KVM-accelerated
 emulator. Manual trigger also available via the Actions tab.

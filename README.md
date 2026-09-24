@@ -55,8 +55,8 @@ WiFi status uses `ACCESS_WIFI_STATE`, a normal permission granted at install tim
 ./gradlew installDebug
 ```
 
-Or [download the latest APK](https://github.com/zeekec/ezWorkSafe/actions/workflows/android.yml) from the latest CI run
-(look for the **ezWorkSafe-release** artifact).
+Or [download the latest APK](https://github.com/zeekec/ezWorkSafe/releases/latest) from the GitHub Releases page.
+Releases are automated from semver tags pushed to `main` — see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#release-build).
 
 ## For developers
 
