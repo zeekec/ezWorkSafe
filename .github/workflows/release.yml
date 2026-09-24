@@ -1,0 +1,72 @@
+name: Release
+
+# Creates a GitHub Release with the signed APK on every semver tag push (vX.Y.Z).
+# The APK's versionName/versionCode are stamped from the tag, so they always match.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write # create GitHub Release + attach the APK
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6.3.0
+
+      - name: Compute version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          MAJOR=${MAJOR:-0}; MINOR=${MINOR:-0}; PATCH=${PATCH:-0}
+          CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
+          echo "name=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Decode keystore
+        if: env.KEYSTORE_B64 != ''
+        run: echo "$KEYSTORE_B64" | base64 -d > release.keystore
+
+      - name: Create keystore.properties
+        if: env.KEYSTORE_B64 != ''
+        env:
+          KEYSTORE_PROPS_B64: ${{ secrets.KEYSTORE_PROPERTIES_B64 }}
+        run: echo "$KEYSTORE_PROPS_B64" | base64 -d > keystore.properties
+
+      - name: Fail if signing key unavailable
+        if: env.KEYSTORE_B64 == ''
+        run: |
+          echo "::error::Release requires KEYSTORE_B64 and KEYSTORE_PROPERTIES_B64 secrets; \
+          refusing to publish an unsigned APK."
+          exit 1
+
+      - name: Run lint and unit tests
+        run: ./gradlew lint test
+
+      - name: Build signed release APK
+        run: ./gradlew assembleRelease -PversionName="${{ steps.version.outputs.name }}" -PversionCode="${{ steps.version.outputs.code }}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            app/build/outputs/apk/release/*.apk \
+            --generate-notes \
+            --title "ezWorkSafe ${{ steps.version.outputs.name }}"

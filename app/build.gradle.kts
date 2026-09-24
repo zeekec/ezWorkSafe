@@ -19,6 +19,13 @@ tasks.withType<Test> {
     }
 }
 
+// Version for local builds (from gradle.properties). CI overrides both via
+// -PversionName / -PversionCode from the release tag so releases match their tag.
+val releaseVersionName = providers.gradleProperty("versionName").orNull
+    ?: providers.gradleProperty("VERSION_NAME").getOrElse("0.1.0")
+val releaseVersionCode = providers.gradleProperty("versionCode").map(String::toInt).orNull
+    ?: providers.gradleProperty("VERSION_CODE").getOrElse("1").toInt()
+
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = if (keystorePropertiesFile.exists()) {
     val props = JavaProperties()
@@ -40,8 +47,8 @@ android {
         applicationId = "com.ezworksafe"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = releaseVersionCode
+        versionName = releaseVersionName
     }
 
     if (keystoreProperties != null) {
