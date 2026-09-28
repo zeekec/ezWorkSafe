@@ -125,7 +125,7 @@ dependencies {
     implementation("androidx.glance:glance-material3:1.2.0")
 
     // WorkManager (overrides Glance's transitive 2.7.1 which lacks WorkDatabase_Impl)
-    implementation("androidx.work:work-runtime:2.11.2")
+    implementation("androidx.work:work-runtime:2.12.0")
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
