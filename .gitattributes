@@ -3,7 +3,10 @@
 
 # Gradle wrapper scripts
 gradlew          text eol=lf
-gradlew.bat      text eol=crlf
+# gradlew.bat is deliberately NOT normalized (see bottom of file). Dependabot
+# rewrites it server-side with CRLF and never passes through the local clean
+# filter, so `text eol=crlf` left git reporting a phantom modification on a
+# byte-identical file after every gradle-wrapper bump.
 
 # Build scripts
 *.gradle.kts     text eol=lf
@@ -47,3 +50,12 @@ proguard-rules.pro  text eol=lf
 # Git hooks (must stay LF on all platforms)
 .gitattributes   text eol=lf
 .githooks/**     text eol=lf
+
+# Generated Gradle wrapper script — treat as opaque bytes.
+# This MUST come after the `*.bat text eol=crlf` rule above: in .gitattributes
+# the last matching line wins, so this is what actually disables normalization.
+# Without `-text`, git smudges the blob to CRLF on checkout and cleans it back to
+# LF on add, so a CRLF blob pushed by Dependabot can never round-trip and git
+# reports a modification that is not there. Gradle regenerates this file and it
+# is never hand-edited, so byte-for-byte fidelity matters more than diffs.
+gradlew.bat      -text
