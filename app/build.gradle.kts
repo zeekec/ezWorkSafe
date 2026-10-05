@@ -19,12 +19,66 @@ tasks.withType<Test> {
     }
 }
 
-// Version for local builds (from gradle.properties). CI overrides both via
-// -PversionName / -PversionCode from the release tag so releases match their tag.
-val releaseVersionName = providers.gradleProperty("versionName").orNull
-    ?: providers.gradleProperty("VERSION_NAME").getOrElse("0.1.0")
-val releaseVersionCode = providers.gradleProperty("versionCode").map(String::toInt).orNull
-    ?: providers.gradleProperty("VERSION_CODE").getOrElse("1").toInt()
+// Version derived from git so there is a single source of truth: the nearest
+// semver tag (vX.Y.Z). CI also passes -PversionName / -PversionCode explicitly
+// from the release tag, which overrides both of these.
+//
+// versionName carries SemVer build metadata: "0.2.0" on a tagged commit, and
+// "0.2.0+7" seven commits past it, so a dev build is identifiable at a glance.
+// versionCode stays tag-derived only (major*10000 + minor*100 + patch) so it is
+// monotonic and never changes meaning for a given tag -- folding the commit
+// count in would widen the encoding and change the value of already-published
+// releases, which Play Store rejects outright.
+//
+// Both git calls exit 128 outside a repository or when no vX.Y.Z tag is
+// reachable, so the fallback keys off the exit code rather than stderr text.
+fun git(vararg args: String): String? =
+    providers.exec {
+        commandLine("git", *args)
+        isIgnoreExitValue = true
+    }.let { output ->
+        if (output.result.get().exitValue == 0) {
+            output.standardOutput.asText.get().trim().ifEmpty { null }
+        } else {
+            null
+        }
+    }
+
+// Returns (versionName, versionCode). Kept as a function because top-level
+// vals in a .gradle.kts script compile to class properties, which cannot be
+// assigned conditionally.
+fun resolveAppVersion(): Pair<String, Int> {
+    val tag = git("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*")
+    if (tag == null) {
+        logger.warn(
+            "No vX.Y.Z git tag reachable (not a git checkout, or tags were not fetched). " +
+                "Falling back to version 0.0.0/1. In CI this usually means actions/checkout " +
+                "is missing 'fetch-depth: 0', which fetches no tags."
+        )
+        // versionCode must be a positive integer; AGP rejects 0 outright. 1 was the
+        // pre-git default in gradle.properties and was never a published value, so
+        // it cannot be mistaken for a real release. "0.0.0" still flags the build
+        // as unversioned, and it surfaces in the About dialog via AppInfoDialog.
+        return "0.0.0" to 1
+    }
+    val base = tag.removePrefix("v")
+    // Count only commits reachable from HEAD that are not in the tag, so this
+    // works whether HEAD is a branch tip or a detached checkout of the tag.
+    val commitsAhead = git("rev-list", "--count", "$tag..HEAD")?.toIntOrNull() ?: 0
+    val versionName = if (commitsAhead > 0) "$base+$commitsAhead" else base
+    // Tolerate short tags (v0.2) the same way release.yml does, defaulting to 0.
+    val parts = base.split(".")
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    val patch = parts.getOrNull(2)?.toIntOrNull() ?: 0
+    require(minor < 100 && patch < 100) {
+        "Tag $tag has minor=$minor patch=$patch; both must be < 100 because versionCode " +
+            "packs them into two decimal places (major*10000 + minor*100 + patch)."
+    }
+    return versionName to (major * 10000 + minor * 100 + patch)
+}
+
+val (appVersionName, appVersionCode) = resolveAppVersion()
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = if (keystorePropertiesFile.exists()) {
@@ -47,8 +101,8 @@ android {
         applicationId = "com.ezworksafe"
         minSdk = 26
         targetSdk = 36
-        versionCode = releaseVersionCode
-        versionName = releaseVersionName
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
 
     if (keystoreProperties != null) {
