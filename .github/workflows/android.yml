@@ -20,6 +20,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The nearest vX.Y.Z git tag is the app version's single source of truth.
+          # The default depth of 1 fetches no tags, which would silently fall back
+          # to version 0.0.0. See the git-derived version block in app/build.gradle.kts.
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v6
