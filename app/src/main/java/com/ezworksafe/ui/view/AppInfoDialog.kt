@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 fun AppInfoDialog(
     onDismiss: () -> Unit
 ) {
+    @Suppress("DEPRECATION")
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
