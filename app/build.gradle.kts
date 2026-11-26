@@ -95,7 +95,11 @@ if (keystoreProperties == null) {
 
 android {
     namespace = "com.ezworksafe"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 1
+        }
+    }
 
     defaultConfig {
         applicationId = "com.ezworksafe"
