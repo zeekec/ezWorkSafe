@@ -76,7 +76,7 @@ but Android 17's instrumentation serializes the `@Ignore`'d `PermissionRefreshE2
 ## Current SDK Versions & Tools
 | Config | Value |
 |--------|-------|
-| `compileSdk` | 37 |
+| `compileSdk` | 37.1 |
 | `minSdk` | 26 |
 | `targetSdk` | 36 |
 | AGP | 9.4.1 |
