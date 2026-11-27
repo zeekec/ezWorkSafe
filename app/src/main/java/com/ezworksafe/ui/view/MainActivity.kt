@@ -5,6 +5,7 @@ package com.ezworksafe.ui.view
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -37,6 +38,10 @@ import com.ezworksafe.util.PermissionHelper
  */
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
     private val viewModel: SensorViewModel by viewModels()
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -65,7 +70,11 @@ class MainActivity : ComponentActivity() {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 while (true) {
                     delay(2_000L)
-                    viewModel.refresh()
+                    try {
+                        viewModel.refresh()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Sensor refresh failed; continuing polling", e)
+                    }
                 }
             }
         }
