@@ -24,7 +24,10 @@ private const val STOP_TIMEOUT_MILLIS = 5_000L
 
 class SensorViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = (application as EzWorkSafeApp).sensorRepository
+    private val repository = (application as? EzWorkSafeApp)?.sensorRepository
+        ?: throw IllegalStateException(
+            "SensorViewModel requires EzWorkSafeApp as the Application, but got ${application::class.qualifiedName}"
+        )
 
     val sensorTypes: List<SensorType> = SensorType.entries
 
