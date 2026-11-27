@@ -22,6 +22,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import android.app.Application
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -88,5 +89,16 @@ class SensorViewModelTest {
 
         assertEquals(SensorStatus.Active, vm.wifiStatus.value)
         collectJob.cancel()
+    }
+
+    @Test
+    fun `constructor throws when application is not EzWorkSafeApp`() {
+        val app = mock<Application>()
+        try {
+            SensorViewModel(app)
+            org.junit.Assert.fail("Expected IllegalStateException")
+        } catch (e: IllegalStateException) {
+            org.junit.Assert.assertTrue(e.message?.contains("EzWorkSafeApp") == true)
+        }
     }
 }
