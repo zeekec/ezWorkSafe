@@ -67,4 +67,15 @@ class PermissionHelperTest {
         )
         assertFalse(PermissionHelper.areRuntimePermissionsGranted(app))
     }
+
+    @Test
+    fun `areRuntimePermissionsGranted respects sdk parameter`() {
+        val app = RuntimeEnvironment.getApplication()
+        shadowOf(app).grantPermissions(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        )
+        assertTrue(PermissionHelper.areRuntimePermissionsGranted(app, Build.VERSION_CODES.R))
+        assertFalse(PermissionHelper.areRuntimePermissionsGranted(app, Build.VERSION_CODES.S))
+    }
 }
