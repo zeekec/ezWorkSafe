@@ -11,9 +11,11 @@ import com.ezworksafe.data.model.SensorType
  * and [SensorWidget] / [CompactWidget] (reader, Glance thread).
  *
  * Fields are [@Volatile][kotlin.jvm.Volatile] for cross-thread visibility.
- * [lastRefreshTime] is set by [com.ezworksafe.data.repository.SensorRepository.refresh]
- * but **not** by [MonitoringService.pushWidgetUpdate] — the timestamp may lag behind
- * the widget display.
+ * [lastRefreshTime] is updated inside [MonitoringService.observeSensors] on every
+ * sensor emission (including real-time WiFi/Bluetooth broadcasts and foreground
+ * Mic/Cam refreshes), but **not** by [MonitoringService.pushWidgetUpdate] itself —
+ * the timestamp reflects the most recent sensor emission and may lag behind the
+ * widget display.
  */
 object WidgetState {
     @Volatile
