@@ -35,7 +35,11 @@ object PermissionHelper {
     }
 
     /** Returns `true` when all runtime permissions are currently granted. */
-    fun areRuntimePermissionsGranted(context: Context, sdk: Int = Build.VERSION.SDK_INT): Boolean {
+    fun areRuntimePermissionsGranted(context: Context): Boolean =
+        areRuntimePermissionsGranted(context, Build.VERSION.SDK_INT)
+
+    /** Returns `true` when all runtime permissions for [sdk] are currently granted. */
+    fun areRuntimePermissionsGranted(context: Context, sdk: Int): Boolean {
         return getRequiredRuntimePermissions(sdk).all {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }
